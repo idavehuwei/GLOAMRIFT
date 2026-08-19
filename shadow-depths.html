@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>幽影深渊 III · 石桥镇</title>
+<title>Gloamrift · 石桥镇</title>
+<script src="js/saves.js"></script>
+<script>if(!GloamSave.getBoot())location.replace("index.html");</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 :root{
@@ -161,26 +163,20 @@ canvas{display:block}
 #cast{position:absolute;left:50%;bottom:194px;transform:translateX(-50%);width:210px;height:8px;background:#0a0806;
   border:1px solid #4a3b26;display:none}
 #castf{height:100%;width:0;background:linear-gradient(90deg,#5f3ba8,#a06aff)}
-#mute{position:absolute;right:14px;bottom:14px;padding:6px 12px;font-size:11px;color:var(--ash);
+#mute,#menubtn{position:absolute;padding:6px 12px;font-size:11px;color:var(--ash);
   border:1px solid #3a2f1f;background:#100d0a;cursor:pointer;pointer-events:auto}
-#mute:hover{color:var(--brass-hi)}
+#mute{right:14px;bottom:14px}
+#menubtn{right:14px;bottom:48px}
+#mute:hover,#menubtn:hover{color:var(--brass-hi)}
 
 #veil{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;
-  background:radial-gradient(ellipse at 50% 42%,rgba(30,16,8,.5),rgba(4,3,5,.97) 62%);pointer-events:auto;z-index:70;overflow-y:auto}
-#veil.off{display:none}
-#veil h1{font-family:var(--serif);font-size:clamp(30px,5.5vw,58px);letter-spacing:.28em;color:#e8cf95;margin-left:.28em;
+  background:radial-gradient(ellipse at 50% 42%,rgba(30,16,8,.5),rgba(4,3,5,.97) 62%);pointer-events:auto;z-index:70;
+  transition:opacity .55s}
+#veil.off{opacity:0;pointer-events:none;transition:opacity .55s}
+#veil h1{font-family:var(--serif);font-size:clamp(28px,5vw,48px);letter-spacing:.32em;color:#e8cf95;margin-left:.32em;
   text-shadow:0 0 30px rgba(216,150,60,.35)}
 #veil .sub{margin-top:9px;font-size:12px;letter-spacing:.4em;color:#8a6f44}
-#veil p{margin-top:20px;max-width:520px;text-align:center;font-size:13px;line-height:1.95;color:#8f8474}
-.classrow{display:flex;gap:14px;margin-top:26px;flex-wrap:wrap;justify-content:center}
-.classcard{width:196px;padding:16px 15px;background:linear-gradient(180deg,#231c15,#100d0a);border:1px solid #4a3b26;
-  cursor:pointer;transition:.18s;text-align:center}
-.classcard:hover{border-color:var(--brass-hi);box-shadow:0 0 26px rgba(180,130,50,.22);transform:translateY(-3px)}
-.classcard.sel{border-color:var(--brass-hi);box-shadow:0 0 26px rgba(180,130,50,.3)}
-.classcard .cg{font-size:32px}
-.classcard .cn{font-family:var(--serif);font-size:17px;color:#e8cf95;letter-spacing:.14em;margin-top:7px}
-.classcard .cd{font-size:11.5px;color:#8f8474;line-height:1.75;margin-top:8px;text-align:left}
-.classcard .cs{font-size:11px;color:#7ea9d8;margin-top:8px;text-align:left}
+#veil p{margin-top:16px;font-size:13px;color:#8f8474;letter-spacing:.18em}
 .btn{margin-top:24px;padding:13px 44px;font-family:var(--serif);font-size:15px;letter-spacing:.2em;color:#e8cf95;
   background:linear-gradient(180deg,#2c2218,#120e0a);border:1px solid #6b5731;cursor:pointer;pointer-events:auto}
 .btn:hover{border-color:var(--brass-hi);color:#fff3d6;box-shadow:0 0 22px rgba(180,130,50,.28)}
@@ -199,7 +195,7 @@ canvas{display:block}
 <div id="app"></div>
 <div id="ui">
   <div id="top-left" class="plate">
-    <div class="name" id="pname">流浪者</div>
+    <div class="name" id="pname">—</div>
     <div class="sub" id="plvl">等级 1</div>
     <div id="xpwrap"><div id="xpbar"></div></div>
   </div>
@@ -234,20 +230,15 @@ canvas{display:block}
   <div id="cast"><div id="castf"></div></div>
   <div id="hint"></div>
   <div id="tip" class="plate"></div>
+  <div id="menubtn">返回标题</div>
   <div id="mute">音效 开</div>
 
   <div id="dead"><h2>你已陨落</h2>
     <p style="margin-top:16px;color:#8f8474;font-size:13px">损失一半金币。装备与经验尚在。</p>
     <button class="btn" id="respawn">在石桥镇醒来</button></div>
 
-  <div id="veil"><h1>幽影深渊</h1><div class="sub">SHADOW DEPTHS III</div>
-    <p>石桥镇建在裂隙的上风口。白天人们种地、打铁、争吵；入夜后没人往东边看。<br>选一条路走下去。</p>
-    <div class="classrow" id="classrow"></div>
-    <button class="btn dis" id="start">进入石桥镇</button>
-    <div class="keys">
-      <b>左键</b> 移动 / 攻击 / 交互 · <b>1-6</b> 技能 · <b>Q E</b> 药水 · <b>空格</b> 拾取<br>
-      <b>C</b> 角色 · <b>I</b> 行囊 · <b>S</b> 技能 · <b>J</b> 任务 · <b>T</b> 回城 · <b>滚轮</b> 缩放 · <b>Esc</b> 关闭
-    </div>
+  <div id="veil"><div class="sub">GLOAMRIFT</div><h1>下行</h1>
+    <p>裂隙在呼吸</p>
   </div>
 </div>
 <script>
@@ -784,7 +775,7 @@ function buyPrice(it){return Math.round((40+itemScore(it)*7+it.rarity*90)*(1+it.
 function sellPrice(it){return Math.max(8,Math.round(buyPrice(it)*.3));}
 
 /* ═════════ 8. 玩家 ═════════ */
-const P={cls:"warrior",x:0,z:0,dir:0,lvl:1,xp:0,xpNext:60,gold:150,pts:0,skPts:1,
+const P={name:"流浪者",cls:"warrior",x:0,z:0,dir:0,lvl:1,xp:0,xpNext:60,gold:150,pts:0,skPts:1,
   base:{str:14,dex:12,vit:16,ene:10},hp:1,mp:1,hpMax:1,mpMax:1,
   path:[],target:null,atkCd:0,anim:{walk:0,atk:0,atkDone:true},
   equip:{},bag:[],potHp:5,potMp:4,ranks:{},barSkills:[null,null,null,null,null,null],
@@ -1056,7 +1047,7 @@ function turnIn(q){
   if(q.item){const it=rollItem(Math.max(1,P.lvl),true);addToBag(it);
     say(`奖励：<span style="color:${RARITY[it.rarity].c}">${it.name}</span>`);}
   SFX.quest();say(`<span style="color:#e2c47f">完成委托：${q.n}（+${q.gold} 金币，+${q.xp} 经验）</span>`);
-  unlockQuests();renderQuests();renderTrack();
+  unlockQuests();renderQuests();renderTrack();saveSoon();
 }
 
 /* ═════════ 13. 面板 ═════════ */
@@ -1116,7 +1107,7 @@ function renderChar(){
     row("攻击距离",CLASSES[P.cls].range+" 码")+row("生命偷取",s.leech+"%")+
     row("移动速度",Math.round(100+s.ms)+"%")+row("生命 / 法力",`${Math.round(s.hpMax)} / ${Math.round(s.mpMax)}`);
   UI.attrbox.querySelectorAll(".plus").forEach(b=>b.addEventListener("click",()=>{
-    if(P.pts<=0)return;P.pts--;P.base[b.dataset.attr]++;refreshMax(false);renderChar();SFX.ui();}));
+    if(P.pts<=0)return;P.pts--;P.base[b.dataset.attr]++;refreshMax(false);renderChar();SFX.ui();saveSoon();}));
 }
 function renderBag(){
   UI.bag.innerHTML="";
@@ -1156,7 +1147,7 @@ function learnSkill(id){
   P.skPts--;P.ranks[id]=rank+1;
   if(rank===0){const free=P.barSkills.indexOf(null);if(free>=0)P.barSkills[free]=id;}
   SFX.level();say(`学会 <span style="color:#e2c47f">${sk.n}</span>${rank?`（等级 ${rank+1}）`:""}`);
-  renderSkills();renderBarUI();
+  renderSkills();renderBarUI();saveSoon();
 }
 function renderQuests(){
   UI.qlist.innerHTML="";
@@ -1278,6 +1269,7 @@ function gainXP(n){
     if($("sk").classList.contains("on"))renderSkills();
     if($("pc").classList.contains("on"))renderChar();
   }
+  saveSoon();
 }
 function hurtPlayer(amount){
   if(!P.alive||P.invuln>0)return;
@@ -1296,6 +1288,7 @@ function die(){
   const lost=Math.floor(P.gold*.5);P.gold-=lost;
   $("dead").classList.add("on");
   say(`你陨落于${W.area.n}，失去 ${lost} 金币。`);
+  saveNow();
 }
 function nearestEnemy(x,z,range){
   let best=null,bd=range*range;
@@ -1440,7 +1433,7 @@ function usePotion(k){
 
 /* ═════════ 16. 背包 ═════════ */
 function addToBag(it){if(P.bag.length>=CFG.BAG)return false;P.bag.push(it);return true;}
-function afterEquipChange(){refreshMax(false);rebuildPlayer();renderChar();renderBag();hideTip();}
+function afterEquipChange(){refreshMax(false);rebuildPlayer();renderChar();renderBag();hideTip();saveSoon();}
 function equipFromBag(i){
   const it=P.bag[i];if(!it)return;
   if(it.cls&&it.cls!==P.cls){hint("你的职业无法使用这件武器");return;}
@@ -1669,7 +1662,7 @@ function enterArea(id){
     setZoneLabel(a.n,"野外 · 推荐等级 "+a.lvl);
     say(`你进入了${a.n}。`);
   }
-  hint(a.n);renderTrack();
+  hint(a.n);renderTrack();saveSoon();
 }
 function populateField(a){
   let made=0;
@@ -1724,7 +1717,7 @@ function enterRift(depth){
   setZoneLabel("裂隙 "+roman(depth),"无限地下层 · 怪物等级 "+lvl);
   hint("裂隙 第 "+roman(depth)+" 层");
   say(depth%3===0?`<span style="color:#c0392b">这一层有东西在等你。</span>`:`你下到裂隙第 ${depth} 层。`);
-  renderTrack();
+  renderTrack();saveSoon();
 }
 function enterDungeon(id,floor){
   const d=dunById(id);
@@ -1751,7 +1744,7 @@ function enterDungeon(id,floor){
   placePlayer(wX(first.cx),wX(first.cy));
   setZoneLabel(d.n,`副本 ${floor} / ${d.floors} 层 · 怪物等级 ${lvl}`);
   hint(d.n+" · 第 "+floor+" 层");
-  renderTrack();
+  renderTrack();saveSoon();
 }
 function townPortal(){
   if(W.area.kind==="town"){hint("你已经在石桥镇了");return;}
@@ -1823,9 +1816,10 @@ window.addEventListener("keydown",e=>{
   else if(k===" "){e.preventDefault();pickupNearby();}
 });
 $("mute").addEventListener("click",function(){this.textContent="音效 "+(SFX.toggle()?"开":"关");});
+$("menubtn").addEventListener("click",()=>{saveNow();location.href=GloamSave.hrefTo("index.html");});
 $("respawn").addEventListener("click",()=>{
   $("dead").classList.remove("on");
-  P.alive=true;refreshMax(true);P.invuln=2;enterArea("town");
+  P.alive=true;refreshMax(true);P.invuln=2;enterArea("town");saveNow();
 });
 function pickupNearby(){
   for(let i=W.items.length-1;i>=0;i--)
@@ -1847,6 +1841,7 @@ function takeItem(i){
   W.group.remove(it.mesh);
   it.mesh.traverse(o=>{if(o.geometry&&o.geometry!==goldGeo&&o.geometry!==potGeo)o.geometry.dispose();});
   W.items.splice(i,1);
+  saveSoon();
 }
 
 /* ═════════ 21. 更新 ═════════ */
@@ -2299,49 +2294,92 @@ window.addEventListener("resize",()=>{
   dollCam.aspect=w/186;dollCam.updateProjectionMatrix();
 });
 
-/* ═════════ 22. 开场与启动 ═════════ */
-let chosen=null;
-(function buildClassCards(){
-  const row=$("classrow");
-  Object.keys(CLASSES).forEach(k=>{
-    const c=CLASSES[k];
-    const d=document.createElement("div");d.className="classcard";
-    d.innerHTML=`<div class="cg">${c.g}</div><div class="cn">${c.n}</div>
-      <div class="cd">${c.desc}</div><div class="cs">${c.info}</div>`;
-    d.addEventListener("click",()=>{
-      chosen=k;SFX.ui();
-      row.querySelectorAll(".classcard").forEach(x=>x.classList.remove("sel"));
-      d.classList.add("sel");$("start").classList.remove("dis");});
-    row.appendChild(d);
-  });
-})();
+/* ═════════ 22. 开场、存档与启动 ═════════ */
+let saveSlot=null,saveTimer=null,booting=true;
+function serializePlayer(){
+  return{
+    v:1,name:P.name,cls:P.cls,lvl:P.lvl,xp:P.xp,xpNext:P.xpNext,gold:P.gold,
+    pts:P.pts,skPts:P.skPts,base:{str:P.base.str,dex:P.base.dex,vit:P.base.vit,ene:P.base.ene},
+    hp:P.hp,mp:P.mp,potHp:P.potHp,potMp:P.potMp,
+    ranks:Object.assign({},P.ranks),barSkills:P.barSkills.slice(),
+    equip:JSON.parse(JSON.stringify(P.equip)),bag:JSON.parse(JSON.stringify(P.bag)),
+    kills:P.kills,eliteKills:P.eliteKills,bossKills:P.bossKills,
+    killByType:Object.assign({},P.killByType),cleared:Object.assign({},P.cleared),
+    quests:JSON.parse(JSON.stringify(QS)),riftDeepest:W.riftDeepest,
+    discovered:Object.assign({},W.discovered),itemSeq:itemSeq,lastArea:"town"
+  };
+}
+function applySave(d){
+  P.name=d.name||CLASSES[d.cls].n;P.cls=d.cls;
+  P.lvl=d.lvl;P.xp=d.xp;P.xpNext=d.xpNext;P.gold=d.gold;
+  P.pts=d.pts;P.skPts=d.skPts;P.base=Object.assign({},d.base);
+  P.equip=d.equip||P.equip;SLOTDEF.forEach(s=>{if(!(s.k in P.equip))P.equip[s.k]=null;});
+  P.bag=d.bag||[];P.potHp=d.potHp;P.potMp=d.potMp;
+  P.ranks=d.ranks||{};P.barSkills=d.barSkills||P.barSkills;
+  P.kills=d.kills||0;P.eliteKills=d.eliteKills||0;P.bossKills=d.bossKills||0;
+  P.killByType=d.killByType||{};P.cleared=d.cleared||{};
+  if(d.quests){for(const k in d.quests)QS[k]=d.quests[k];}
+  W.riftDeepest=d.riftDeepest||1;W.discovered=d.discovered||{town:true};
+  itemSeq=d.itemSeq||0;P.alive=true;
+  refreshMax(false);
+  P.hp=clamp(d.hp==null?P.hpMax:d.hp,1,P.hpMax);
+  P.mp=clamp(d.mp==null?P.mpMax:d.mp,0,P.mpMax);
+}
+function saveNow(){
+  if(saveSlot==null||booting)return;
+  GloamSave.writeSlot(saveSlot,serializePlayer());
+}
+function saveSoon(){
+  if(booting)return;
+  clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,600);
+}
 function startingWeapon(cls){
   const base=BASES.weapon[cls][0];
   return{id:++itemSeq,type:"weapon",glyph:base.g,rarity:0,name:"磨损的"+base.n,ilvl:1,
     dmgMin:base.d[0],dmgMax:base.d[1],armor:0,affixes:[],spd:base.sp,cls};
 }
-$("start").addEventListener("click",()=>{
-  if(!chosen)return;
-  P.cls=chosen;
-  const c=CLASSES[chosen];
+function startNew(name,cls){
+  P.name=name;P.cls=cls;
+  const c=CLASSES[cls];
   P.base={str:c.base.str,dex:c.base.dex,vit:c.base.vit,ene:c.base.ene};
-  UI.pname.textContent=c.n;
-  P.equip.weapon=startingWeapon(chosen);
-  const first=SKILLS.find(s=>s.cls===chosen&&s.req===1);
+  UI.pname.textContent=P.name;
+  P.equip.weapon=startingWeapon(cls);
+  const first=SKILLS.find(s=>s.cls===cls&&s.req===1);
   P.ranks[first.id]=1;P.barSkills[0]=first.id;P.skPts=0;
   refreshMax(true);rebuildPlayer();
   renderBarUI();renderTabs();renderQuests();renderTrack();renderChar();renderBag();renderSkills();
   enterArea("town");
   P.hp=P.hpMax;P.mp=P.mpMax;
-  $("veil").classList.add("off");
-  SFX.portal();
   say(`你以<b style="color:#e2c47f">${c.n}</b>的身份醒来。先去找执政官塞琳。`);
-});
-// 先建一个占位世界，等选职业后再正式开始
-W.area=AREA.town;
-genTown();buildScene("town",AREA.town.pal,AREA.town);applyPal(AREA.town.pal);
-rebuildPlayer();placePlayer(0,10);renderBarUI();renderTabs();
+}
+function bootFromMenu(){
+  const boot=GloamSave.getBoot();
+  if(!boot){location.replace("index.html");return false;}
+  saveSlot=boot.slot|0;
+  if(boot.mode==="load"){
+    const data=GloamSave.getSlot(boot.slot);
+    if(!data){location.replace("load.html");return false;}
+    applySave(data);
+    UI.pname.textContent=P.name;
+    rebuildPlayer();
+    renderBarUI();renderTabs();renderQuests();renderTrack();renderChar();renderBag();renderSkills();
+    enterArea("town");
+    P.hp=clamp(data.hp==null?P.hpMax:data.hp,1,P.hpMax);
+    P.mp=clamp(data.mp==null?P.mpMax:data.mp,0,P.mpMax);
+  }else{
+    startNew(boot.name||"流浪者",boot.cls||"warrior");
+  }
+  return true;
+}
+
+if(!bootFromMenu())return;
+booting=false;saveNow();
+$("veil").classList.add("off");
+SFX.portal();
 loop();
+setInterval(saveNow,60000);
+document.addEventListener("visibilitychange",()=>{if(document.hidden)saveNow();});
+window.addEventListener("beforeunload",saveNow);
 })();
 </script>
 </body>

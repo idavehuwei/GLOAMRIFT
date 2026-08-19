@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gloamrift · 幽影深渊</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/menu.css">
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="grain"></div>
+<div class="vignette"></div>
+<div class="corner tl"></div><div class="corner tr"></div>
+<div class="corner bl"></div><div class="corner br"></div>
+
+<div class="stage">
+  <div class="brand">
+    <div class="chapter">CHAPTER I  ·  STONEBRIDGE</div>
+    <h1 class="logo">GLOAMRIFT<em>幽影深渊</em></h1>
+    <p class="tag">None look east after dusk.</p>
+    <p class="tag-zh">入夜后，没人往东边看</p>
+  </div>
+  <nav class="menu" id="menu">
+    <button type="button" id="btn-continue" disabled>继续下行</button>
+    <a href="create.html" data-carry="1">新的旅程</a>
+    <a href="load.html" data-carry="1">读取卷宗</a>
+    <button type="button" class="ghost" id="btn-about">关于名号</button>
+  </nav>
+  <p class="hint" id="cont-hint"></p>
+</div>
+<div class="foot">STONEBRIDGE  ·  THE RIFT WINDWARD</div>
+
+<div class="overlay" id="about">
+  <div class="sheet plate">
+    <h2>GLOAMRIFT</h2>
+    <p>Gloam 是暮光，rift 是裂隙。石桥镇建在裂隙的上风口——白天人们种地、打铁、争吵；入夜后没人往东边看。</p>
+    <p>中文名仍是<strong style="color:#e8cf95;font-weight:400">幽影深渊</strong>。英文名不再直译 Shadow Depths，而取一个能单独站得住的词：像一声地名，也像一道伤口。</p>
+    <button type="button" class="btn close" id="about-x">关闭</button>
+  </div>
+</div>
+
+<script src="js/saves.js"></script>
+<script src="js/atmosphere.js"></script>
+<script src="js/ui-tone.js"></script>
+<script>
+(function(){
+  GloamAtmosphere.attach("#fx", {theme:"title"});
+  var latest = GloamSave.latestSlotIndex();
+  var cont = document.getElementById("btn-continue");
+  var hint = document.getElementById("cont-hint");
+  if(latest >= 0){
+    var s = GloamSave.getSlot(latest);
+    cont.disabled = false;
+    hint.textContent = s.name + "  ·  " + GloamSave.classLabel(s.cls) + "  ·  Lv." + s.lvl;
+    cont.addEventListener("click", function(){
+      GloamTone.confirm();
+      GloamSave.setBoot({mode:"load", slot:latest});
+      location.href = GloamSave.hrefToGame({mode:"load", slot:latest});
+    });
+  } else {
+    hint.textContent = "尚无卷宗。从新的旅程开始。";
+  }
+  document.querySelectorAll(".menu a").forEach(function(a){
+    a.addEventListener("mouseenter", GloamTone.hover);
+    a.addEventListener("click", function(e){
+      if(a.getAttribute("data-carry")){
+        e.preventDefault();
+        GloamTone.click();
+        location.href = GloamSave.hrefTo(a.getAttribute("href"));
+      } else GloamTone.click();
+    });
+  });
+  document.getElementById("btn-about").addEventListener("click", function(){
+    GloamTone.click();
+    document.getElementById("about").classList.add("on");
+  });
+  document.getElementById("about-x").addEventListener("click", function(){
+    document.getElementById("about").classList.remove("on");
+  });
+  document.getElementById("about").addEventListener("click", function(e){
+    if(e.target.id === "about") this.classList.remove("on");
+  });
+})();
+</script>
+</body>
+</html>

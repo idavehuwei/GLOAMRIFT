@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gloamrift · 卷宗</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/menu.css">
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="grain"></div>
+<div class="vignette"></div>
+<a class="back" href="index.html" id="back">← 标题</a>
+
+<div class="stage top">
+  <div class="vault">
+    <h1>THE ARCHIVE</h1>
+    <p class="sub">读取卷宗  ·  世界会按同一粒种子再长出来</p>
+    <div class="saves" id="saves"></div>
+  </div>
+</div>
+<div class="foot">THREE GRAVES  ·  三口棺，三份名字</div>
+
+<script src="js/saves.js"></script>
+<script src="js/atmosphere.js"></script>
+<script src="js/ui-tone.js"></script>
+<script>
+(function(){
+  GloamAtmosphere.attach("#fx", {theme:"archive"});
+  var glyphs = {warrior:"⚔", mage:"✧", archer:"➶"};
+
+  function load(i){
+    var s = GloamSave.getSlot(i);
+    if(!s){ location.href = "create.html"; return; }
+    GloamTone.confirm();
+    location.href = GloamSave.hrefToGame({mode:"load", slot:i});
+  }
+  function render(){
+    var box = document.getElementById("saves");
+    box.innerHTML = "";
+    GloamSave.getSlots().forEach(function(s, i){
+      var d = document.createElement("div");
+      d.className = "save plate"+(s?"":" empty");
+      if(s){
+        d.innerHTML =
+          '<div class="mark">'+(glyphs[s.cls]||"·")+'</div>'+
+          '<div><div class="nm">'+s.name+'</div>'+
+          '<div class="meta">'+GloamSave.classEn(s.cls)+'  ·  '+GloamSave.classLabel(s.cls)+
+          '<br>等级 '+s.lvl+'  ·  金币 '+s.gold+'  ·  石桥镇</div></div>'+
+          '<div class="when">'+GloamSave.formatTime(s.t)+
+          '<br><button type="button" class="del">焚毁</button></div>';
+        d.addEventListener("mouseenter", GloamTone.hover);
+        d.addEventListener("click", function(e){
+          if(e.target.closest(".del")) return;
+          load(i);
+        });
+        d.querySelector(".del").addEventListener("click", function(e){
+          e.stopPropagation();
+          if(!confirm("焚毁「"+s.name+"」的卷宗？")){ GloamTone.deny(); return; }
+          GloamSave.deleteSlot(i); GloamTone.click(); render();
+        });
+      } else {
+        d.innerHTML = '<div class="mark">·</div><div><div class="nm">空槽 '+(i+1)+'</div>'+
+          '<div class="meta">这口棺是空的。去铸名厅写下一份新卷宗。</div></div>'+
+          '<div class="when">NEW</div>';
+          d.addEventListener("click", function(){ location.href = GloamSave.hrefTo("create.html"); });
+      }
+      box.appendChild(d);
+    });
+  }
+  render();
+  document.getElementById("back").addEventListener("click", function(e){
+    e.preventDefault();
+    location.href = GloamSave.hrefTo("index.html");
+  });
+})();
+</script>
+</body>
+</html>
