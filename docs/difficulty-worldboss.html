@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>幽影深渊 · 难度分层与世界首领</title>
+<style>
+:root{
+  --ink:#0e1116; --slate:#161a21; --slate-2:#1b2028; --line:#2b3240;
+  --iron:#7d8794; --iron-hi:#b4bfcc;
+  --brass:#c39a4e; --brass-hi:#ecd39a; --bone:#cfc7b4; --ash:#8b8477;
+  --blood:#a83a2b; --ember:#d1622f; --verdigris:#579587; --violet:#8a6ad0; --pale:#b9b3d8;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,"Songti SC",serif;
+  --sans:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Courier New",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--bone);font-family:var(--sans);font-size:15px;line-height:1.78;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 60% 36% at 22% -6%,rgba(87,149,135,.10),transparent 62%),
+             radial-gradient(ellipse 60% 36% at 78% 104%,rgba(138,106,208,.12),transparent 62%)}
+.wrap{position:relative;z-index:1;max-width:1120px;margin:0 auto;padding:0 28px 130px}
+header{padding:78px 0 46px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.34em;color:var(--iron);text-transform:uppercase}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(38px,6.4vw,70px);line-height:1.02;color:#f2e8d2;margin:18px 0 0}
+h1 em{font-style:italic;color:var(--brass-hi)}
+.sub{margin-top:20px;max-width:670px;color:var(--ash);font-size:15.5px}
+.meta{display:flex;flex-wrap:wrap;gap:26px;margin-top:30px;font-family:var(--mono);font-size:11.5px;color:var(--ash)}
+.meta b{color:var(--bone);font-weight:400}
+nav.docs{display:flex;gap:2px;margin-top:34px;flex-wrap:wrap}
+nav.docs a{font-family:var(--mono);font-size:11px;letter-spacing:.14em;padding:9px 16px;color:var(--ash);
+  border:1px solid var(--line);text-decoration:none;transition:.16s}
+nav.docs a:hover{color:var(--brass-hi);border-color:var(--brass)}
+nav.docs a[aria-current]{color:#0e1116;background:var(--iron-hi);border-color:var(--iron-hi)}
+section{padding-top:74px}
+.shead{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--line);padding-bottom:12px}
+.snum{font-family:var(--mono);font-size:11px;color:var(--iron);letter-spacing:.2em}
+h2{font-family:var(--serif);font-weight:400;font-size:29px;color:#f2e8d2}
+.lede{margin-top:20px;max-width:790px;color:#b7b0a0}
+h3{font-family:var(--serif);font-weight:400;font-size:20px;color:var(--brass-hi);margin:40px 0 12px}
+p+p{margin-top:13px}
+code{font-family:var(--mono);font-size:.88em;color:var(--brass-hi);background:#11151c;padding:1px 5px;border:1px solid var(--line)}
+
+.plate{margin-top:26px;background:#0b0e13;border:1px solid var(--line);padding:22px 20px 16px}
+.plate svg{display:block;width:100%;height:auto}
+.plate-cap{margin-top:14px;font-family:var(--mono);font-size:11px;color:#5f6a78;line-height:1.9}
+
+.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1px;margin-top:28px;
+  background:var(--line);border:1px solid var(--line)}
+.tier{background:var(--slate);padding:24px 22px 26px;border-top:2px solid}
+.tier.n{border-color:var(--verdigris)}.tier.h{border-color:var(--ember)}.tier.m{border-color:var(--violet)}
+.tier .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;margin-bottom:8px}
+.tier.n .k{color:var(--verdigris)}.tier.h .k{color:var(--ember)}.tier.m .k{color:var(--violet)}
+.tier h4{font-family:var(--serif);font-weight:400;font-size:25px;color:#f2e8d2}
+.tier .lv{font-family:var(--mono);font-size:12px;color:var(--brass);margin-top:4px}
+.tier .when{margin-top:14px;font-family:var(--serif);font-size:16px;line-height:1.9;color:#d5ccb8}
+.tier p{font-size:13.6px;color:#a9a291;margin-top:12px}
+
+table{width:100%;border-collapse:collapse;margin-top:22px;font-size:13.5px}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--iron);
+  text-align:left;padding:9px 12px;border-bottom:1px solid var(--iron);font-weight:400;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:#b7b0a0}
+td:first-child{color:var(--bone)}
+tbody tr:hover td{background:#141821}
+.num{font-family:var(--mono);font-size:12.5px;color:var(--brass-hi);white-space:nowrap}
+.tag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:2px 7px;border:1px solid currentColor;white-space:nowrap}
+.t-n{color:var(--verdigris)}.t-h{color:var(--ember)}.t-m{color:var(--violet)}
+
+.qrow{display:grid;grid-template-columns:80px 1fr;border-top:1px solid #222833;padding:16px 0}
+.qrow:last-child{border-bottom:1px solid #222833}
+.qrow .qid{font-family:var(--mono);font-size:11px;color:var(--iron);padding-top:3px}
+.qrow h5{font-family:var(--serif);font-weight:400;font-size:18px;color:#e8e0cd;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.qrow h5 .lv{font-family:var(--mono);font-size:11px;color:var(--brass);font-weight:400}
+.qrow h5 .tgt{font-family:var(--mono);font-size:10.5px;color:#7a8494;border:1px solid var(--line);padding:2px 8px}
+.qrow p{margin-top:8px;font-size:13.8px;color:#a9a291;max-width:810px}
+.line{margin-top:14px;padding-left:16px;border-left:2px solid #3a4250;max-width:810px}
+.line .sp{font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;color:var(--brass);display:block;margin-bottom:5px}
+.line p{font-family:var(--serif);font-size:16px;line-height:1.95;color:#d5ccb8;margin:0}
+.line p+p{margin-top:8px}
+.line.boss{border-color:var(--blood)}.line.boss .sp{color:#d0604c}.line.boss p{color:#e0c8bc}
+.line.npc{border-color:#7a5c8a}.line.npc .sp{color:#b48ad0}
+.line.world{border-color:#4a5560}.line.world .sp{color:var(--iron)}.line.world p{font-style:italic;color:#b0a894}
+
+.wb{border-top:1px solid var(--line);padding:28px 0}
+.wb:last-of-type{border-bottom:1px solid var(--line)}
+.wb-hd{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.wb-hd h4{font-family:var(--serif);font-weight:400;font-size:23px;color:#f2e8d2}
+.wb-hd .tier-tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em}
+.wb-hd .where{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ash)}
+.wb p{margin-top:10px;font-size:14px;color:#a9a291;max-width:820px}
+.wb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1px;margin-top:16px;
+  background:var(--line);border:1px solid var(--line)}
+.wb-cell{background:var(--slate-2);padding:14px 15px}
+.wb-cell .k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--iron);margin-bottom:5px}
+.wb-cell .v{font-size:13.2px;color:#c3bcab}
+
+pre{margin-top:18px;background:#11151c;border:1px solid var(--line);padding:18px;overflow-x:auto;
+  font-family:var(--mono);font-size:12.4px;line-height:1.85;color:#b7b0a0}
+pre .c{color:#5f6b57}pre .k{color:var(--brass)}pre .q{color:var(--verdigris)}
+.note{margin-top:24px;border-left:2px solid var(--iron);padding:4px 0 4px 18px;color:#a9a291;font-size:14px}
+.warnbox{margin-top:24px;border-left:2px solid var(--blood);padding:4px 0 4px 18px;color:#a9a291;font-size:14px}
+footer{margin-top:100px;padding-top:26px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;color:#5f5a50;letter-spacing:.1em}
+@media (max-width:720px){.wrap{padding:0 18px 90px}.qrow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">卷宗 六 · 系统与剧本</div>
+  <h1>三　周　目<br><em>同一张地图，不同的时候</em></h1>
+  <p class="sub">难度不做成"怪血更厚"。按设定一——往下走就是往回走——三个难度是三个<b>时间位置</b>：第一遍是现在，第二遍是你造成的后果，第三遍是你已经在里面了。</p>
+  <div class="meta">
+    <span>普通 <b>1 – 60</b></span>
+    <span>地狱 <b>60 – 80</b></span>
+    <span>噩梦 <b>80 – 100</b></span>
+    <span>世界首领 <b>6 只</b></span>
+    <span>结局继承 <b>3 × 3</b></span>
+  </div>
+  <nav class="docs">
+    <a href="world-map-design.html">一 · 世界测绘</a>
+    <a href="art-asset-plan.html">二 · 美术资源</a>
+    <a href="content-roadmap.html">三 · 内容扩展</a>
+    <a href="chapter-1-script.html">四 · 第一章</a>
+    <a href="chapter-2-5-script.html">五 · 第二至五章</a>
+    <a href="#" aria-current="page">六 · 难度与世界首领</a>
+  </nav>
+</header>
+
+<section id="overview">
+  <div class="shead"><span class="snum">§ 01</span><h2>三个周目</h2></div>
+  <p class="lede">每一周目玩的是同一批地图和同一批怪，但世界的<b>状态</b>不同，NPC 说的话不同，任务是主线的镜像而不是重复。玩家重开的动力不是"再刷一遍装备"，是"我想看看我上次那个选择把这里变成了什么样"。</p>
+
+  <div class="tiers">
+    <div class="tier n">
+      <div class="k">周目 一</div><h4>普通</h4><div class="lv">LV 1 – 60 · 五章主线</div>
+      <div class="when">你来的时候，事情正在发生。</div>
+      <p>完整走完五章，在第五章末做出三选一的结局。这一遍是"调查"：你不知道下面有什么，NPC 也不打算告诉你。</p>
+      <p style="color:#7d8794;font-size:12.5px">结束条件：完成终局任意结局 → 解锁地狱</p>
+    </div>
+    <div class="tier h">
+      <div class="k">周目 二</div><h4>地狱</h4><div class="lv">LV 60 – 80 · 回响八环</div>
+      <div class="when">你回来的时候，事情已经因你而变了。</div>
+      <p>三年后（或迁镇途中，或全镇做梦的第一年——取决于你选的结局）。地图相同，状态不同。这一遍是"清算"：你会撞见自己造成的东西。</p>
+      <p style="color:#7d8794;font-size:12.5px">结束条件：击败「无名之群」终局 → 解锁噩梦</p>
+    </div>
+    <div class="tier m">
+      <div class="k">周目 三</div><h4>噩梦</h4><div class="lv">LV 80 – 100 · 名字六环</div>
+      <div class="when">你不在上面了。你在被人记得的那一层。</div>
+      <p>玩家自己成了记忆。三个年代的同一片地叠在一起随机呈现，界面上你的名字开始一个字一个字掉。这一遍是"找回自己"，也是真结局的唯一入口。</p>
+      <p style="color:#7d8794;font-size:12.5px">结束条件：把名字放进第零根 → 真结局</p>
+    </div>
+  </div>
+
+  <div class="plate">
+    <svg viewBox="0 0 1000 300" role="img" aria-label="同一座镇子的三种状态">
+      <g font-family="ui-monospace,monospace" font-size="10.5" letter-spacing="2">
+        <text x="150" y="26" text-anchor="middle" fill="#579587">普通 · 现在</text>
+        <text x="500" y="26" text-anchor="middle" fill="#d1622f">地狱 · 三年后</text>
+        <text x="850" y="26" text-anchor="middle" fill="#8a6ad0">噩梦 · 不在时间里</text>
+      </g>
+      <g stroke="#242b35"><line x1="325" y1="40" x2="325" y2="280"/><line x1="675" y1="40" x2="675" y2="280"/></g>
+
+      <!-- 普通 -->
+      <g>
+        <rect x="40" y="200" width="220" height="60" fill="#1c2129"/>
+        <g fill="#2b323d" stroke="#3a4250">
+          <rect x="60" y="160" width="52" height="42"/><rect x="130" y="150" width="60" height="52"/>
+          <rect x="206" y="168" width="44" height="34"/>
+        </g>
+        <path d="M60 160 L86 138 L112 160 Z" fill="#4a3530"/>
+        <path d="M130 150 L160 124 L190 150 Z" fill="#4a3530"/>
+        <path d="M206 168 L228 150 L250 168 Z" fill="#4a3530"/>
+        <g fill="#e8c47a"><rect x="72" y="172" width="9" height="9"/><rect x="148" y="164" width="9" height="9"/>
+          <rect x="216" y="178" width="8" height="8"/></g>
+        <rect x="142" y="200" width="36" height="80" fill="#252b34"/>
+        <text x="150" y="288" text-anchor="middle" font-family="ui-monospace,monospace" font-size="9" fill="#5f6a78">
+          灯亮着 · 三个 NPC · 桥完好</text>
+      </g>
+      <!-- 地狱 -->
+      <g>
+        <rect x="390" y="200" width="220" height="60" fill="#1c1a1a"/>
+        <g fill="#2b2626" stroke="#4a3a34">
+          <rect x="410" y="160" width="52" height="42"/><rect x="480" y="150" width="60" height="52"/>
+          <rect x="556" y="168" width="44" height="34"/>
+        </g>
+        <path d="M410 160 L436 138 L462 160 Z" fill="#3a2622"/>
+        <path d="M480 150 L510 124 L540 150 Z" fill="#3a2622"/>
+        <path d="M556 168 L578 150 L600 168 Z" fill="#2a1c1a" opacity=".5"/>
+        <g fill="#d1622f"><rect x="422" y="172" width="9" height="9"/></g>
+        <rect x="492" y="200" width="36" height="80" fill="#2a2020"/>
+        <path d="M492 236 L528 244" stroke="#a83a2b" stroke-width="2"/>
+        <g fill="#7d5a4a" opacity=".8">
+          <circle cx="440" cy="228" r="3"/><circle cx="470" cy="240" r="3"/><circle cx="560" cy="232" r="3"/>
+          <circle cx="590" cy="246" r="3"/><circle cx="410" cy="250" r="3"/>
+        </g>
+        <text x="500" y="288" text-anchor="middle" font-family="ui-monospace,monospace" font-size="9" fill="#7a5a4a">
+          半数房子空了 · 桥墩有裂 · 地表出现重演者</text>
+      </g>
+      <!-- 噩梦 -->
+      <g opacity=".92">
+        <rect x="740" y="200" width="220" height="60" fill="#1a1826"/>
+        <g fill="#242034" stroke="#3d3552">
+          <rect x="760" y="160" width="52" height="42"/><rect x="830" y="150" width="60" height="52"/>
+          <rect x="906" y="168" width="44" height="34"/>
+        </g>
+        <g fill="none" stroke="#8a6ad0" stroke-width="1" opacity=".55">
+          <rect x="766" y="152" width="52" height="42"/><rect x="824" y="158" width="60" height="52"/>
+          <rect x="900" y="160" width="44" height="34"/>
+        </g>
+        <g fill="none" stroke="#579587" stroke-width="1" opacity=".35">
+          <rect x="754" y="168" width="52" height="42"/><rect x="836" y="142" width="60" height="52"/>
+        </g>
+        <rect x="842" y="200" width="36" height="80" fill="#262038"/>
+        <text x="850" y="288" text-anchor="middle" font-family="ui-monospace,monospace" font-size="9" fill="#8177a8">
+          三个年代重叠 · NPC 说不同年代的话 · 你的名字在掉</text>
+      </g>
+    </svg>
+    <div class="plate-cap">
+      石桥镇在三个周目的同一机位。地狱难度的视觉改动全部靠<b>现有系统</b>实现：房屋材质换色、少放几盏灯、
+      改雾色、在地表刷"重演者"敌人。噩梦难度多一层——同一栋房子渲染三个错位的轮廓（三个年代叠在一起）。
+    </div>
+  </div>
+</section>
+
+<section id="remap">
+  <div class="shead"><span class="snum">§ 02</span><h2>等级重排</h2></div>
+  <p class="lede">原本五章铺在 1–80，现在压进 1–60，把 60–100 留给二三周目。压缩的办法不是砍内容，是<b>把每章的等级带收窄</b>——任务数量与剧情一字不改，只是升级曲线更陡。</p>
+
+  <table>
+    <thead><tr><th>章</th><th>标题</th><th>原等级带</th><th>新等级带（普通）</th><th>地狱回响</th><th>噩梦回响</th></tr></thead>
+    <tbody>
+      <tr><td class="num">一</td><td>钉子</td><td class="num">1 – 20</td><td class="num">1 – 12</td><td class="num">60 – 64</td><td class="num">80 – 84</td></tr>
+      <tr><td class="num">二</td><td>第八根</td><td class="num">20 – 35</td><td class="num">12 – 24</td><td class="num">64 – 68</td><td class="num">84 – 88</td></tr>
+      <tr><td class="num">三</td><td>海不认账</td><td class="num">35 – 50</td><td class="num">24 – 36</td><td class="num">68 – 72</td><td class="num">88 – 92</td></tr>
+      <tr><td class="num">四</td><td>众议既定</td><td class="num">50 – 65</td><td class="num">36 – 48</td><td class="num">72 – 76</td><td class="num">92 – 96</td></tr>
+      <tr><td class="num">五</td><td>记得自己的名字</td><td class="num">65 – 80</td><td class="num">48 – 60</td><td class="num">76 – 80</td><td class="num">96 – 100</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">升级曲线相应调整：现有 <code>xpNext = 60 × lvl^1.55</code> 在 60 级之后增长过慢，二三周目会几分钟一级。建议 60 级后换档为 <code>xpNext = 60 × lvl^1.55 × (1 + (lvl-60) × 0.06)</code>，并让地狱/噩梦的怪物经验乘以对应倍率，实测目标是每个周目 20 级约 18–22 小时。</div>
+</section>
+
+<section id="hell">
+  <div class="shead"><span class="snum">§ 03</span><h2>地狱 · 回响八环</h2></div>
+  <p class="lede">地狱难度的剧情不是重讲一遍，是<b>八段"你回来了"</b>。每一段对应普通难度的一章，回到同一个地点，看那里因为你变成了什么样。全程只有八环任务，剩下的时间给刷装备和世界首领。</p>
+
+  <h3>世界状态：由你的结局决定</h3>
+  <table>
+    <thead><tr><th>普通难度结局</th><th>地狱开场的石桥镇</th><th>关键差异</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag t-n">A · 续</span></td>
+        <td>三年后。塞琳不在了（第八根是她）。镇上有新的记账人——那个人是你。</td>
+        <td>你成了执政官。NPC 对你的称呼全部改变；账本面板归你管，你要决定第九根写谁</td></tr>
+      <tr><td><span class="tag t-n">B · 拔</span></td>
+        <td>迁镇途中。石桥镇空了，帐篷扎在西边二十里。井是干的，田不长东西。</td>
+        <td>没有固定城镇，商人跟着车队走；地下再没有重演者，取而代之的是<b>什么都没有的空层</b></td></tr>
+      <tr><td><span class="tag t-n">C · 众议重开</span></td>
+        <td>全镇做梦的第一年。人都在，但每个人都疲惫，白天走神，说话说到一半停住。</td>
+        <td>NPC 会随机说出别人的记忆；玩家可以"问梦"获取线索，但每问一次镇民精神值下降</td></tr>
+    </tbody>
+  </table>
+
+  <h3>贯穿地狱的新威胁：记忆潮</h3>
+  <p>地下装不下了。重演者开始渗到地表——白天在野外会遇到穿着不同年代衣服的死者，做着与该地点无关的动作（在荒原上划船、在海边挖土）。这不是氛围装饰，它有明确的因果：</p>
+  <div class="line world"><span class="sp">玛拉 / 或车队医士 · 地狱开场</span>
+    <p>你有没有想过，你在下面杀掉的那些东西，每杀一次它们就要重演一次。</p>
+    <p>你走了一趟，它们重演了一万次。</p>
+    <p>底下现在挤得满出来了。</p></div>
+  <p style="margin-top:14px"><b>玩家的刷怪行为被写进了剧情。</b>这是这个设定给的最大礼物——不需要额外机制，玩家在普通难度做过的每一件事都成了地狱难度的成因。</p>
+
+  <div style="margin-top:26px">
+    <div class="qrow"><div class="qid">H-01</div><div>
+      <h5>回来的人 <span class="lv">LV 60–62</span><span class="tgt">killtype · 落石荒原</span></h5>
+      <p>回荒原第一件事：你会遇见<b>第一章的你</b>——一个新手装备的重演者，走你走过的路线，砍你砍过的方向。它不会说话。杀掉它，它第二天还在。</p>
+      <div class="line world"><span class="sp">环境</span>
+        <p>它在数狼。数到八，停下，转身往镇子走。走到一半消失，然后从头开始数。</p></div>
+    </div></div>
+
+    <div class="qrow"><div class="qid">H-02</div><div>
+      <h5>空棺现在满了 <span class="lv">LV 62–64</span><span class="tgt">dungeon crypt · 地狱版</span></h5>
+      <p>墓窖的棺材不再是空的。三年里镇上死的人都埋在这儿——包括你认得的名字。塞克拉不再点名，它在<b>登记</b>。</p>
+      <div class="line boss"><span class="sp">塞克拉 · 地狱</span>
+        <p>你上次来的时候我念到你了。你没答。</p>
+        <p>现在你答不答都行。我这儿满了。</p></div>
+    </div></div>
+
+    <div class="qrow"><div class="qid">H-03</div><div>
+      <h5>钟又响了 <span class="lv">LV 64–66</span><span class="tgt">explore · 北境冰湖</span></h5>
+      <p>结局 C 的世界里，全镇每天唱诵，湖底的钟跟着共振——修道院废墟开始<b>重新长回来</b>。结局 A/B 的世界里则相反：湖面裂了，钟沉得更深。同一环任务，三种呈现。</p>
+    </div></div>
+
+    <div class="qrow"><div class="qid">H-04</div><div>
+      <h5>十一条船 <span class="lv">LV 66–69</span><span class="tgt">dungeon hulk · 地狱版</span></h5>
+      <p>格雷·维尔德不凿了。他坐在那儿，因为船已经全沉完了——三年里他终于凿完了第十一条。现在他没事干，这比他挥凿子的时候更可怕。</p>
+      <div class="line boss"><span class="sp">格雷 · 地狱</span>
+        <p>完了。</p>
+        <p>（他抬头看你。）接下来呢？</p></div>
+    </div></div>
+
+    <div class="qrow"><div class="qid">H-05</div><div>
+      <h5>账本第九行 <span class="lv">LV 69–72</span><span class="tgt">dungeon ledger · 地狱版</span></h5>
+      <p>结局 A 的分支在这里最重：账本是你的了，第九行空着，而镇上已经有人来问"轮到谁"。游戏会让玩家在面板上真的写一个名字——写谁都行，包括自己。</p>
+      <div class="line npc"><span class="sp">镇民 · 结局 A 分支</span>
+        <p>大人，我媳妇娘家姓维尔德。她嫁过来两年了。</p>
+        <p>（他不敢看你。）您看，够格吗？</p></div>
+    </div></div>
+
+    <div class="qrow"><div class="qid">H-06</div><div>
+      <h5>顶到上面来了 <span class="lv">LV 72–75</span><span class="tgt">世界首领 · 无名之群 前置</span></h5>
+      <p>记忆潮在三张野外图同时爆发。这一环是压力测试关：三个区域各守住一处，撑够时间。失败不会卡进度，但会永久损失该区域的一个 NPC 服务点。</p>
+    </div></div>
+
+    <div class="qrow"><div class="qid">H-07</div><div>
+      <h5>还剩几个人记得 <span class="lv">LV 75–78</span><span class="tgt">explore · 全区域</span></h5>
+      <p>挨个去问还活着的人记不记得某件事。答案会一次比一次含糊——遗忘已经开始了，而且是从活人身上开始的。</p>
+      <div class="line npc"><span class="sp">卡登 · 地狱后段</span>
+        <p>我姓什么来着。</p>
+        <p>（他笑了一下。）跟你开玩笑的。……不是玩笑。</p></div>
+    </div></div>
+
+    <div class="qrow"><div class="qid">H-08</div><div>
+      <h5>无名之群 <span class="lv">LV 78–80</span><span class="tgt">终局 · 世界首领</span></h5>
+      <p>地狱终局。所有被顶上来的重演者叠成一个几十米高的形体，站在桥上。它不攻击镇子，它在<b>找一个能记得它们的人</b>。打赢它不会让它消失——它会散开，然后钻进你身体里。</p>
+      <div class="line boss"><span class="sp">无名之群</span>
+        <p>（无数声音同时说同一句，但错开半拍）<br>我叫什么。我叫什么。我叫什么。</p>
+        <p>（战斗结束）……你记得。那就先放你这儿。</p></div>
+      <div class="line world"><span class="sp">地狱结束 · 黑场</span>
+        <p>你没有死。你只是从那天起，开始做别人的梦。</p>
+        <p>第二个月，镇上的人开始叫不出你的名字。</p></div>
+    </div></div>
+  </div>
+</section>
+
+<section id="nightmare">
+  <div class="shead"><span class="snum">§ 04</span><h2>噩梦 · 名字六环</h2></div>
+  <p class="lede">第三周目玩家已经不是"活人在探索"了——你被记住了，所以你在里面。这一周目的核心机制是一个界面魔术：<b>你的名字会掉字</b>。</p>
+
+  <h3>核心机制 · 掉名</h3>
+  <pre><span class="c">// 进入噩梦难度时，玩家角色名被拆成字符数组</span>
+P.trueName   = <span class="q">"流浪者"</span>;              <span class="c">// 或玩家自定义名</span>
+P.nameMask   = [<span class="k">true</span>, <span class="k">true</span>, <span class="k">true</span>];    <span class="c">// 每个字是否还"记得"</span>
+
+<span class="c">// 每过 8 分钟游戏时间，随机掉一个字（UI 上变成 ？）</span>
+<span class="c">// 掉光之后：角色面板标题变成「？？？」，NPC 不再称呼你，任务追踪不再显示"你"</span>
+<span class="c">// 找回方式：完成噩梦任务、击败世界首领、在正确的地点回忆</span>
+
+<span class="k">function</span> renderName() {
+  <span class="k">return</span> P.trueName.split(<span class="q">''</span>).map((c,i) => P.nameMask[i] ? c : <span class="q">'？'</span>).join(<span class="q">''</span>);
+}
+<span class="c">// 全部掉光且 30 分钟内未找回 → 强制回到镇上，损失一次"完整记忆"（可重来，但结局评级下降）</span></pre>
+
+  <p style="margin-top:14px">这个机制便宜、可实现，而且和主题严丝合缝——柯尔在第五章说过："下面最先没的就是名字。"玩家在噩梦难度亲身经历一次。</p>
+
+  <h3>世界规则：三个年代叠在一起</h3>
+  <table>
+    <thead><tr><th>表现</th><th>实现方式</th></tr></thead>
+    <tbody>
+      <tr><td>同一区域随机呈现三个年代之一</td><td>进图时掷一次：现在 / 四十年前 / 三百年前，各自换一套色板、阻挡物样式、怪物表</td></tr>
+      <tr><td>建筑有三重错位轮廓</td><td>同一栋建筑渲染三次，两次为半透明线框、位置各偏移 0.6 单位</td></tr>
+      <tr><td>NPC 说不同年代的话</td><td>对白池里混入他们在前两个周目说过的句子，随机抽取</td></tr>
+      <tr><td>怪物混代</td><td>同一批房间里同时出现骷髅（三百年前）、溺亡者（一百二十年前）、重演者（三年前）</td></tr>
+      <tr><td>地图偶尔"跳帧"</td><td>玩家走过某处时，短暂切换成另一年代的该处，再切回来</td></tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top:26px">
+    <div class="qrow"><div class="qid">N-01</div><div>
+      <h5>第一个字 <span class="lv">LV 80–84</span><span class="tgt">explore · 石桥镇（三重）</span></h5>
+      <p>开场你的名字已经掉了一个字。镇上的人看着你，说不出称呼。第一个字要在<b>第一次有人叫你名字的地方</b>找回——也就是普通难度第一环，塞琳雇你的那张桌子前。</p>
+      <div class="line npc"><span class="sp">塞琳（哪个年代的她说不清）</span>
+        <p>你走过桥了。桥费是干活抵的。</p>
+        <p>（她抬头。）……我认得你。我不认得你的名字。</p></div>
+    </div></div>
+
+    <div class="qrow"><div class="qid">N-02</div><div>
+      <h5>别人的梦 <span class="lv">LV 84–88</span><span class="tgt">killtype · 混代怪</span></h5>
+      <p>你开始做他们的梦。任务是在梦里替七个死者完成他们没完成的动作（爬完那四阶楼梯、凿完那块板、唱完那一段）。完成一个，你想起一点自己。</p>
+    </div></div>
+
+    <div class="qrow"><div class="qid">N-03</div><div>
+      <h5>第零根的主人 <span class="lv">LV 88–92</span><span class="tgt">dungeon · 湖底之下</span></h5>
+      <p>比柯尔更早的那批人留下的东西。他们不写字，用的是别的方式记事——地上刻的圈、石头摆的阵、一段没人会唱的调子。这里没有敌人，只有解读。</p>
+      <div class="line world"><span class="sp">石阵 · 释读之后</span>
+        <p>他们的办法不是钉。是每年选一个人，把这一年的事全记下来，然后<b>说给所有人听</b>。<br>
+        听过的人，就都记得了。</p></div>
+    </div></div>
+
+    <div class="qrow"><div class="qid">N-04</div><div>
+      <h5>三个卡登 <span class="lv">LV 92–95</span><span class="tgt">explore · 全区域</span></h5>
+      <p>同一个人的三个年代同时存在：要塞里做工的少年卡登、镇上的铁匠卡登、迁镇路上关灯的老卡登。他们互相看不见。你要让三个人各说一句话，凑成完整的一句。</p>
+      <div class="line npc"><span class="sp">三个卡登 · 拼合</span>
+        <p>（少年）「我家在这儿等了……」<br>（铁匠）「……三百年，总得……」<br>（老人）「……有人留下来关灯。」</p></div>
+    </div></div>
+
+    <div class="qrow"><div class="qid">N-05</div><div>
+      <h5>最后一个字 <span class="lv">LV 95–98</span><span class="tgt">世界首领 · 第九根</span></h5>
+      <p>名字的最后一个字在"第九根"手里——那根还没钉下去的钉子，悬在裂隙上方，一直在找人。它认得你，因为账本上写过你。</p>
+    </div></div>
+
+    <div class="qrow"><div class="qid">N-06</div><div>
+      <h5>真结局 · 说给所有人听 <span class="lv">LV 98–100</span><span class="tgt">终局</span></h5>
+      <p>回到第零根的空洞前。你手里有三样东西：找回的名字、七个死者的记忆、第零根主人的方法。你要做的不是钉进去，是<b>把这一切说出来</b>——对着镇子，对着地下，对着还没出生的人。</p>
+      <div class="line boss"><span class="sp">柯尔 · 最后一次</span>
+        <p>你要说多久？</p>
+        <p>（你说：一直说。）……那就一直说吧。<br>我当年要是知道有这么麻烦的办法，也许就不拔了。</p></div>
+      <div class="line world"><span class="sp">真结局 · 尾声</span>
+        <p>没有人被钉下去。也没有人可以停下来。</p>
+        <p>石桥镇每年选一个人，把这一年的事记全，然后在广场上说给所有人听。<br>说完了，第二年换一个人。</p>
+        <p>他们管这个叫"记账"。他们已经忘了这个词原来是什么意思了——<br>但只要还在说，就不算忘。</p></div>
+    </div></div>
+  </div>
+
+  <div class="warnbox">噩梦难度有一条必须守住的底线：<b>玩家永远可以退出</b>。掉名机制在设计上要给足容错——名字掉光只是回镇 + 结局评级下降，不允许出现"删档""无法继续"这类不可逆惩罚。恐怖感来自氛围，不来自剥夺玩家的进度。</div>
+</section>
+
+<section id="worldboss">
+  <div class="shead"><span class="snum">§ 05</span><h2>世界首领</h2></div>
+  <p class="lede">六只，分布在三个难度。世界首领与副本首领的区别：它们<b>在野外地图上活动</b>、定时出现、不会因为你走开而消失、打不过可以放弃（它不追你，它有自己的事要做）。它们也是唯一掉落顶级符文与套装终件的来源。</p>
+
+  <h3>通用规则</h3>
+  <table>
+    <thead><tr><th>项</th><th>规则</th></tr></thead>
+    <tbody>
+      <tr><td>出现</td><td>每 25 分钟游戏时间，在其所属区域随机一处出现，持续 10 分钟后离开</td></tr>
+      <tr><td>预告</td><td>出现前 30 秒全局提示 + 小地图闪烁标记 + 环境变化（天色 / 音效）</td></tr>
+      <tr><td>血量</td><td>该难度同级首领的 6–10 倍，分 3 阶段，每阶段换机制</td></tr>
+      <tr><td>失败</td><td>玩家死亡不影响首领进度；首领血量在离开时重置。没有"团灭惩罚"</td></tr>
+      <tr><td>掉落</td><td>必掉 1 件传奇 + 1 枚高阶符文；首杀额外给套装终件与图鉴条目</td></tr>
+      <tr><td>叙事</td><td>每只都在做一件与主线相关的事，不是纯数值靶子——玩家看它在干什么就能读到信息</td></tr>
+    </tbody>
+  </table>
+
+  <div class="wb">
+    <div class="wb-hd"><span class="tier-tag t-n">普通</span><h4>载石者 · 阿姆</h4>
+      <span class="where">落石荒原 · LV 30</span></div>
+    <p>一个背着界碑走路的巨型石人。它在把第一座镇子的界碑一块一块搬回原位——三百年了，还差最后一块。它不主动攻击，除非你挡在它要走的路线上（而那条路线正好穿过整张地图）。</p>
+    <div class="wb-grid">
+      <div class="wb-cell"><div class="k">阶段一</div><div class="v">它继续走。你必须在它移动时输出，攻击会被背上的碑挡掉一部分</div></div>
+      <div class="wb-cell"><div class="k">阶段二</div><div class="v">放下碑，用碑砸地，产生直线冲击波</div></div>
+      <div class="wb-cell"><div class="k">阶段三</div><div class="v">重新背起碑，加速前进——限时，跑出地图就算失败</div></div>
+      <div class="wb-cell"><div class="k">掉落</div><div class="v">套装「石桥守望」肩部 · 余烬符文 · 图鉴「界碑的下落」</div></div>
+    </div>
+    <div class="line boss"><span class="sp">阿姆（它不说话，碑上有字）</span>
+      <p>「凡越此碑者，自负。」</p></div>
+  </div>
+
+  <div class="wb">
+    <div class="wb-hd"><span class="tier-tag t-n">普通</span><h4>潮　信</h4>
+      <span class="where">沉船海岸 · LV 45 · 仅涨潮时</span></div>
+    <p>一团有人形轮廓的巨大水体，涨潮时从海里走上来，退潮时回去。它体内能看见十一条船的碎片和人影。它每次上岸都会往同一个方向走三十步——那是当年逃亡者的家的方向。</p>
+    <div class="wb-grid">
+      <div class="wb-cell"><div class="k">阶段一</div><div class="v">水体形态，物理伤害减免 70%，需用技能击碎表层</div></div>
+      <div class="wb-cell"><div class="k">阶段二</div><div class="v">分裂成十一个小水人，各自走向不同方向，必须在它们汇合前清掉</div></div>
+      <div class="wb-cell"><div class="k">阶段三</div><div class="v">退潮倒计时，它开始撤退，此阶段伤害加成 100%</div></div>
+      <div class="wb-cell"><div class="k">掉落</div><div class="v">套装「暮语猎手」胸甲 · 饥渴符文 · 图鉴「第十一条船」</div></div>
+    </div>
+  </div>
+
+  <div class="wb">
+    <div class="wb-hd"><span class="tier-tag t-h">地狱</span><h4>无名之群</h4>
+      <span class="where">石桥镇桥面 · LV 78 · 地狱终局兼常驻</span></div>
+    <p>地狱难度的终局首领，通关后转为常驻世界首领。几十米高，由无数重演者叠成，形状一直在变——因为里面的人一直在做各自的动作。它站在桥上不动，只是不停地问同一个问题。</p>
+    <div class="wb-grid">
+      <div class="wb-cell"><div class="k">阶段一</div><div class="v">它不动。你要清掉从它身上不断掉下来的重演者，清够数量才能伤到本体</div></div>
+      <div class="wb-cell"><div class="k">阶段二</div><div class="v">它开始说名字——说到你认得的名字时，对应的死者会单独出来打你</div></div>
+      <div class="wb-cell"><div class="k">阶段三</div><div class="v">它伸手扶桥。桥开始塌，玩家要边打边把镇民往岸上引（护送）</div></div>
+      <div class="wb-cell"><div class="k">掉落</div><div class="v">神器级护身符「一万次重演」· 三枚随机高阶符文 · 解锁噩梦难度</div></div>
+    </div>
+    <div class="line boss"><span class="sp">无名之群</span>
+      <p>我叫什么。我叫什么。我叫什么。</p></div>
+  </div>
+
+  <div class="wb">
+    <div class="wb-hd"><span class="tier-tag t-h">地狱</span><h4>不肯散的商队</h4>
+      <span class="where">流动 · 三张野外图轮换 · LV 70</span></div>
+    <p>结局 B（拔）分支专属：迁镇途中失散的一支车队，走在错误的方向上，一直在往回走。它们不知道镇子已经空了。若玩家选的是 A 或 C，这只世界首领替换为「守夜的一整队人」——三年里死在记忆潮里的镇民。</p>
+    <div class="wb-grid">
+      <div class="wb-cell"><div class="k">特点</div><div class="v">移动型首领，边走边打，玩家要跟着它跑完一段路</div></div>
+      <div class="wb-cell"><div class="k">机制</div><div class="v">车上的箱子可打碎，每碎一个削弱它一层护盾，但也掉一件战利品——贪或稳的取舍</div></div>
+      <div class="wb-cell"><div class="k">掉落</div><div class="v">套装终件（随职业） · 重铸材料 · 图鉴「他们要去哪儿」</div></div>
+    </div>
+  </div>
+
+  <div class="wb">
+    <div class="wb-hd"><span class="tier-tag t-m">噩梦</span><h4>第九根</h4>
+      <span class="where">裂隙上方 · 全地图可见 · LV 96</span></div>
+    <p>一根悬在半空、还没钉下去的钉子。它在找人。玩家在噩梦难度的任何地方抬头都能看见它——它会慢慢转向你所在的方向。名字的最后一个字在它那里。</p>
+    <div class="wb-grid">
+      <div class="wb-cell"><div class="k">阶段一</div><div class="v">它下落。你要在它落地前打断三次，每次打断需要在指定位置</div></div>
+      <div class="wb-cell"><div class="k">阶段二</div><div class="v">它开始念候选人名单——念到的人（NPC）会当场倒下，你要抢在念完前打断</div></div>
+      <div class="wb-cell"><div class="k">阶段三</div><div class="v">它念你的名字。此时你的名字若已掉光，它直接钉下来（战斗失败）；若名字完整，你可以答"不"</div></div>
+      <div class="wb-cell"><div class="k">掉落</div><div class="v">名字最后一字 · 神器「没钉下去的那根」· 真结局前置</div></div>
+    </div>
+    <div class="line boss"><span class="sp">第九根</span>
+      <p>（它念的是账本上的顺序）<br>……卡登。玛拉。塞琳。</p>
+      <p>（停顿。）你。</p></div>
+  </div>
+
+  <div class="wb">
+    <div class="wb-hd"><span class="tier-tag t-m">噩梦</span><h4>空　白</h4>
+      <span class="where">随机 · 任意区域 · LV 100</span></div>
+    <p>最难的一只，也是最不像首领的一只：一片<b>什么都没有</b>的区域，在地图上缓慢移动。被它覆盖的地方，怪物、道具、地形全部消失，玩家的技能图标一个个变灰，UI 逐渐空白。它没有血条——你打的是"记得"这件事本身。</p>
+    <div class="wb-grid">
+      <div class="wb-cell"><div class="k">机制</div><div class="v">进入范围后每 10 秒失去一个技能栏。要靠剩下的技能撑到它移开</div></div>
+      <div class="wb-cell"><div class="k">伤害方式</div><div class="v">对着空白使用"回忆"（新增互动键），说出一件你做过的事，空白就缩小一点</div></div>
+      <div class="wb-cell"><div class="k">内容来源</div><div class="v">可回忆的事项来自玩家真实的存档记录：击杀数、通关的副本、交过的任务</div></div>
+      <div class="wb-cell"><div class="k">掉落</div><div class="v">神器级戒指「还记得」· 图鉴终章 · 成就「一直说」</div></div>
+    </div>
+    <div class="line world"><span class="sp">空白 · 无台词</span>
+      <p>（它不发出任何声音。战斗中所有背景音会逐渐消失，包括你自己的脚步声。）</p></div>
+  </div>
+
+  <div class="note">六只里有四只的核心机制都<b>不是纯输出</b>——搬碑的要卡走位、潮信要分头处理、第九根要打断、空白要用回忆。这样做的原因很简单：世界首领是玩家在一个难度里会打几十遍的东西，如果只是血厚，二十遍之后就变成纯粹的时间消耗。</div>
+</section>
+
+<section id="numbers">
+  <div class="shead"><span class="snum">§ 06</span><h2>数值与实现</h2></div>
+  <p class="lede">难度层不新增系统，只是给现有公式加一组乘数，外加一个抗性维度——没有抗性的话，三个难度的区别只会是"打得更久"。</p>
+
+  <table>
+    <thead><tr><th>项</th><th>普通</th><th>地狱</th><th>噩梦</th></tr></thead>
+    <tbody>
+      <tr><td>怪物生命</td><td class="num">×1.0</td><td class="num">×4.5</td><td class="num">×14</td></tr>
+      <tr><td>怪物伤害</td><td class="num">×1.0</td><td class="num">×3.0</td><td class="num">×7.5</td></tr>
+      <tr><td>怪物经验</td><td class="num">×1.0</td><td class="num">×3.5</td><td class="num">×9</td></tr>
+      <tr><td>精英出现率</td><td class="num">9% + 1.2%/层</td><td class="num">18% + 1.5%/层</td><td class="num">30% + 2%/层</td></tr>
+      <tr><td>玩家全抗性</td><td class="num">0</td><td class="num">−40</td><td class="num">−90</td></tr>
+      <tr><td>掉落品质上限</td><td class="num">传奇</td><td class="num">神器</td><td class="num">神器 + 套装终件</td></tr>
+      <tr><td>符文等级</td><td class="num">1 – 2 阶</td><td class="num">2 – 3 阶</td><td class="num">3 – 4 阶</td></tr>
+      <tr><td>物品等级</td><td class="num">= 怪物等级</td><td class="num">+3</td><td class="num">+6</td></tr>
+    </tbody>
+  </table>
+
+  <h3>抗性维度（配套 v3.2 引入）</h3>
+  <p>加四种伤害类型：物理 / 火 / 冰 / 暗影。怪物按类型分配伤害来源，装备提供对应抗性词缀。难度惩罚直接作用在玩家抗性基线上，这样"地狱难度要堆抗性"就成了真实的构筑目标，而不是纯粹的数值墙。</p>
+
+  <pre><span class="c">// 难度状态挂在存档上，进图时统一取用</span>
+W.diff = <span class="q">"hell"</span>;   <span class="c">// "normal" | "hell" | "nightmare"</span>
+
+<span class="k">const</span> DIFF = {
+  normal:    { hp:1,   dmg:1,   xp:1,   elite:0,    res:0,   ilvl:0, tag:<span class="q">"普通"</span> },
+  hell:      { hp:4.5, dmg:3,   xp:3.5, elite:.09,  res:-40, ilvl:3, tag:<span class="q">"地狱"</span> },
+  nightmare: { hp:14,  dmg:7.5, xp:9,   elite:.21,  res:-90, ilvl:6, tag:<span class="q">"噩梦"</span> }
+};
+
+<span class="c">// spawnEnemy 里只改三行</span>
+<span class="k">const</span> D = DIFF[W.diff];
+e.hpMax = Math.round(t.hp * mult * (elite?2.4:1) * D.hp);
+e.dmg   = [ ...原值.map(v => Math.round(v * D.dmg)) ];
+e.xp    = Math.round(t.xp * mult * D.xp);
+
+<span class="c">// 世界首领调度器：独立于区域生成，跟随游戏时间</span>
+<span class="k">const</span> WORLD_BOSSES = [
+  { id:<span class="q">"amu"</span>,   area:<span class="q">"waste"</span>, diff:[<span class="q">"normal"</span>,<span class="q">"hell"</span>], lvl:30, every:25*60, window:10*60 },
+  { id:<span class="q">"tide"</span>,  area:<span class="q">"shore"</span>, diff:[<span class="q">"normal"</span>,<span class="q">"hell"</span>], lvl:45, every:25*60, window:10*60, cond:<span class="q">"hightide"</span> },
+  { id:<span class="q">"swarm"</span>, area:<span class="q">"town"</span>,  diff:[<span class="q">"hell"</span>],            lvl:78, every:30*60, window:12*60 },
+  { id:<span class="q">"nail9"</span>, area:<span class="q">"*"</span>,     diff:[<span class="q">"nightmare"</span>],       lvl:96, every:35*60, window:15*60 },
+  { id:<span class="q">"void"</span>,  area:<span class="q">"*"</span>,     diff:[<span class="q">"nightmare"</span>],       lvl:100,every:40*60, window:12*60 }
+];
+<span class="c">// 到点 → 全局提示 + 小地图标记 + 在该区域随机可站立点 spawnEnemy(worldboss)
+// 离开 → 移除实体并重置血量，不留残血给玩家蹭</span></pre>
+
+  <h3>排期建议</h3>
+  <table>
+    <thead><tr><th>版本</th><th>内容</th><th>前置</th><th>估时</th></tr></thead>
+    <tbody>
+      <tr><td>v3.1</td><td>存档（多周目的前提）</td><td>—</td><td class="num">2 人日</td></tr>
+      <tr><td>v3.2</td><td>抗性四维 + 难度乘数 + 难度选择界面</td><td>存档</td><td class="num">2 人日</td></tr>
+      <tr><td>v3.4</td><td>世界首领调度器 + 前两只（阿姆 / 潮信）</td><td>难度系统</td><td class="num">3 人日</td></tr>
+      <tr><td>v4.1</td><td>地狱难度：世界状态三分支 + 回响八环 + 无名之群</td><td>五章主线完成</td><td class="num">6 人日</td></tr>
+      <tr><td>v4.2</td><td>噩梦难度：掉名机制 + 三代叠加渲染 + 名字六环</td><td>地狱</td><td class="num">7 人日</td></tr>
+      <tr><td>v4.3</td><td>第九根 / 空白 + 真结局</td><td>噩梦</td><td class="num">4 人日</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">优先级判断：<b>世界首领可以提前做</b>（v3.4，不依赖剧情），因为它给普通难度的中后期提供了明确的追求目标；而地狱与噩梦必须等五章主线全部完成——它们的全部叙事重量都建立在"你上次做了什么"之上，主线没走完，这个前提不存在。</div>
+</section>
+
+<footer>幽影深渊 · 卷宗六 / 难度分层与世界首领　—　三周目共约 60 小时主线，世界首领常驻</footer>
+</div>
+</body>
+</html>

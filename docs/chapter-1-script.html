@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>幽影深渊 · 第一章剧本</title>
+<style>
+:root{
+  --ink:#0e1116; --slate:#161a21; --slate-2:#1b2028; --line:#2b3240;
+  --iron:#7d8794; --iron-hi:#b4bfcc;
+  --brass:#c39a4e; --brass-hi:#ecd39a; --bone:#cfc7b4; --ash:#8b8477;
+  --blood:#a83a2b; --ember:#d1622f; --verdigris:#579587; --violet:#8a6ad0;
+  --ok:#5f9e86; --part:#c39a4e; --gap:#a83a2b;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,"Songti SC",serif;
+  --sans:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Courier New",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--bone);font-family:var(--sans);font-size:15px;line-height:1.78;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 66% 38% at 50% -8%,rgba(195,154,78,.10),transparent 66%)}
+.wrap{position:relative;z-index:1;max-width:1150px;margin:0 auto;padding:0 28px 130px}
+header{padding:78px 0 46px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.34em;color:var(--iron);text-transform:uppercase}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(38px,6.4vw,70px);line-height:1.02;color:#f2e8d2;margin:18px 0 0}
+h1 em{font-style:italic;color:var(--brass-hi)}
+.sub{margin-top:20px;max-width:700px;color:var(--ash);font-size:15.5px}
+.meta{display:flex;flex-wrap:wrap;gap:26px;margin-top:30px;font-family:var(--mono);font-size:11.5px;color:var(--ash)}
+.meta b{color:var(--bone);font-weight:400}
+nav.docs{display:flex;gap:2px;margin-top:34px;flex-wrap:wrap}
+nav.docs a{font-family:var(--mono);font-size:11px;letter-spacing:.14em;padding:9px 16px;color:var(--ash);
+  border:1px solid var(--line);text-decoration:none;transition:.16s}
+nav.docs a:hover{color:var(--brass-hi);border-color:var(--brass)}
+nav.docs a[aria-current]{color:#0e1116;background:var(--iron-hi);border-color:var(--iron-hi)}
+section{padding-top:74px}
+.shead{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--line);padding-bottom:12px}
+.snum{font-family:var(--mono);font-size:11px;color:var(--iron);letter-spacing:.2em}
+h2{font-family:var(--serif);font-weight:400;font-size:29px;color:#f2e8d2}
+.lede{margin-top:20px;max-width:810px;color:#b7b0a0}
+h3{font-family:var(--serif);font-weight:400;font-size:21px;color:var(--brass-hi);margin:40px 0 12px}
+h4.sub-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;color:var(--iron);margin:26px 0 10px;font-weight:400}
+p+p{margin-top:13px}
+code{font-family:var(--mono);font-size:.88em;color:var(--brass-hi);background:#11151c;padding:1px 5px;border:1px solid var(--line)}
+
+.plate{margin-top:26px;background:#0b0e13;border:1px solid var(--line);padding:22px 20px 16px}
+.plate svg{display:block;width:100%;height:auto}
+.plate-cap{margin-top:14px;font-family:var(--mono);font-size:11px;color:#5f6a78;line-height:1.9}
+
+table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13.5px}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--iron);
+  text-align:left;padding:9px 12px;border-bottom:1px solid var(--iron);font-weight:400;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:#b7b0a0}
+td:first-child{color:var(--bone)}
+tbody tr:hover td{background:#141821}
+.num{font-family:var(--mono);font-size:12.5px;color:var(--brass-hi);white-space:nowrap}
+.st{font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:2px 8px;border:1px solid currentColor;white-space:nowrap}
+.s-ok{color:var(--ok)}.s-part{color:var(--part)}.s-gap{color:var(--gap)}.s-no{color:#5f6a78}
+
+.beat{border-top:1px solid var(--line);padding:28px 0}
+.beat:last-of-type{border-bottom:1px solid var(--line)}
+.beat-hd{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.beat-hd .rank{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--verdigris)}
+.beat-hd h4{font-family:var(--serif);font-weight:400;font-size:23px;color:#f2e8d2}
+.beat-hd .loc{font-family:var(--mono);font-size:10.5px;color:#6f7a88;border:1px solid var(--line);padding:2px 8px}
+.beat-hd .est{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ash)}
+.beat p{margin-top:11px;max-width:850px;color:#a9a291;font-size:14.2px}
+.beat .lore{margin-top:14px;border-left:2px solid var(--verdigris);padding:3px 0 3px 16px;
+  font-size:13.8px;color:#9db5ab}
+.beat .lore b{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--verdigris);
+  display:block;margin-bottom:4px;font-weight:400}
+
+.script{margin-top:18px;border-left:2px solid var(--line);padding-left:18px}
+.script .who{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--brass);margin-top:14px}
+.script .line{color:#c8c1af;font-size:14.4px;margin-top:2px}
+.script .stage{color:#6f7a88;font-size:13px;font-style:italic;margin-top:10px}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:16px}
+.grid2 h5{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--brass);margin-bottom:8px}
+.grid2 ul{margin-left:16px;font-size:13.4px;color:#a9a291}
+.grid2 li{margin-top:5px}
+.note{margin-top:24px;border-left:2px solid var(--iron);padding:4px 0 4px 18px;color:#a9a291;font-size:14px}
+.warnbox{margin-top:24px;border-left:2px solid var(--blood);padding:4px 0 4px 18px;color:#a9a291;font-size:14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:1px;margin-top:26px;
+  background:var(--line);border:1px solid var(--line)}
+.card{background:var(--slate);padding:20px}
+.card h4{font-family:var(--serif);font-weight:400;font-size:18px;color:#f2e8d2}
+.card .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--brass);margin-bottom:9px}
+.card p{font-size:13.5px;color:#a9a291;margin-top:8px}
+footer{margin-top:100px;padding-top:26px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;color:#5f5a50;letter-spacing:.1em}
+@media (max-width:760px){.wrap{padding:0 18px 90px}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">卷宗 四 · 第一章</div>
+  <h1>你来这儿<br><em>是为了想起一个名字</em></h1>
+  <p class="sub">第一章是整个故事的地基：它要在两小时内让玩家理解三件事——往下走就是往回走、怪物是没被说出口的记忆、名字会一点点掉。剧本按可玩节拍写，每一段都对应世界测绘卷宗里的一处实景。</p>
+  <div class="meta">
+    <span>章节 <b>第一章 · 石桥镇之下</b></span>
+    <span>等级带 <b>1 → 8</b></span>
+    <span>区域 <b>石桥镇 · 落石荒原 · 哭嚎墓窖</b></span>
+    <span>首领 <b>塞克拉</b></span>
+    <span>时长 <b>约 2 小时</b></span>
+  </div>
+  <nav class="docs">
+    <a href="world-map-design.html">一 · 世界测绘</a>
+    <a href="art-asset-plan.html">二 · 美术资源</a>
+    <a href="content-roadmap.html">三 · 内容扩展</a>
+    <a href="#" aria-current="page">四 · 第一章</a>
+    <a href="chapter-2-5-script.html">五 · 第二至五章</a>
+    <a href="difficulty-worldboss.html">六 · 难度与世界首领</a>
+    <a href="boss-loot-design.html">七 · 首领与掉落</a>
+    <a href="diablo-gap-analysis.html">八 · 对标暗黑</a>
+  </nav>
+</header>
+
+<section id="premise">
+  <div class="shead"><span class="snum">§ 01</span><h2>一章要交代的三件事</h2></div>
+  <p class="lede">第一章不讲大反派，也不急着抛世界观。它只需要把三条底层规则用玩家<b>亲身经历</b>的方式立起来——立住了，后面四章都省事；立不住，整个设定就散了。</p>
+
+  <div class="cards">
+    <div class="card"><div class="k">规则 一</div><h4>往下走就是往回走</h4>
+      <p>裂隙不是空间意义上的"更深"，是时间意义上的"更早"。越往下，遇见的东西越旧、越接近某个人还没忘掉的过去。玩家第一次下墓窖时，脚下的台阶会写着一个越来越久远的年份。</p></div>
+    <div class="card"><div class="k">规则 二</div><h4>怪物是没说出口的记忆</h4>
+      <p>它们不是恶魔，是<b>重演者</b>——某个死者生前反复做的一件事，没人替他说出来，于是自己一遍遍演。塞克拉不攻击你，她只是在找孩子；是你挡了路。</p></div>
+    <div class="card"><div class="k">规则 三</div><h4>名字会掉</h4>
+      <p>在这座镇上待得越久、下得越深，你就越记不住东西。第一章结尾，玩家会第一次经历"某个 NPC 忘了你叫什么"——轻描淡写，但它是后面所有机制的情绪源头。</p></div>
+  </div>
+
+  <div class="note">写作纪律：<b>第一章绝不解释"为什么"</b>。不解释镇子为什么在忘、裂隙从哪来、名字掉去了哪里。只呈现现象，让玩家自己起疑。答案分散在后四章，能撑多久撑多久——这是这个故事最值钱的部分。</div>
+</section>
+
+<section id="open">
+  <div class="shead"><span class="snum">§ 02</span><h2>序幕 · 到达</h2></div>
+  <p class="lede">开场三分钟，无战斗。玩家从东门外的石桥走进镇子，镜头压得很低，只看得见脚边一圈。这里第一次演示<b>光照半径</b>——你看不清远处，正如镇上的人看不清过去。</p>
+
+  <div class="script">
+    <div class="stage">石桥。雨刚停。玩家走过桥面，桥头坐着一个老人，面前摆着一块写满名字的木牌，大半已经被划掉。</div>
+    <div class="who">桥头老人</div>
+    <div class="line">"进城的？……那你先在这儿写个名字。"</div>
+    <div class="line">"不是给我看的。是给你自己——等你哪天想不起来了，回来这儿念一遍。"</div>
+    <div class="stage">（玩家输入角色名。老人把名字刻上木牌，动作很慢。）</div>
+    <div class="who">桥头老人</div>
+    <div class="line">"刻上了。别谢我。这镇子留不住东西，木头能留住几天算几天。"</div>
+  </div>
+
+  <div class="lore" style="margin-top:22px;border-left:2px solid var(--verdigris);padding:3px 0 3px 16px;font-size:13.8px;color:#9db5ab">
+    <b>设计意图</b>
+    角色命名被包装成剧情动作，而不是一个菜单。木牌是<b>存档点</b>的实体化——回到桥头"念一遍名字"就是读档。这一处把系统和世界观焊死在一起，玩家不会意识到自己在存档。
+  </div>
+</section>
+
+<section id="town">
+  <div class="shead"><span class="snum">§ 03</span><h2>石桥镇 · 三个人</h2></div>
+  <p class="lede">进镇后是自由探索段。三位 NPC 各自把一套系统教给玩家，同时把"这镇子在忘"这件事从三个角度铺开。台词要短，信息要靠潜台词。</p>
+
+  <div class="beat">
+    <div class="beat-hd"><span class="rank">NPC · 北轴</span><h4>执政官 塞琳</h4>
+      <span class="loc">石桥镇 (0, −18)</span><span class="est">主线派发</span></div>
+    <p>压在广场正北的轴线上，是玩家进镇后第一个会走向的人。她派发第一章主线，语气克制、疲惫，像一个已经送走太多人的管理者。</p>
+    <div class="script">
+      <div class="who">塞琳</div>
+      <div class="line">"又一个往下走的。我不拦你，拦不住。"</div>
+      <div class="line">"东边荒原上有伙强盗，最近不对劲——他们不抢东西了，只是站在那儿，念叨。你去看看。顺手，把能带回来的名字带回来。"</div>
+      <div class="who">玩家（可选）</div>
+      <div class="line">"什么叫'带回名字'？"</div>
+      <div class="who">塞琳</div>
+      <div class="line">"你会懂的。所有到这儿的人最后都懂了。……可惜，懂了就留不下了。"</div>
+    </div>
+  </div>
+
+  <div class="beat">
+    <div class="beat-hd"><span class="rank">NPC · 西侧</span><h4>药剂商 玛拉</h4>
+      <span class="loc">石桥镇 (18, −8)</span><span class="est">教学：回想</span></div>
+    <p>教会玩家<b>回想</b>（鉴定）机制。她配的药治的是"遗忘"，所以由她来替玩家"想起"从地下带上来的东西，人设与机制完全咬合。</p>
+    <div class="script">
+      <div class="who">玛拉</div>
+      <div class="line">"从下面带上来的？给我看看。……你自己是想不起它是什么的，对吧。"</div>
+      <div class="line">"正常。地下的东西上来都这样。我替你想——免费，但你得跑这一趟。急的话，拿张回想的纸条自己来，六十金一张。"</div>
+      <div class="stage">（首次交互后解锁"回想的纸条"，并把玩家背包里的未鉴定物品标记为「想不起来的东西」。）</div>
+    </div>
+    <div class="lore"><b>与卷宗八呼应</b>
+      这里落地的是卷宗八 §03 第 3 位的「物品鉴定 → 回想」。第一章强制走一次"背一包回镇找玛拉"的循环，把节奏感教给玩家。</div>
+  </div>
+
+  <div class="beat">
+    <div class="beat-hd"><span class="rank">NPC · 东侧</span><h4>铁匠 卡登</h4>
+      <span class="loc">石桥镇 (−18, −8)</span><span class="est">教学：装备</span></div>
+    <p>制式武装与修整。话最少的一个，只收黑铁、不问来路——这条人设在卷宗八里被复用成了「来路不明的箱子」（赌博）的合理性来源。</p>
+    <div class="script">
+      <div class="who">卡登</div>
+      <div class="line">"要打铁，把黑铁放下。别的我不收，也别跟我说它从哪来。"</div>
+      <div class="line">"……你那把武器该换了。下面的东西，一天比一天记得清怎么咬人。"</div>
+    </div>
+  </div>
+
+  <div class="note">广场另有<b>赌徒沃恩</b>（随机货 / 猜大小）与桥头老人（存档），第一章不强制交互，但沃恩的一句吆喝要能被听见："来路不明，价钱公道——反正你也记不住它原来是谁的。"为第五章埋线。</div>
+</section>
+
+<section id="waste">
+  <div class="shead"><span class="snum">§ 04</span><h2>落石荒原 · 第一次战斗</h2></div>
+  <p class="lede">推荐等级 3。这一段教战斗、教拾取、教精英，同时用最直白的一幕坐实"规则二"：这些强盗不是坏人，是忘了自己是人的人。</p>
+
+  <div class="beat">
+    <div class="beat-hd"><span class="rank">遭遇 · 1</span><h4>不再抢东西的强盗</h4>
+      <span class="loc">落石荒原 · 营地</span><span class="est">首个精英</span></div>
+    <p>玩家抵达第一个营地，强盗们背对着玩家，围着一堆早已熄灭的篝火，反复做着生前的动作——磨刀、数钱、擦一个不存在的碗。直到玩家靠近，他们才像被惊醒一样转过身。这是<b>精英随机词缀</b>的首次登场（卷宗八 §03 第 1 位）。</p>
+    <div class="lore"><b>首个精英的词缀是固定的</b>
+      第一个精英必带「喊名字的」——周期性大喊，唤醒周围沉睡的死者。玩家第一次亲眼看见"喊出名字"把一片趴着的怪叫起来，"说出来"这个母题就有了具体的战斗反馈。</div>
+  </div>
+
+  <div class="script">
+    <div class="stage">击杀营地头目后，他倒地，手里攥着半张纸。拾取触发独白。</div>
+    <div class="who">头目（临死）</div>
+    <div class="line">"……我叫什么来着。"</div>
+    <div class="line">"你……你替我记着行吗。就一下。"</div>
+    <div class="stage">（获得"半张纸"——第一件残句道具，为卷宗八「一句话」系统埋料。图鉴新增一条空白名字栏。）</div>
+  </div>
+
+  <div class="warnbox">情绪校准：这一幕<b>不要配激烈音乐</b>。参考卷宗八 §07——氛围坚决往暗黑一代靠。头目死时应该是安静的，只有风声和玩家自己的脚步。玩家该感到的是别扭，不是爽。</div>
+</section>
+
+<section id="crypt">
+  <div class="shead"><span class="snum">§ 05</span><h2>哭嚎墓窖 · 塞克拉</h2></div>
+  <p class="lede">第一个副本，两层，推荐等级 6，末层首领<b>塞克拉</b>。整章的情绪高点。她是第一个让玩家意识到"我杀的到底是什么"的敌人。首领机制详见卷宗七。</p>
+
+  <div class="beat">
+    <div class="beat-hd"><span class="rank">首领 · 第一章</span><h4>塞克拉，还在找孩子的人</h4>
+      <span class="loc">哭嚎墓窖 · 二层</span><span class="est">两阶段</span></div>
+    <p>塞克拉不主动扑向玩家。战斗开始时她在房间中央来回走，喊一个名字。她的攻击全部来自"寻找"这个动作的外溢——她掀开地面找孩子，掀起的碎石砸到你；她大喊，声波是范围伤害。玩家越往她身边凑，她越激动，伤害越高。</p>
+    <div class="grid2">
+      <div><h5>阶段一 · 找</h5><ul>
+        <li>沿房间边缘巡走，周期性掀地（地面预警圈）</li>
+        <li>「喊名字的」词缀常驻：唤醒场上骷髅</li>
+        <li>玩家可打断她的喊叫，打断后她会怔住 2 秒</li>
+      </ul></div>
+      <div><h5>阶段二 · 想起来了</h5><ul>
+        <li>血量 50% 时她停下，说出孩子的名字，全屏震荡</li>
+        <li>此后移动加快，主动追向玩家</li>
+        <li>击杀时掉落"孩子的顶针"——第一件遗物（卷宗八 §03 第 4 位）</li>
+      </ul></div>
+    </div>
+    <div class="script">
+      <div class="who">塞克拉（战败）</div>
+      <div class="line">"……找到了。"</div>
+      <div class="line">"是你啊。你怎么在这儿。你不该下来的，这么冷。"</div>
+      <div class="stage">（她把玩家认成了她要找的孩子。她安静下来，消散。地面出现一行字：往下走就是往回走——你离她要找的那天，又近了一层。）</div>
+    </div>
+  </div>
+</section>
+
+<section id="close">
+  <div class="shead"><span class="snum">§ 06</span><h2>收束 · 第一次掉名字</h2></div>
+  <p class="lede">回镇交任务。这一段把"规则三"从概念变成玩家的亲身损失，并留下通往第二章的钩子。</p>
+
+  <div class="script">
+    <div class="stage">玩家带着塞克拉的顶针回到广场，找塞琳复命。</div>
+    <div class="who">塞琳</div>
+    <div class="line">"回来了。你叫……"</div>
+    <div class="line">（停顿）"……对不起。我知道你告诉过我。就在刚才，它掉了。"</div>
+    <div class="who">塞琳</div>
+    <div class="line">"这就是这镇子。你替下面的人记着，上面的人就把你忘了。总有一头要漏。"</div>
+    <div class="line">"往北边林子里去吧。那儿有个更旧的名字在等人念。"</div>
+    <div class="stage">（提示玩家可回桥头"念一遍名字"让塞琳重新记起——即返回存档点。第二章入口"暮语林地"解锁。）</div>
+  </div>
+
+  <h3>第一章验收</h3>
+  <table>
+    <thead><tr><th>玩完第一章，玩家应该……</th><th>由哪一幕负责</th></tr></thead>
+    <tbody>
+      <tr><td>知道"下"意味着"更早"，而不只是"更难"</td><td>§05 墓窖台阶年份 + 塞克拉认错人</td></tr>
+      <tr><td>对"杀怪"产生一丝迟疑，而不是纯粹的爽</td><td>§04 头目遗言 + §05 无战斗音乐</td></tr>
+      <tr><td>亲身经历过一次"被忘记"</td><td>§06 塞琳忘了玩家的名字</td></tr>
+      <tr><td>掌握战斗 / 拾取 / 回想 / 打铁四套基础操作</td><td>§03 三 NPC + §04 首战</td></tr>
+      <tr><td>手里攥着至少一条没解开的谜</td><td>全程不解释"为什么"</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">交接给卷宗五：第二章起，节奏从"教学"转为"追问"。玩家已经接受了三条规则，接下来每一章都要往这三条规则上加一个"可是"——可是名字掉去哪了？可是谁在最底下？可是我，是不是也是被谁记着才在这儿？</div>
+</section>
+
+<footer>幽影深渊 · 卷宗四 / 第一章剧本　—　石桥镇之下 · Lv 1→8 · 首领塞克拉 · 约 2 小时</footer>
+</div>
+</body>
+</html>

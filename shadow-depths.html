@@ -194,6 +194,10 @@ canvas{display:block}
 .act:hover{border-color:var(--brass-hi);color:#fff3d6}
 .act.dis{opacity:.35;pointer-events:none}
 .act.pick{border-color:var(--brass-hi);color:#fff3d6;box-shadow:0 0 10px rgba(176,141,79,.25)}
+.act.big{display:block;text-align:center;padding:11px 18px;margin-top:8px}
+.sitem.off{opacity:.4;pointer-events:none}
+.board-recite{font-family:var(--serif);font-size:13px;color:#cfc7b4;background:#0f0c0a;border:1px solid #3a2f1e;
+  border-left:2px solid var(--brass);padding:9px 12px;margin:4px 0 2px}
 .diebox{display:flex;flex-direction:column;align-items:center;margin:8px 0 12px}
 .die{width:64px;height:64px;border:1px solid #6b5731;background:#120e0a;display:flex;align-items:center;
   justify-content:center;font-family:var(--serif);font-size:30px;color:#e2c47f;letter-spacing:0}
@@ -971,7 +975,8 @@ const P={name:"流浪者",cls:"warrior",x:0,z:0,dir:0,lvl:1,xp:0,xpNext:60,gold:
   cds:{},potCd:0,alive:true,hitFlash:0,kills:0,eliteKills:0,bossKills:0,killByType:{},cleared:{},
   shield:0,shieldT:0,invuln:0,buffs:{},casting:null,castT:0,channel:null,
   pickupTarget:null,npcTarget:null,lastHold:0,lastChase:0,onMark:null,trackId:"",
-  bountyDay:"",bountyList:[],bountyClaimed:{},bountyChest:false,bountyPotless:0,bountyDun:{}};
+  bountyDay:"",bountyList:[],bountyClaimed:{},bountyChest:false,bountyPotless:0,bountyDun:{},
+  nameForgotten:false,recallNotes:0,codex:[],relics:[],flags:{}};
 SLOTDEF.forEach(s=>P.equip[s.k]=null);
 
 let pModel=null;
@@ -1097,6 +1102,12 @@ function dropAt(x,z,obj){
     m.position.set(rf(-.2,.2),.2+rf(0,.12),rf(-.2,.2));g.add(m);}}
   else if(obj.kind==="potion"){const m=new THREE.Mesh(potGeo,new THREE.MeshBasicMaterial({color:obj.pot==="hp"?0xd8342a:0x3a7fe0}));
     m.position.y=.22;g.add(m);}
+  else if(obj.kind==="relic"){const col=0xecd39a;
+    const m=new THREE.Mesh(new THREE.BoxGeometry(.28,.36,.05),new THREE.MeshBasicMaterial({color:col}));
+    m.position.y=.34;m.rotation.y=.4;g.add(m);
+    const gl=new THREE.PointLight(col,1.1,5,2);gl.position.y=.6;g.add(gl);
+    const beam=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,2.6,6),
+      new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.4}));beam.position.y=1.4;g.add(beam);}
   else{const col=(RARITY[obj.item.rarity]||RARITY[0]).hex;
     const m=new THREE.Mesh(new THREE.BoxGeometry(.34,.34,.34),new THREE.MeshBasicMaterial({color:col}));
     m.position.y=.32;g.add(m);
@@ -1211,7 +1222,7 @@ function project(x,y,z){_v.set(x,y,z).project(camera);
 /* ═════════ 12. 任务 ═════════ */
 const QUESTS=[
  {id:"q1",n:"荒原的狼群",d:"落石荒原的狼群开始咬牲口了。杀死 8 只灰狼。",type:"killtype",t:"wolf",need:8,xp:150,gold:180,req:null},
- {id:"q2",n:"路上的劫掠者",d:"通往林地的路被人堵了。清理 6 个劫掠者。",type:"killtype",t:"bandit",need:6,xp:260,gold:260,req:"q1"},
+ {id:"q2",n:"不再抢东西的强盗",d:"荒原上的强盗不抢东西了，只是站着念叨。清理 6 个劫掠者，看看那个「喊名字的」头目要找什么。",type:"killtype",t:"bandit",need:6,xp:260,gold:260,req:"q1"},
  {id:"q3",n:"哭嚎墓窖",d:"旧墓地里的声音越来越响。深入墓窖，斩杀白骨之王塞克拉。",type:"dungeon",t:"crypt",need:1,xp:700,gold:600,item:true,req:"q2"},
  {id:"q4",n:"林中的丝",d:"暮语林地的树上挂满了丝。烧掉 10 只腐丝蛛。",type:"killtype",t:"spider",need:10,xp:900,gold:700,req:"q3"},
  {id:"q5",n:"织母阿拉卡",d:"顺着丝找到蛛巢，杀掉那个母体。",type:"dungeon",t:"nest",need:1,xp:1600,gold:1200,item:true,req:"q4"},
@@ -1260,6 +1271,20 @@ function turnIn(q){
   SFX.quest();say(`<span style="color:#e2c47f">完成委托：${q.n}（+${q.gold} 金币，+${q.xp} 经验）</span>`);
   if(P.trackId===q.id)P.trackId="";
   unlockQuests();renderQuests();renderTrack();saveSoon();
+  if(q.id==="q3"&&!(P.flags&&P.flags.selinForgot))selinForgetName();
+}
+// §06 收束 · 第一次掉名字
+function selinForgetName(){
+  P.flags=P.flags||{};P.flags.selinForgot=true;
+  P.nameForgotten=true;refreshName();
+  const lines=[
+    `<span style="color:#c8bfa6">塞琳："回来了。你叫……"</span>`,
+    `<span style="color:#8a7f70">（她停顿了很久。）"……对不起。我知道你告诉过我。就在刚才，它掉了。"</span>`,
+    `<span style="color:#c8bfa6">"这就是这镇子。你替下面的人记着，上面的人就把你忘了。总有一头要漏。"</span>`,
+    `<span style="color:#9db5ab">"往北边林子里去吧。那儿有个更旧的名字在等人念。"</span>`,
+    `<span style="color:#8a7f70">（回桥头念一遍名字，塞琳会重新记起你。暮语林地已解锁。）</span>`
+  ];
+  lines.forEach((ln,i)=>setTimeout(()=>say(ln),900*(i+1)));
 }
 
 /* ═════════ 13. 面板 ═════════ */
@@ -1286,6 +1311,13 @@ function itemHTML(it,cmp){
       <div class="h">左键无效 · 拿到铁匠处镶进稀有以上装备 · 右键丢弃</div>`;
   }
   ensureGear(it);
+  if(it.unknown){
+    const sn0=(SLOTDEF.find(s=>(s.t||s.k)===it.type)||{n:it.type}).n;
+    return`<div class="n" style="color:#9a8f7a">想不起来的东西</div>
+      <div style="color:#8a7f70;font-size:11px">从地下带上来的 · 像是某种${sn0}</div>
+      <div class="a" style="color:#8a7f70">它是什么，你一时记不起来了。</div>
+      <div class="h">${P.recallNotes>0?"左键用回想的纸条想起它":"回石桥镇找玛拉回想，或买张回想的纸条"} · 右键丢弃</div>`;
+  }
   const r=RARITY[it.rarity]||RARITY[0];
   const sn=(SLOTDEF.find(s=>(s.t||s.k)===it.type)||{n:it.type}).n;
   let h=`<div class="n" style="color:${r.c}">${it.name}</div>
@@ -1337,7 +1369,8 @@ function renderChar(){
     row("护甲",s.armor)+row("减伤",Math.round(100-100*(100/(100+s.armor)))+"%")+
     row("暴击几率",s.crit.toFixed(1)+"%")+row("攻击间隔",s.atkTime.toFixed(2)+"s")+
     row("攻击距离",CLASSES[P.cls].range+" 码")+row("生命偷取",s.leech+"%")+
-    row("移动速度",Math.round(100+s.ms)+"%")+row("生命 / 法力",`${Math.round(s.hpMax)} / ${Math.round(s.mpMax)}`);
+    row("移动速度",Math.round(100+s.ms)+"%")+row("生命 / 法力",`${Math.round(s.hpMax)} / ${Math.round(s.mpMax)}`)+
+    codexHTML();
   UI.attrbox.querySelectorAll(".plus").forEach(b=>b.addEventListener("click",()=>{
     if(P.pts<=0)return;P.pts--;P.base[b.dataset.attr]++;refreshMax(false);renderChar();SFX.ui();saveSoon();}));
 }
@@ -1345,11 +1378,13 @@ function renderBag(){
   UI.bag.innerHTML="";
   for(let i=0;i<CFG.BAG;i++){
     const c=document.createElement("div");c.className="cell";const it=P.bag[i];
-    if(it){c.textContent=it.glyph;c.style.borderColor=RARITY[it.rarity].c;
-      c.style.boxShadow=`0 0 8px ${RARITY[it.rarity].c}33 inset`;
+    if(it){c.textContent=it.unknown?"❔":it.glyph;
+      c.style.borderColor=it.unknown?"#6a6152":RARITY[it.rarity].c;
+      c.style.boxShadow=it.unknown?"0 0 8px #6a615233 inset":`0 0 8px ${RARITY[it.rarity].c}33 inset`;
+      if(it.unknown)c.style.color="#9a8f7a";
       c.addEventListener("mouseenter",ev=>showTip(ev,itemHTML(it,true)));
       c.addEventListener("mouseleave",hideTip);
-      c.addEventListener("click",()=>equipFromBag(i));
+      c.addEventListener("click",()=>it.unknown?recallFromBag(i):equipFromBag(i));
       c.addEventListener("contextmenu",ev=>{ev.preventDefault();P.bag.splice(i,1);renderBag();hideTip();});}
     UI.bag.appendChild(c);
   }
@@ -1507,11 +1542,33 @@ function dealToEnemy(e,amount,crit,color){
   if(s.leech>0)P.hp=clamp(P.hp+amount*s.leech/100,0,P.hpMax);
   if(e.hp<=0)killEnemy(e);
 }
+const RELIC_HALFPAPER={id:"halfpaper",n:"半张纸",icon:"📄",d:"某个忘了自己名字的人",
+  codex:{n:"（空白名字）",text:"半张纸上只剩一个模糊的字头"},
+  lines:[`<span style="color:#8a7f70">纸上写着半个名字，墨迹被汗浸开了。你替他记着——就一下。</span>`]};
+const RELIC_THIMBLE={id:"thimble",n:"孩子的顶针",icon:"🪡",d:"塞克拉一直在找的东西",
+  codex:{n:"莉赛尔",text:"塞克拉要找的孩子的名字"},
+  lines:[`<span style="color:#9db5ab">一枚磨得发亮的顶针。它太小了，本不该出现在这么深的地方。</span>`]};
 function killEnemy(e){
   e.dead=true;e.dieT=0;e.bar.group.visible=false;
   SFX.die();burst(e.x,1,e.z,0x8a1b1b,14,5);rollDrop(e);gainXP(e.xp);
   P.kills++;P.killByType[e.type]=(P.killByType[e.type]||0)+1;
   if(e.elite)P.eliteKills++;
+  // §04 头目遗言 + 半张纸
+  if(e.campLeader&&!(P.flags&&P.flags.halfPaper)){
+    P.flags=P.flags||{};P.flags.halfPaper=true;
+    say(`<span style="color:#c8bfa6">头目（临死）："……我叫什么来着。"</span>`);
+    setTimeout(()=>say(`<span style="color:#8a7f70">"你……你替我记着行吗。就一下。"</span>`),1100);
+    dropAt(e.x,e.z,{kind:"relic",relic:RELIC_HALFPAPER});
+  }
+  // §05 塞克拉战败：认错人、消散、地面浮字、顶针
+  if(e.sekhra&&!(P.flags&&P.flags.thimble)){
+    P.flags=P.flags||{};P.flags.thimble=true;
+    say(`<span style="color:#c8bfa6">塞克拉（战败）："……找到了。"</span>`);
+    setTimeout(()=>say(`<span style="color:#c8bfa6">"是你啊。你怎么在这儿。你不该下来的，这么冷。"</span>`),1200);
+    setTimeout(()=>say(`<span style="color:#9db5ab">她把你认成了要找的孩子，安静下来，消散了。</span>`),2400);
+    setTimeout(()=>say(`<span style="color:#8a7f70">地面浮起一行字：<i>往下走就是往回走——你离她要找的那天，又近了一层。</i></span>`),3400);
+    dropAt(e.x,e.z,{kind:"relic",relic:RELIC_THIMBLE});
+  }
   if(e.boss){
     P.bossKills++;say(`<span style="color:#e2c47f">${e.name} 倒下了。</span>`);
     if(W.area.kind==="dungeon"&&W.dun&&W.dunFloor>=W.dun.floors){
@@ -1710,10 +1767,43 @@ function usePotion(k){
 }
 
 /* ═════════ 16. 背包 ═════════ */
+function isUnderground(){return W.area&&(W.area.kind==="dungeon"||W.area.kind==="rift");}
+// 回想（鉴定）：从地下带上来的装备暂时想不起来是什么
+function identifyItem(it){if(it&&it.unknown){it.unknown=false;return true;}return false;}
+function identifyAll(){let n=0;P.bag.forEach(it=>{if(identifyItem(it))n++;});return n;}
+function countUnknown(){return P.bag.filter(it=>it&&it.unknown).length;}
+// 残句与遗物：第一章沿途攒下的记忆碎片
+function collectRelic(rel){
+  if(!rel)return;
+  if(rel.id&&P.relics.some(r=>r.id===rel.id))return;
+  P.relics.push({id:rel.id,n:rel.n,d:rel.d,icon:rel.icon||"🕯"});
+  if(rel.codex)P.codex.push({n:rel.codex.n||"？？？",text:rel.codex.text||""});
+  SFX.quest();
+  say(`<span style="color:#c8a24a">得到遗物：${rel.n}</span>`);
+  if(rel.lines)rel.lines.forEach((ln,i)=>setTimeout(()=>say(ln),650*(i+1)));
+  if($("pc").classList.contains("on"))renderChar();
+  saveSoon();
+}
+function codexHTML(){
+  if(!P.relics.length&&!P.codex.length)return"";
+  let h=`<div class="grouphd">残句与遗物</div>`;
+  P.relics.forEach(r=>h+=`<div class="arow"><span>${r.icon} ${r.n}</span><span style="color:#8a7f70;font-size:11px">${r.d||""}</span></div>`);
+  P.codex.forEach(c=>h+=`<div class="arow"><span style="color:#9db5ab">▍ ${c.n||"（空白名字）"}</span><span style="color:#6f7a88;font-size:11px">${c.text||""}</span></div>`);
+  return h;
+}
 function addToBag(it){if(P.bag.length>=CFG.BAG)return false;P.bag.push(it);return true;}
 function afterEquipChange(){refreshMax(false);rebuildPlayer();renderChar();renderBag();hideTip();saveSoon();}
+function recallFromBag(i){
+  const it=P.bag[i];if(!it||!it.unknown)return;
+  if(P.recallNotes<=0){hint("回石桥镇找玛拉回想，或买张回想的纸条");return;}
+  P.recallNotes--;identifyItem(it);SFX.loot();
+  const r=RARITY[it.rarity]||RARITY[0];
+  say(`你想起来了：<span style="color:${r.c}">${it.name}</span>`);
+  renderBag();hideTip();saveSoon();
+}
 function equipFromBag(i){
   const it=P.bag[i];if(!it)return;
+  if(it.unknown){recallFromBag(i);return;}
   if(it.type==="rune"){hint("符文要拿到铁匠处镶嵌");return;}
   if(it.cls&&it.cls!==P.cls){hint("你的职业无法使用这件武器");return;}
   let key=it.type;
@@ -1735,6 +1825,8 @@ const NPCDEF=[
    look:{body:0x3a2a18,skin:0xc9a070,leg:0x2a1a10,helm:0xb08d4f,cape:0x7a5a20}},
  {id:"selin",n:"执政官 塞琳",t:"镇务委托",g:"📜",dx:0,dz:-9,
    look:{body:0x5a2a3a,skin:0xc39a72,leg:0x3a1a25,helm:0xb08d4f,cape:0x7a2a3a}},
+ {id:"bridge",n:"桥头老人",t:"念一遍名字 · 存档",g:"🪧",dx:15,dz:3,verb:"念名",
+   look:{body:0x4a4238,skin:0xb8a488,leg:0x33302a,hood:0x3a352c,cape:0x5a5040}},
  {id:"stash",n:"银行",t:"跨角色金库 · 40 格",g:"🏦",x:-20,z:14,kind:"stash",verb:"打开",labelY:1.5},
  {id:"board",n:"悬赏板",t:"每日五条",g:"📋",x:10,z:16,kind:"board",verb:"查看",labelY:2.2},
  {id:"waystone",n:"传送石碑",t:"已探明之地",g:"🗿",x:0,z:20,kind:"waystone",verb:"触摸",labelY:2.8}
@@ -1806,15 +1898,33 @@ function openNPC(id){
   if(id==="waystone"){openWaystone();return;}
   const n=NPCDEF.find(x=>x.id===id);
   let body=`<div class="npchead"><div class="av">${n.g}</div><div><div class="nn">${n.n}</div><div class="nt">${n.t}</div></div></div>`;
+  if(id==="bridge"){
+    const dlg=P.nameForgotten
+      ?`"你回来了。……脸我记得，名字它掉了。"<br>"没事。牌子上刻着呢。你自己念一遍，我替你把它按回去。"`
+      :`"进城的？木牌上有你的名字。<br>这镇子留不住东西——等你哪天想不起来了，回来这儿念一遍。"`;
+    body+=`<div class="dlg">${dlg}</div>
+      <div class="board-recite">木牌上刻着：<b style="color:#ecd39a">${P.name}</b></div>
+      <div class="subttl">念一遍名字</div>
+      <div class="act big" data-recite="1">念出「${P.name}」（写入卷宗）</div>`;
+    UI.npcbody.innerHTML=body;
+    togglePanel("npc",true);
+    UI.npcbody.querySelectorAll("[data-recite]").forEach(b=>b.addEventListener("click",reciteName));
+    return;
+  }
   if(id==="kaden"){
     $("npc").classList.add("smith");
-    body+=`<div class="dlg">"制式件我这儿有。词缀打偏了拿来重铸。稀有以上能开孔——符文从精英和首领身上撬。"</div>
+    body+=`<div class="dlg">"要打铁，把黑铁放下。别的我不收，也别跟我说它从哪来。<br>……你那把武器该换了。下面的东西，一天比一天记得清怎么咬人。"</div>
       <div class="subttl">制式装备（金币 ${P.gold}）</div><div class="shopgrid" id="stock"></div>
       <div class="subttl">重铸词缀</div><div id="reforgebox"></div>
       <div class="subttl">打孔与符文</div><div id="socketbox"></div>
       <div class="subttl">出售你的物品</div><div class="shopgrid" id="mysell"></div>`;
   }else if(id==="mara"){
-    body+=`<div class="dlg">"红瓶止血，蓝瓶醒神。别指望它们能救一个已经躺下的人。"</div>
+    const unk=countUnknown();
+    body+=`<div class="dlg">"从下面带上来的？给我看看。……你自己是想不起它是什么的，对吧。<br>正常。地下的东西上来都这样。我替你想——免费，但你得跑这一趟。"</div>
+      <div class="subttl">回想（想不起来的东西 ${unk} 件 · 纸条 ${P.recallNotes} 张）</div>
+      <div class="shopgrid">
+      <div class="sitem${unk?"":" off"}" data-recall="all"><span class="g">🕯</span><span class="n">替我想起来<br><span style="color:#8a7f70;font-size:11px">${unk?`回想全部 ${unk} 件`:"行囊里没有想不起来的东西"}</span></span><span class="p">免费</span></div>
+      <div class="sitem" data-buy="note"><span class="g">📜</span><span class="n">回想的纸条 ×1<br><span style="color:#8a7f70;font-size:11px">急的话拿去地下自己用</span></span><span class="p">60 金</span></div></div>
       <div class="subttl">补给（金币 ${P.gold}）</div><div class="shopgrid">
       <div class="sitem" data-buy="hp"><span class="g">🧪</span><span class="n">治疗药水 ×1<br><span style="color:#8a7f70;font-size:11px">当前 ${P.potHp} 瓶</span></span><span class="p">${potPrice()} 金</span></div>
       <div class="sitem" data-buy="mp"><span class="g">🔵</span><span class="n">法力药水 ×1<br><span style="color:#8a7f70;font-size:11px">当前 ${P.potMp} 瓶</span></span><span class="p">${potPrice()} 金</span></div>
@@ -1834,7 +1944,13 @@ function openNPC(id){
   }else{
     const done=QUESTS.filter(q=>QS[q.id].state==="open"&&questDone(q));
     const open=QUESTS.filter(q=>QS[q.id].state==="open"&&!questDone(q));
-    body+=`<div class="dlg">"每一层都比上一层更饿。你要是还打算往下走，先把该做的做完。"</div>`;
+    const firstTalk=!(P.flags&&P.flags.metSelin);
+    let sdlg;
+    if(P.nameForgotten)sdlg=`"又一个往下走的……对不起，我记不起你叫什么了。桥头有块牌子，你去念一遍，我就想起来了。"`;
+    else if(firstTalk){P.flags=P.flags||{};P.flags.metSelin=true;
+      sdlg=`"又一个往下走的。我不拦你，拦不住。<br>东边荒原上有伙强盗，最近不对劲——他们不抢东西了，只是站在那儿念叨。你去看看。顺手，把能带回来的名字带回来。"`;}
+    else sdlg=`"每一层都比上一层更饿。你要是还打算往下走，先把该做的做完。"`;
+    body+=`<div class="dlg">${sdlg}</div>`;
     if(done.length){body+=`<div class="subttl">可复命</div>`;
       done.forEach(q=>body+=`<div class="qcard done"><div class="qn">${q.n}</div><div class="qd">${q.d}</div>
         <div class="qr">奖励：${q.gold} 金币 · ${q.xp} 经验${q.item?" · 稀有装备":""}</div>
@@ -1854,10 +1970,32 @@ function openNPC(id){
     UI.npcbody.querySelectorAll("[data-bet]").forEach(b=>b.addEventListener("click",()=>playGamble(b.dataset.bet)));
   }
   UI.npcbody.querySelectorAll("[data-buy]").forEach(b=>b.addEventListener("click",()=>buyPotion(b.dataset.buy)));
+  UI.npcbody.querySelectorAll("[data-recall]").forEach(b=>b.addEventListener("click",()=>{
+    const n=identifyAll();
+    if(!n){hint("没有想不起来的东西");return;}
+    SFX.loot();say(`<span style="color:#c8a24a">玛拉替你想起了 ${n} 件东西。</span>`);
+    renderBag();openNPC("mara");saveSoon();}));
   UI.npcbody.querySelectorAll("[data-turn]").forEach(b=>b.addEventListener("click",()=>{
     turnIn(QUESTS.find(x=>x.id===b.dataset.turn));openNPC("selin");}));
 }
+function reciteName(){
+  const wasGone=P.nameForgotten;
+  P.nameForgotten=false;refreshName();
+  SFX.quest();saveNow();
+  if(wasGone){
+    say(`<span style="color:#ecd39a">你念出了自己的名字。塞琳会重新记起它——至少这几天。</span>`);
+    if(QS.q3&&QS.q3.state==="done"&&P.flags&&P.flags.selinForgot)P.flags.selinRemember=true;
+  }else{
+    say(`<span style="color:#ecd39a">老人把「${P.name}」重新刻深了一遍。卷宗已写入。</span>`);
+  }
+  togglePanel("npc",false);
+}
 function buyPotion(k){
+  if(k==="note"){
+    if(P.gold<60){hint("金币不足");return;}
+    P.gold-=60;P.recallNotes++;SFX.gold();saveSoon();openNPC("mara");
+    say("买了一张回想的纸条。");return;
+  }
   const one=potPrice(),map={hp:[1,"hp",one],mp:[1,"mp",one],hp5:[5,"hp",one*5],mp5:[5,"mp",one*5]};
   const[n,t,cost]=map[k];
   if(P.gold<cost){hint("金币不足");return;}
@@ -2373,6 +2511,7 @@ function populateField(a){
     made++;
   }
   // 营地：3-4 个小队，含一个精英
+  let leaderSet=false;
   for(let c=0;c<4;c++){
     let cx=0,cz=0,ok=false;
     for(let t=0;t<40&&!ok;t++){
@@ -2384,7 +2523,14 @@ function populateField(a){
     for(let i=0;i<n;i++){
       const x=cx+rf(-4,4),z=cz+rf(-4,4);
       if(!canStand(x,z,.7))continue;
-      spawnEnemy(pick(a.mobs),x,z,Math.max(1,a.lvl+ri(0,2)),i===0);
+      const etype=(i===0&&a.id==="waste"&&!leaderSet&&a.mobs.includes("bandit"))?"bandit":pick(a.mobs);
+      const en=spawnEnemy(etype,x,z,Math.max(1,a.lvl+ri(0,2)),i===0);
+      // §04 落石荒原 · 第一个精英必带「喊名字的」，头目掉半张纸
+      if(i===0&&a.id==="waste"&&!leaderSet){
+        leaderSet=true;en.shout=true;en.callName="谁来着";en.shoutCd=2.5;
+        en.name="精英 "+ETYPES[en.type].n+" · 喊名字的";
+        if(!(P.flags&&P.flags.halfPaper)){en.campLeader=true;en.leaderRelic="halfpaper";}
+      }
     }
   }
 }
@@ -2435,7 +2581,15 @@ function enterDungeon(id,floor){
       spawnEnemy(pick(d.mobs),x,z,lvl,RND()<.12);}
   });
   const last=W.rooms[W.rooms.length-1];
-  if(isLast)spawnEnemy(d.boss,wX(last.cx)+3,wX(last.cy)+3,lvl+2,false);
+  if(isLast){
+    const b=spawnEnemy(d.boss,wX(last.cx)+3,wX(last.cy)+3,lvl+2,false);
+    // §05 哭嚎墓窖 · 塞克拉：两阶段 + 常驻「喊名字的」
+    if(id==="crypt"){
+      b.sekhra=true;b.phase=1;b.shout=true;b.callName="孩子";b.childName="莉赛尔";
+      b.shoutCd=3;b.name="白骨之王 · 塞克拉 · 还在找孩子的人";
+      b.skill="slam";b.ranged=false;b.range=3;b.speed=2.3; // 阶段一：掀地、近身、游走缓慢
+    }
+  }
   else addMark({kind:"next",label:"下一层",x:wX(last.cx),z:wX(last.cy)});
   const first=W.rooms[0];
   addMark({kind:"exit",label:"离开副本",x:wX(first.cx)+3,z:wX(first.cy)+3});
@@ -2552,12 +2706,17 @@ function takeItem(i){
   if(it.kind==="gold"){P.gold+=it.amt;SFX.gold();floatText(it.x,1.2,it.z,"+"+it.amt+" 金币","#f5c451",15);}
   else if(it.kind==="potion"){if(it.pot==="hp")P.potHp++;else P.potMp++;SFX.loot();
     floatText(it.x,1.2,it.z,it.pot==="hp"?"治疗药水":"法力药水","#d0c0a0",14);}
+  else if(it.kind==="relic"){collectRelic(it.relic);}
   else{
     if(P.bag.length>=CFG.BAG){hint("行囊已满");return;}
-    P.bag.push(it.item);SFX.loot();
-    const r=RARITY[it.item.rarity]||RARITY[0];
-    floatText(it.x,1.4,it.z,it.item.name,r.c,16);
-    say(`拾取 <span style="color:${r.c}">${it.item.name}</span>`);
+    const g=it.item;
+    if(isUnderground()&&g.type!=="rune")g.unknown=true;
+    P.bag.push(g);SFX.loot();
+    if(g.unknown){floatText(it.x,1.4,it.z,"想不起来的东西","#8a7f70",15);
+      say(`拾取 <span style="color:#8a7f70">想不起来的东西</span>（回镇找玛拉回想，或用回想的纸条）`);}
+    else{const r=RARITY[g.rarity]||RARITY[0];
+      floatText(it.x,1.4,it.z,g.name,r.c,16);
+      say(`拾取 <span style="color:${r.c}">${g.name}</span>`);}
     if($("inv").classList.contains("on"))renderBag();
   }
   W.group.remove(it.mesh);
@@ -2705,7 +2864,34 @@ function updateEnemies(dt){
     if(!P.alive)e.state="idle";
     else if(d<aggro)e.state=d<=e.range?"attack":"chase";
     else if(e.state!=="idle"&&d>aggro*1.6)e.state="idle";
-    const spd=e.speed*(e.slow>0?.4:1);
+    if(e.woke>0)e.woke-=dt;
+    let spd=e.speed*(e.slow>0?.4:1)*(e.woke>0?1.25:1);
+
+    // §05 塞克拉 · 两阶段：血量 50% 时「想起来了」
+    if(e.sekhra&&e.phase===1&&e.hp<=e.hpMax*.5){
+      e.phase=2;e.speed*=1.4;e.shoutCd=0;
+      floatText(e.x,5,e.z,"“"+e.childName+"”","#ffe6a0",30);
+      ringFX(e.x,e.z,10,0xfff0a0,3);camShake=.8;SFX.boom();
+      say(`<span style="color:#ecd39a">塞克拉停下了。她说出了那个名字——「${e.childName}」。全屏震荡。</span>`);
+      say(`<span style="color:#8a7f70">她想起来了。此后她不再游走，只朝你来。</span>`);
+    }
+
+    // 「喊名字的」词缀：周期性大喊，唤醒周围沉睡的死者
+    if(e.shout&&e.state!=="idle"&&P.alive){
+      e.shoutCd=(e.shoutCd||0)-dt;
+      if(e.shoutCd<=0){
+        e.shoutCd=e.phase===2?4.5:6.5;
+        const nm=e.sekhra&&e.phase===1?e.callName:(e.callName||e.childName||"——");
+        floatText(e.x,4.2,e.z,"“"+nm+"？”","#e8dcae",20);
+        ringFX(e.x,e.z,e.boss?9:6,0xd8c88a,1.2);SFX.cast();
+        let woke=0;
+        for(const o of W.enemies){
+          if(o===e||o.dead)continue;
+          if(dist2(o.x,o.z,e.x,e.z)<(e.boss?14:10)**2){o.state="chase";o.woke=3;woke++;}
+        }
+        if(woke)floatText(e.x,5,e.z,"惊醒了 "+woke+" 具","#b09a6a",14);
+      }
+    }
 
     if(e.boss&&e.state!=="idle"&&e.skillCd<=0&&P.alive){
       e.skillCd=e.skill==="slam"?7:9;
@@ -3035,7 +3221,10 @@ function serializePlayer(){
     discovered:Object.assign({},W.discovered),itemSeq:itemSeq,lastArea:"town",
     bountyDay:P.bountyDay||"",bountyList:P.bountyList||[],bountyClaimed:Object.assign({},P.bountyClaimed||{}),
     bountyChest:!!P.bountyChest,bountyPotless:P.bountyPotless||0,bountyDun:Object.assign({},P.bountyDun||{}),
-    trackId:P.trackId||""
+    trackId:P.trackId||"",
+    nameForgotten:!!P.nameForgotten,recallNotes:P.recallNotes||0,
+    codex:JSON.parse(JSON.stringify(P.codex||[])),relics:JSON.parse(JSON.stringify(P.relics||[])),
+    flags:Object.assign({},P.flags||{})
   };
 }
 function applySave(d){
@@ -3072,6 +3261,11 @@ function applySave(d){
   P.bountyChest=!!d.bountyChest;P.bountyPotless=n(d.bountyPotless);
   P.bountyDun=d.bountyDun&&typeof d.bountyDun==="object"?d.bountyDun:{};
   P.trackId=typeof d.trackId==="string"&&questById(d.trackId)?d.trackId:"";
+  P.nameForgotten=!!d.nameForgotten;P.recallNotes=Math.max(0,n(d.recallNotes));
+  P.codex=Array.isArray(d.codex)?d.codex.filter(c=>c&&typeof c==="object"):[];
+  P.relics=Array.isArray(d.relics)?d.relics.filter(c=>c&&typeof c==="object"):[];
+  P.flags=d.flags&&typeof d.flags==="object"?d.flags:{};
+  P.bag.forEach(it=>{if(it&&it.unknown!==undefined)it.unknown=!!it.unknown;});
   itemSeq=Math.max(itemSeq,n(d.itemSeq));
   P.bag.forEach(it=>{ensureGear(it);if(it.id>itemSeq)itemSeq=it.id;});
   SLOTDEF.forEach(s=>{const it=P.equip[s.k];if(it){ensureGear(it);if(it.id>itemSeq)itemSeq=it.id;}});
@@ -3115,6 +3309,8 @@ function restartRun(){
   GloamSave.deleteSlot(saveSlot);
   location.href=GloamSave.hrefTo("create.html");
 }
+function refreshName(){UI.pname.textContent=P.nameForgotten?"？？？":P.name;
+  UI.pname.style.color=P.nameForgotten?"#8a7f70":"";}
 function startingWeapon(cls){
   const base=BASES.weapon[cls][0];
   return{id:++itemSeq,type:"weapon",glyph:base.g,rarity:0,name:"磨损的"+base.n,ilvl:1,
@@ -3124,7 +3320,7 @@ function startNew(name,cls){
   P.name=name;P.cls=cls;
   const c=CLASSES[cls];
   P.base={str:c.base.str,dex:c.base.dex,vit:c.base.vit,ene:c.base.ene};
-  UI.pname.textContent=P.name;
+  refreshName();
   P.equip.weapon=startingWeapon(cls);
   const first=SKILLS.find(s=>s.cls===cls&&s.req===1);
   P.ranks[first.id]=1;P.barSkills[0]=first.id;P.skPts=0;
@@ -3136,7 +3332,8 @@ function startNew(name,cls){
   enterArea("town");
   ensureBounties();
   P.hp=P.hpMax;P.mp=P.mpMax;
-  say(`你以<b style="color:#e2c47f">${c.n}</b>的身份醒来。先去找执政官塞琳。广场上新来了个扔骰子的。`);
+  say(`雨刚停，你走过石桥进了镇子。桥头老人把「<b style="color:#ecd39a">${P.name}</b>」刻上了木牌——"这镇子留不住东西，回来这儿念一遍就想得起。"`);
+  setTimeout(()=>say(`你以<b style="color:#e2c47f">${c.n}</b>的身份醒来。往北去找执政官塞琳领第一份委托。`),1200);
 }
 function bootFromMenu(){
   const boot=GloamSave.getBoot();
@@ -3149,7 +3346,7 @@ function bootFromMenu(){
       location.replace(GloamSave.hrefTo("load.html"));
       return false;
     }
-    UI.pname.textContent=P.name;
+    refreshName();
     rebuildPlayer();
     renderBarUI();renderTabs();renderQuests();renderTrack();renderChar();renderBag();renderSkills();
     enterArea("town");
