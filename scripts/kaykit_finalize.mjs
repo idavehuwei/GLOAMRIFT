@@ -14,6 +14,12 @@ const MAP = {
   char_warrior: { idle: "Idle", run: "Running_A", attack: "1H_Melee_Attack_Chop", die: "Death_A" },
   char_mage:    { idle: "Idle", run: "Running_A", attack: "Spellcast_Shoot",       die: "Death_A" },
   char_archer:  { idle: "Idle", run: "Running_A", attack: "1H_Ranged_Shoot",       die: "Death_A" },
+  // 怪物（KayKit 同套骨骼/动画名）
+  mob_skeleton: { idle: "Idle", run: "Running_A", attack: "1H_Melee_Attack_Chop", die: "Death_A" },
+  mob_ghoul:    { idle: "Idle", run: "Running_A", attack: "1H_Melee_Attack_Chop", die: "Death_A" },
+  mob_bandit:   { idle: "Idle", run: "Running_A", attack: "1H_Melee_Attack_Chop", die: "Death_A" },
+  mob_skelrogue:{ idle: "Idle", run: "Running_A", attack: "1H_Ranged_Shoot",      die: "Death_A" },
+  boss_sekhra:  { idle: "Idle", run: "Running_A", attack: "Spellcast_Shoot",       die: "Death_A" },
 };
 
 for (const [id, wanted] of Object.entries(MAP)) {
@@ -23,6 +29,8 @@ for (const [id, wanted] of Object.entries(MAP)) {
   const doc = await io.read(file);
   const root = doc.getRoot();
   const byName = new Map(root.listAnimations().map(a => [a.getName(), a]));
+  // 幂等：已经削过（有 idle 且动画很少）就跳过，避免二次运行把已改名的 clip 全删了
+  if (byName.has("idle") && root.listAnimations().length <= 6) { console.log(`${id}  skip (already stripped)`); continue; }
   const keep = new Set();
   for (const [runtimeName, clip] of Object.entries(wanted)) {
     const anim = byName.get(clip);
