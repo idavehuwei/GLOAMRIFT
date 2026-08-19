@@ -77,7 +77,8 @@ function waitServer() {
       const texts = [...document.querySelectorAll(".wlabel")].map(el => el.textContent || "");
       return texts.some(t => t.indexOf("银行") >= 0) &&
         texts.some(t => t.indexOf("悬赏板") >= 0) &&
-        texts.some(t => t.indexOf("传送石碑") >= 0);
+        texts.some(t => t.indexOf("传送石碑") >= 0) &&
+        texts.some(t => t.indexOf("赌徒") >= 0);
     });
     ok("town: south service labels visible", true);
     await page.evaluate(() => {

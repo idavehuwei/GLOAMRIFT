@@ -192,6 +192,13 @@ canvas{display:block}
   color:#e8cf95;background:linear-gradient(180deg,#2c2218,#120e0a);border:1px solid #6b5731;cursor:pointer}
 .act:hover{border-color:var(--brass-hi);color:#fff3d6}
 .act.dis{opacity:.35;pointer-events:none}
+.act.pick{border-color:var(--brass-hi);color:#fff3d6;box-shadow:0 0 10px rgba(176,141,79,.25)}
+.diebox{display:flex;flex-direction:column;align-items:center;margin:8px 0 12px}
+.die{width:64px;height:64px;border:1px solid #6b5731;background:#120e0a;display:flex;align-items:center;
+  justify-content:center;font-family:var(--serif);font-size:30px;color:#e2c47f;letter-spacing:0}
+.die.win{border-color:#4d6b3c;color:#7ec87e}
+.die.lose{border-color:#6d2a22;color:#c05a4a}
+.dieres{font-size:12px;color:#9e937f;margin-top:8px;text-align:center;line-height:1.6;min-height:20px}
 .dcard{border:1px solid #2a2118;background:#0f0c0a;padding:10px 12px;margin-bottom:8px}
 .dcard .dn{font-family:var(--serif);font-size:13px;color:var(--brass-hi)}
 .dcard .dm{font-size:11.5px;color:#9e937f;line-height:1.6;margin-top:3px}
@@ -713,7 +720,7 @@ function buildTownProps(G){
   const well=new THREE.Mesh(new THREE.CylinderGeometry(1.05,1.15,1,10),new THREE.MeshLambertMaterial({color:0x6a6258}));
   well.position.set(wX(c-3),.5,wX(c+3));G.add(well);
   // 摊位与围栏
-  const keepSvc=[[-20,14],[10,16],[0,20]];
+  const keepSvc=[[-20,14],[10,16],[0,20],[8,4]];
   for(let i=0;i<10;i++){
     const x=wX(c)+rf(-24,24),z=wX(c)+rf(-16,16);
     if(!canStand(x,z,1.2))continue;
@@ -884,6 +891,19 @@ function rollItem(lvl,forceRare,clsHint){
   if(r===1)it.name=pick(PRE)+it.name;
   else if(r===2||r===3)it.name=pick(PRE)+it.name+pick(SUF);
   else if(r===4)it.name=pick(UNIQUE);
+  return it;
+}
+function makeBasicItem(type,cls,lvl){
+  cls=cls||P.cls||"warrior";
+  let base;
+  if(type==="weapon")base=BASES.weapon[cls][0];
+  else if(type==="offhand")base=BASES.offhand[cls==="mage"?2:cls==="archer"?3:0];
+  else base=BASES[type][0];
+  const sc=1+(Math.max(1,lvl)-1)*.18;
+  const it={id:++itemSeq,type,glyph:base.g,rarity:0,name:"制式"+base.n,ilvl:lvl,dmgMin:0,dmgMax:0,armor:0,
+    affixes:[],spd:base.sp||1,cls:type==="weapon"?cls:null};
+  if(type==="weapon"){it.dmgMin=Math.max(1,Math.round(base.d[0]*sc));it.dmgMax=Math.max(2,Math.round(base.d[1]*sc));}
+  else it.armor=Math.round(rf(base.a[0],base.a[1])*sc);
   return it;
 }
 function itemScore(it){let s=it.dmgMin+it.dmgMax*1.2+it.armor*.8;
@@ -1642,10 +1662,12 @@ function equipFromBag(i){
 
 /* ═════════ 17. NPC ═════════ */
 const NPCDEF=[
- {id:"kaden",n:"铁匠 卡登",t:"武器与护甲",g:"⚒",dx:-9,dz:-4,
+ {id:"kaden",n:"铁匠 卡登",t:"制式武装",g:"⚒",dx:-9,dz:-4,
    look:{body:0x6a4a2a,skin:0xb98a5a,leg:0x3a2a1a,helm:0x8a7a5a,weapon:0xc0b8a6,wkind:"sword"}},
  {id:"mara",n:"药剂商 玛拉",t:"药水与补给",g:"⚗",dx:9,dz:-4,
    look:{body:0x3a5a6a,skin:0xd0a888,leg:0x2a3a45,cape:0x2a4a5a}},
+ {id:"vaun",n:"赌徒 沃恩",t:"猜大小 · 赌货",g:"🎲",dx:4,dz:2,
+   look:{body:0x3a2a18,skin:0xc9a070,leg:0x2a1a10,helm:0xb08d4f,cape:0x7a5a20}},
  {id:"selin",n:"执政官 塞琳",t:"镇务委托",g:"📜",dx:0,dz:-9,
    look:{body:0x5a2a3a,skin:0xc39a72,leg:0x3a1a25,helm:0xb08d4f,cape:0x7a2a3a}},
  {id:"stash",n:"银行",t:"跨角色金库 · 40 格",g:"🏦",x:-20,z:14,kind:"stash",verb:"打开",labelY:1.5},
@@ -1697,6 +1719,7 @@ function spawnNPCs(){
   });
 }
 let shopStock=[];
+let gambleStake=1,lastGamble=null;
 function refreshStock(){
   RND=mulberry32((Date.now()^(P.kills*7919)^(P.gold*31))>>>0);
   shopStock=[];
@@ -1704,6 +1727,13 @@ function refreshStock(){
   for(let i=0;i<6;i++)shopStock.push(rollItem(clamp(lv+ri(-1,2),1,99),RND()<.3));
 }
 function potPrice(){return 35+Math.max(0,P.lvl-1)*9;}
+function gambleCost(mul){return Math.round((55+P.lvl*16)*(mul||1));}
+function giveWonItem(it,msg){
+  if(addToBag(it)){say(msg);return;}
+  const st=stashItems();
+  if(st.length<CFG.STASH){st.push(it);writeStash(st);say(msg+" 行囊满了，进了银行。");}
+  else{P.gold+=sellPrice(it);say("箱子和行囊都满了，东西折成了金币。");}
+}
 function openNPC(id){
   $("npc").classList.remove("bank");
   if(id==="stash"){openStash();return;}
@@ -1712,8 +1742,8 @@ function openNPC(id){
   const n=NPCDEF.find(x=>x.id===id);
   let body=`<div class="npchead"><div class="av">${n.g}</div><div><div class="nn">${n.n}</div><div class="nt">${n.t}</div></div></div>`;
   if(id==="kaden"){
-    body+=`<div class="dlg">"从下面带上来的东西我都收。也别嫌我的货贵——铁在裂隙边上不便宜。"</div>
-      <div class="subttl">在售（金币 ${P.gold}）</div><div class="shopgrid" id="stock"></div>
+    body+=`<div class="dlg">"要花活去找广场上那个扔骰子的。我这儿只打制式件——不漂亮，但不会在你背后裂开。"</div>
+      <div class="subttl">制式装备（金币 ${P.gold}）</div><div class="shopgrid" id="stock"></div>
       <div class="subttl">出售你的物品</div><div class="shopgrid" id="mysell"></div>`;
   }else if(id==="mara"){
     body+=`<div class="dlg">"红瓶止血，蓝瓶醒神。别指望它们能救一个已经躺下的人。"</div>
@@ -1722,6 +1752,17 @@ function openNPC(id){
       <div class="sitem" data-buy="mp"><span class="g">🔵</span><span class="n">法力药水 ×1<br><span style="color:#8a7f70;font-size:11px">当前 ${P.potMp} 瓶</span></span><span class="p">${potPrice()} 金</span></div>
       <div class="sitem" data-buy="hp5"><span class="g">🧰</span><span class="n">治疗药水 ×5</span><span class="p">${potPrice()*5} 金</span></div>
       <div class="sitem" data-buy="mp5"><span class="g">🧰</span><span class="n">法力药水 ×5</span><span class="p">${potPrice()*5} 金</span></div></div>`;
+  }else if(id==="vaun"){
+    const die=lastGamble?lastGamble.die:"?";
+    const dcls=lastGamble?(lastGamble.win?" win":" lose"):"";
+    body+=`<div class="dlg">"一到三为小，四到六为大。猜对了，桌上随便抓一件。猜错了，金币就是我的。"</div>
+      <div class="subttl">猜大小 · 金币 ${P.gold}</div>
+      <div class="diebox"><div class="die${dcls}" id="dieface">${die}</div>
+      <div class="dieres" id="dieres">${lastGamble?lastGamble.text:"1–3 小 · 4–6 大。先选注码，再押大小。"}</div></div>
+      <div>${[["1","小注"],["2","中注"],["4","豪注"]].map(([m,n])=>
+        `<span class="act${+m===gambleStake?" pick":""}" data-stake="${m}">${n} ${gambleCost(+m)} 金</span>`).join("")}</div>
+      <div style="margin-top:8px"><span class="act" data-bet="small">押小</span><span class="act" data-bet="big">押大</span></div>
+      <div class="subttl">今夜赌货（金币 ${P.gold}）</div><div class="shopgrid" id="stock"></div>`;
   }else{
     const done=QUESTS.filter(q=>QS[q.id].state==="open"&&questDone(q));
     const open=QUESTS.filter(q=>QS[q.id].state==="open"&&!questDone(q));
@@ -1737,7 +1778,13 @@ function openNPC(id){
   }
   UI.npcbody.innerHTML=body;
   togglePanel("npc",true);
-  if(id==="kaden")fillShop();
+  if(id==="kaden")fillSmith();
+  if(id==="vaun"){
+    fillGambleShop();
+    UI.npcbody.querySelectorAll("[data-stake]").forEach(b=>b.addEventListener("click",()=>{
+      gambleStake=+b.dataset.stake;openNPC("vaun");}));
+    UI.npcbody.querySelectorAll("[data-bet]").forEach(b=>b.addEventListener("click",()=>playGamble(b.dataset.bet)));
+  }
   UI.npcbody.querySelectorAll("[data-buy]").forEach(b=>b.addEventListener("click",()=>buyPotion(b.dataset.buy)));
   UI.npcbody.querySelectorAll("[data-turn]").forEach(b=>b.addEventListener("click",()=>{
     turnIn(QUESTS.find(x=>x.id===b.dataset.turn));openNPC("selin");}));
@@ -1747,10 +1794,38 @@ function buyPotion(k){
   const[n,t,cost]=map[k];
   if(P.gold<cost){hint("金币不足");return;}
   P.gold-=cost;if(t==="hp")P.potHp+=n;else P.potMp+=n;
-  SFX.gold();openNPC("mara");
+  SFX.gold();saveSoon();openNPC("mara");
 }
-function fillShop(){
+function fillSmith(){
   const st=$("stock"),ms=$("mysell");if(!st)return;
+  st.innerHTML="";
+  ["weapon","armor","helm","offhand","gloves","boots"].forEach(type=>{
+    const it=makeBasicItem(type,P.cls,Math.max(1,P.lvl));itemSeq--;
+    const d=document.createElement("div");d.className="sitem";
+    d.innerHTML=`<span class="g">${it.glyph}</span><span class="n" style="color:${RARITY[0].c}">${it.name}</span><span class="p">${buyPrice(it)} 金</span>`;
+    d.addEventListener("mouseenter",ev=>showTip(ev,itemHTML(it,true)));
+    d.addEventListener("mouseleave",hideTip);
+    d.addEventListener("click",()=>{
+      const buy=makeBasicItem(type,P.cls,Math.max(1,P.lvl));
+      const c=buyPrice(buy);
+      if(P.gold<c){hint("金币不足");itemSeq--;return;}
+      if(!addToBag(buy)){hint("行囊已满");itemSeq--;return;}
+      P.gold-=c;SFX.gold();
+      say(`买下 <span style="color:${RARITY[0].c}">${buy.name}</span>`);
+      saveSoon();openNPC("kaden");renderBag();});
+    st.appendChild(d);});
+  ms.innerHTML="";
+  P.bag.forEach((it,i)=>{
+    const d=document.createElement("div");d.className="sitem";
+    d.innerHTML=`<span class="g">${it.glyph}</span><span class="n" style="color:${RARITY[it.rarity].c}">${it.name}</span><span class="p">+${sellPrice(it)} 金</span>`;
+    d.addEventListener("mouseenter",ev=>showTip(ev,itemHTML(it,false)));
+    d.addEventListener("mouseleave",hideTip);
+    d.addEventListener("click",()=>{P.gold+=sellPrice(it);P.bag.splice(i,1);SFX.gold();saveSoon();openNPC("kaden");renderBag();});
+    ms.appendChild(d);});
+  if(!P.bag.length)ms.innerHTML=`<div style="color:#8a7f70;font-size:12px">行囊是空的。</div>`;
+}
+function fillGambleShop(){
+  const st=$("stock");if(!st)return;
   st.innerHTML="";
   shopStock.forEach((it,i)=>{
     const d=document.createElement("div");d.className="sitem";
@@ -1762,19 +1837,33 @@ function fillShop(){
       if(P.gold<c){hint("金币不足");return;}
       if(!addToBag(it)){hint("行囊已满");return;}
       P.gold-=c;shopStock.splice(i,1);SFX.gold();
-      say(`买下 <span style="color:${RARITY[it.rarity].c}">${it.name}</span>`);
-      openNPC("kaden");renderBag();});
+      say(`从赌台上拿走 <span style="color:${RARITY[it.rarity].c}">${it.name}</span>`);
+      saveSoon();openNPC("vaun");renderBag();});
     st.appendChild(d);});
-  if(!shopStock.length)st.innerHTML=`<div style="color:#8a7f70;font-size:12px">货卖光了，下次回来再看。</div>`;
-  ms.innerHTML="";
-  P.bag.forEach((it,i)=>{
-    const d=document.createElement("div");d.className="sitem";
-    d.innerHTML=`<span class="g">${it.glyph}</span><span class="n" style="color:${RARITY[it.rarity].c}">${it.name}</span><span class="p">+${sellPrice(it)} 金</span>`;
-    d.addEventListener("mouseenter",ev=>showTip(ev,itemHTML(it,false)));
-    d.addEventListener("mouseleave",hideTip);
-    d.addEventListener("click",()=>{P.gold+=sellPrice(it);P.bag.splice(i,1);SFX.gold();openNPC("kaden");renderBag();});
-    ms.appendChild(d);});
-  if(!P.bag.length)ms.innerHTML=`<div style="color:#8a7f70;font-size:12px">行囊是空的。</div>`;
+  if(!shopStock.length)st.innerHTML=`<div style="color:#8a7f70;font-size:12px">今夜的货被掏空了。掷骰子还能再开。</div>`;
+}
+function playGamble(side){
+  const cost=gambleCost(gambleStake);
+  if(P.gold<cost){hint("金币不足");return;}
+  P.gold-=cost;
+  const die=1+Math.floor(RND()*6);
+  const isBig=die>=4;
+  const win=(side==="big")===isBig;
+  const face=isBig?"大":"小";
+  let text=`骰子 ${die} · ${face}。`;
+  if(win){
+    const lv=clamp(P.lvl+ri(0,1+(gambleStake>1?1:0)+(gambleStake>2?1:0)),1,99);
+    const it=rollItem(lv,gambleStake>=4?true:gambleStake>=2?RND()<.55:RND()<.18);
+    lastGamble={die,win:true,text:text+`押中了。`};
+    SFX.level();
+    giveWonItem(it,`<span style="color:#e2c47f">押中 ${face}。</span> 抓到 <span style="color:${RARITY[it.rarity].c}">${it.name}</span>`);
+    lastGamble.text=text+`你赢了 <span style="color:${RARITY[it.rarity].c}">${it.name}</span>。`;
+  }else{
+    lastGamble={die,win:false,text:text+"金币归我。"};
+    SFX.hit();
+    say(`<span style="color:#c05a4a">押错了。</span> 骰子是 ${die}。`);
+  }
+  saveSoon();openNPC("vaun");renderBag();
 }
 
 function stashItems(){return GloamSave.getStash();}
@@ -2850,7 +2939,7 @@ function startNew(name,cls){
   enterArea("town");
   ensureBounties();
   P.hp=P.hpMax;P.mp=P.mpMax;
-  say(`你以<b style="color:#e2c47f">${c.n}</b>的身份醒来。先去找执政官塞琳。南边新支了银行、悬赏板和石碑。`);
+  say(`你以<b style="color:#e2c47f">${c.n}</b>的身份醒来。先去找执政官塞琳。广场上新来了个扔骰子的。`);
 }
 function bootFromMenu(){
   const boot=GloamSave.getBoot();
