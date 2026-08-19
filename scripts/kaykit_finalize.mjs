@@ -20,6 +20,7 @@ const MAP = {
   mob_bandit:   { idle: "Idle", run: "Running_A", attack: "1H_Melee_Attack_Chop", die: "Death_A" },
   mob_skelrogue:{ idle: "Idle", run: "Running_A", attack: "1H_Ranged_Shoot",      die: "Death_A" },
   boss_sekhra:  { idle: "Idle", run: "Running_A", attack: "Spellcast_Shoot",       die: "Death_A" },
+  npc_rogue:    { idle: "Idle", run: "Running_A", attack: "1H_Melee_Attack_Chop", die: "Death_A" },
 };
 
 for (const [id, wanted] of Object.entries(MAP)) {

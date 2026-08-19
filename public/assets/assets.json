@@ -2,9 +2,12 @@
   "char_warrior":  { "path": "models/char_warrior.glb?v=3",  "scale": 1.0, "yOffset": 0 },
   "char_mage":     { "path": "models/char_mage.glb?v=3",     "scale": 1.0, "yOffset": 0 },
   "char_archer":   { "path": "models/char_archer.glb?v=3",   "scale": 1.0, "yOffset": 0 },
+  "npc_rogue":     { "path": "models/npc_rogue.glb?v=3",     "scale": 1.0, "yOffset": 0 },
   "mob_skeleton":  { "path": "models/mob_skeleton.glb?v=3",  "scale": 1.0, "yOffset": 0 },
   "mob_ghoul":     { "path": "models/mob_ghoul.glb?v=3",     "scale": 1.0, "yOffset": 0 },
   "mob_bandit":    { "path": "models/mob_bandit.glb?v=3",    "scale": 1.0, "yOffset": 0 },
   "mob_skelrogue": { "path": "models/mob_skelrogue.glb?v=3", "scale": 1.0, "yOffset": 0 },
+  "mob_maw":       { "path": "models/mob_maw.glb?v=3",       "scale": 1.6, "yOffset": 0 },
+  "mob_slime":     { "path": "models/mob_slime.glb?v=3",     "scale": 1.3, "yOffset": 0 },
   "boss_sekhra":   { "path": "models/boss_sekhra.glb?v=3",   "scale": 1.0, "yOffset": 0 }
 }
