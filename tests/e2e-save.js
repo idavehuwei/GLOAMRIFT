@@ -141,6 +141,92 @@ function waitServer() {
     await page.waitForFunction(() => document.getElementById("pname") && document.getElementById("pname").textContent === "TestWarden");
     ok("load page: enters game", true);
 
+    console.log("\n[e2e smith reforge / sockets]");
+    const smithOrig = await page.evaluate(() => {
+      const P = window.__GLOAMTEST.P;
+      return {gold:P.gold, bag:JSON.parse(JSON.stringify(P.bag)), equip:JSON.parse(JSON.stringify(P.equip))};
+    });
+    const smithUi = await page.evaluate(() => {
+      const T = window.__GLOAMTEST;
+      T.openNPC("kaden");
+      const npc = document.getElementById("npc");
+      const ref = document.getElementById("reforgebox");
+      const sock = document.getElementById("socketbox");
+      return {
+        smith: npc && npc.classList.contains("smith"),
+        reforge: ref ? ref.textContent : "",
+        socket: sock ? sock.textContent : ""
+      };
+    });
+    ok("smith: kaden panel widens", !!(smithUi && smithUi.smith));
+    ok("smith: common gear cannot reforge", !!(smithUi && smithUi.reforge.indexOf("没有带词缀") >= 0));
+    ok("smith: common gear cannot socket", !!(smithUi && smithUi.socket.indexOf("稀有以上") >= 0));
+
+    const smithFlow = await page.evaluate(() => {
+      const T = window.__GLOAMTEST;
+      const rare = T.rollItem(8, true);
+      rare.type = "weapon"; rare.cls = "warrior"; rare.rarity = 3; T.rollAffixes(rare);
+      T.P.equip.weapon = rare;
+      const rune = T.rollRune();
+      rune.k = "dmg"; rune.v = 6; rune.runeId = "rune_ember"; rune.name = "余烬符文";
+      T.P.bag.push(rune);
+      T.P.gold = 50000;
+      const gold0 = T.P.gold;
+      const aff0 = JSON.stringify(rare.affixes);
+      T.doReforge("eweapon");
+      const afterRef = T.gearAt("eweapon");
+      const gold1 = T.P.gold;
+      T.doPunch("eweapon");
+      const dmg0 = T.pStats().dmgMax;
+      T.doSocketIn("eweapon", 0, 0);
+      const sock = T.gearAt("eweapon") && T.gearAt("eweapon").sockets && T.gearAt("eweapon").sockets[0];
+      const inlaid = !!(sock && sock.k === "dmg" && sock.v === 6);
+      const dmg1 = T.pStats().dmgMax;
+      const bagAfterIn = T.P.bag.filter(x => x && x.type === "rune").length;
+      const punched = !!(T.gearAt("eweapon") && T.gearAt("eweapon").sockets && T.gearAt("eweapon").sockets.length === 1);
+      T.doSocketOut("eweapon");
+      const afterOut = T.gearAt("eweapon");
+      const bagAfterOut = T.P.bag.filter(x => x && x.type === "rune").length;
+      const old = T.rollItem(5, true);
+      delete old.sockets; delete old.reforged;
+      T.ensureGear(old);
+      T.openNPC("kaden");
+      return {
+        hook: !!(T.openNPC && T.doReforge),
+        reforged: afterRef && afterRef.reforged === 1,
+        affChanged: JSON.stringify(afterRef && afterRef.affixes) !== aff0,
+        goldDown: gold1 < gold0,
+        punched,
+        inlaid,
+        dmgUp: dmg1 > dmg0,
+        runeGone: bagAfterIn === 0,
+        extracted: bagAfterOut === 1 && afterOut && afterOut.sockets && afterOut.sockets[0] === null,
+        oldSave: Array.isArray(old.sockets) && old.reforged === 0,
+        uiPunch: !!document.querySelector("[data-punch]"),
+        uiReforge: !!document.querySelector("[data-reforge]")
+      };
+    });
+    ok("smith: test hook present", !!(smithFlow && smithFlow.hook));
+    ok("smith: reforge increments count", !!(smithFlow && smithFlow.reforged));
+    ok("smith: reforge rerolls affixes", !!(smithFlow && smithFlow.affChanged));
+    ok("smith: reforge spends gold", !!(smithFlow && smithFlow.goldDown));
+    ok("smith: punch opens a hole", !!(smithFlow && smithFlow.punched));
+    ok("smith: rune sockets into hole", !!(smithFlow && smithFlow.inlaid));
+    ok("smith: socketed rune affects pStats", !!(smithFlow && smithFlow.dmgUp));
+    ok("smith: inlay removes rune from bag", !!(smithFlow && smithFlow.runeGone));
+    ok("smith: extract restores rune and empty hole", !!(smithFlow && smithFlow.extracted));
+    ok("smith: old save missing sockets hydrates", !!(smithFlow && smithFlow.oldSave));
+    ok("smith: punch control visible on rare", !!(smithFlow && smithFlow.uiPunch));
+    ok("smith: reforge control visible", !!(smithFlow && smithFlow.uiReforge));
+
+    await page.evaluate((orig) => {
+      const P = window.__GLOAMTEST.P;
+      P.gold = orig.gold;
+      P.bag.splice(0, P.bag.length);
+      orig.bag.forEach(it => P.bag.push(it));
+      Object.keys(P.equip).forEach(k => { P.equip[k] = orig.equip[k] || null; });
+    }, smithOrig);
+
     await page.goto(BASE + "/index.html");
     await page.evaluate(() => {
       const raw = JSON.parse(localStorage.getItem("gloamrift-saves-v1"));

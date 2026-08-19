@@ -172,6 +172,7 @@ canvas{display:block}
 
 #npc{left:50%;top:50%;transform:translate(-50%,-50%);width:580px;max-height:76vh;overflow-y:auto}
 #npc.bank{width:min(820px,94vw)}
+#npc.smith{width:min(640px,94vw)}
 #npc .grid{margin:6px 0 10px}
 .bankcols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .bankcol .subttl{margin-top:0}
@@ -199,6 +200,14 @@ canvas{display:block}
 .die.win{border-color:#4d6b3c;color:#7ec87e}
 .die.lose{border-color:#6d2a22;color:#c05a4a}
 .dieres{font-size:12px;color:#9e937f;margin-top:8px;text-align:center;line-height:1.6;min-height:20px}
+.gcard{border:1px solid #2a2118;background:#0f0c0a;padding:9px 11px;margin-bottom:7px}
+.gcard .gn{font-family:var(--serif);font-size:13px}
+.gcard .gm{font-size:11px;color:#8a7f70;margin-top:3px;line-height:1.55}
+.sock{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.sock i{width:26px;height:26px;border:1px solid #4a3b26;background:#120e0a;display:inline-flex;
+  align-items:center;justify-content:center;font-size:14px;font-style:normal;cursor:pointer}
+.sock i.empty{opacity:.4;font-size:11px;color:#6d6355}
+.sock i:hover{border-color:var(--brass-hi)}
 .dcard{border:1px solid #2a2118;background:#0f0c0a;padding:10px 12px;margin-bottom:8px}
 .dcard .dn{font-family:var(--serif);font-size:13px;color:var(--brass-hi)}
 .dcard .dm{font-size:11.5px;color:#9e937f;line-height:1.6;margin-top:3px}
@@ -868,6 +877,21 @@ const AFFIX=[{n:"力量",k:"str",r:[2,7]},{n:"敏捷",k:"dex",r:[2,7]},{n:"体�
   {n:"护甲",k:"armor",r:[4,16]},{n:"最大生命",k:"hp",r:[8,28]},{n:"最大法力",k:"mp",r:[5,18]},
   {n:"伤害",k:"dmg",r:[1,5]},{n:"暴击几率%",k:"crit",r:[2,6]},{n:"攻击速度%",k:"as",r:[3,9]},
   {n:"生命偷取%",k:"leech",r:[1,4]},{n:"移动速度%",k:"ms",r:[3,8]}];
+const RUNES=[
+  {id:"rune_ember",n:"余烬",g:"🔥",k:"dmg",v:[4,9],tier:1},
+  {id:"rune_frost",n:"霜结",g:"❄",k:"armor",v:[8,18],tier:1},
+  {id:"rune_vita",n:"命泉",g:"❤",k:"hp",v:[12,24],tier:1},
+  {id:"rune_hawk",n:"鹰羽",g:"🪶",k:"crit",v:[2,5],tier:2},
+  {id:"rune_gale",n:"疾风",g:"💨",k:"as",v:[4,8],tier:2},
+  {id:"rune_leech",n:"饥渴",g:"🩸",k:"leech",v:[1,3],tier:3}
+];
+function runeById(id){return RUNES.find(r=>r.id===id);}
+function modName(k){const a=AFFIX.find(x=>x.k===k);return a?a.n:k;}
+function applyMod(s,k,v){
+  if(k==="armor")s.armor+=v;else if(k==="hp")s.hpB+=v;else if(k==="mp")s.mpB+=v;
+  else if(k==="dmg")s.dmgF+=v;else if(k==="crit")s.crit+=v;else if(k==="as")s.asB+=v;
+  else if(k==="leech")s.leech+=v;else if(k==="ms")s.ms+=v;else if(s[k]!=null)s[k]+=v;
+}
 const PRE=["幽影","焦骨","锈蚀","狼首","苍白","烈焰","远古","无声","裂隙","血誓","霜噬","石桥"];
 const SUF=["之约","的余烬","的低语","之刃","的守望","的墓志","之怒","的黄昏"];
 const UNIQUE=["瓦拉克的枷锁","塞克拉的指骨","织母的丝腺","执政官的遗诺","第一次下潜","桥下之物"];
@@ -882,15 +906,41 @@ function rollItem(lvl,forceRare,clsHint){
   else r=roll<.46?0:roll<.78?1:roll<.945?2:roll<.99?3:4;
   const sc=1+(lvl-1)*.30;
   const it={id:++itemSeq,type,glyph:base.g,rarity:r,name:base.n,ilvl:lvl,dmgMin:0,dmgMax:0,armor:0,
-    affixes:[],spd:base.sp||1,cls:type==="weapon"?cls:null};
+    affixes:[],spd:base.sp||1,cls:type==="weapon"?cls:null,sockets:[],reforged:0};
   if(type==="weapon"){it.dmgMin=Math.round(base.d[0]*sc+r*1.7);it.dmgMax=Math.round(base.d[1]*sc+r*3.4);}
   else it.armor=Math.round(rf(base.a[0],base.a[1])*sc)+r*3;
-  const used={};
-  for(let i=0;i<RARITY[r].af;i++){const a=pick(AFFIX);if(used[a.k])continue;used[a.k]=1;
-    it.affixes.push({n:a.n,k:a.k,v:Math.round(rf(a.r[0],a.r[1])*(1+(lvl-1)*.18))});}
+  rollAffixes(it);
   if(r===1)it.name=pick(PRE)+it.name;
   else if(r===2||r===3)it.name=pick(PRE)+it.name+pick(SUF);
   else if(r===4)it.name=pick(UNIQUE);
+  return it;
+}
+function rollAffixes(it){
+  it.affixes=[];
+  const used={},need=RARITY[it.rarity]?RARITY[it.rarity].af:0;
+  let guard=0;
+  while(it.affixes.length<need&&guard++<48){
+    const a=pick(AFFIX);if(used[a.k])continue;used[a.k]=1;
+    it.affixes.push({n:a.n,k:a.k,v:Math.round(rf(a.r[0],a.r[1])*(1+(Math.max(1,it.ilvl)-1)*.18))});
+  }
+}
+function makeRuneItem(id,v,name){
+  const def=runeById(id)||RUNES[0];
+  const val=v==null?ri(def.v[0],def.v[1]):v;
+  return{id:++itemSeq,type:"rune",runeId:def.id,glyph:def.g,rarity:Math.min(4,def.tier||1),
+    name:name||(def.n+"符文"),ilvl:1,dmgMin:0,dmgMax:0,armor:0,affixes:[],k:def.k,v:val,n:def.n};
+}
+function rollRune(){
+  const w=RUNES.map(r=>r.tier===1?62:r.tier===2?28:10);
+  let t=RND()*w.reduce((a,b)=>a+b,0),def=RUNES[0];
+  for(let i=0;i<RUNES.length;i++){t-=w[i];if(t<=0){def=RUNES[i];break;}}
+  return makeRuneItem(def.id);
+}
+function ensureGear(it){
+  if(!it||typeof it!=="object"||it.type==="rune")return it;
+  if(!Array.isArray(it.affixes))it.affixes=[];
+  if(!Array.isArray(it.sockets))it.sockets=[];
+  if(!isFinite(+it.reforged))it.reforged=0;
   return it;
 }
 function makeBasicItem(type,cls,lvl){
@@ -901,13 +951,15 @@ function makeBasicItem(type,cls,lvl){
   else base=BASES[type][0];
   const sc=1+(Math.max(1,lvl)-1)*.18;
   const it={id:++itemSeq,type,glyph:base.g,rarity:0,name:"制式"+base.n,ilvl:lvl,dmgMin:0,dmgMax:0,armor:0,
-    affixes:[],spd:base.sp||1,cls:type==="weapon"?cls:null};
+    affixes:[],spd:base.sp||1,cls:type==="weapon"?cls:null,sockets:[],reforged:0};
   if(type==="weapon"){it.dmgMin=Math.max(1,Math.round(base.d[0]*sc));it.dmgMax=Math.max(2,Math.round(base.d[1]*sc));}
   else it.armor=Math.round(rf(base.a[0],base.a[1])*sc);
   return it;
 }
 function itemScore(it){let s=it.dmgMin+it.dmgMax*1.2+it.armor*.8;
-  it.affixes.forEach(a=>s+=a.v*(a.k==="dmg"?3:a.k==="crit"?4:a.k==="as"?3:1));return s;}
+  (it.affixes||[]).forEach(a=>s+=a.v*(a.k==="dmg"?3:a.k==="crit"?4:a.k==="as"?3:1));
+  (it.sockets||[]).forEach(r=>{if(r)s+=r.v*(r.k==="dmg"?3:r.k==="crit"?4:r.k==="as"?3:1);});
+  return s;}
 function buyPrice(it){return Math.round((40+itemScore(it)*7+it.rarity*90)*(1+it.ilvl*.06));}
 function sellPrice(it){return Math.max(8,Math.round(buyPrice(it)*.3));}
 
@@ -950,12 +1002,10 @@ function pStats(){
     armor:0,dmgMin:1,dmgMax:3,crit:5,hpB:0,mpB:0,dmgF:0,asB:0,leech:0,ms:0,wspd:1};
   for(const k in P.equip){
     const it=P.equip[k];if(!it)continue;
-    s.armor+=it.armor;
+    s.armor+=it.armor||0;
     if(it.type==="weapon"){s.dmgMin+=it.dmgMin;s.dmgMax+=it.dmgMax;s.wspd=it.spd||1;}
-    it.affixes.forEach(a=>{
-      if(a.k==="armor")s.armor+=a.v;else if(a.k==="hp")s.hpB+=a.v;else if(a.k==="mp")s.mpB+=a.v;
-      else if(a.k==="dmg")s.dmgF+=a.v;else if(a.k==="crit")s.crit+=a.v;else if(a.k==="as")s.asB+=a.v;
-      else if(a.k==="leech")s.leech+=a.v;else if(a.k==="ms")s.ms+=a.v;else s[a.k]+=a.v;});
+    (it.affixes||[]).forEach(a=>applyMod(s,a.k,a.v));
+    (it.sockets||[]).forEach(r=>{if(r)applyMod(s,r.k,r.v);});
   }
   const main=P.cls==="warrior"?s.str:P.cls==="archer"?s.dex:s.ene;
   const bd=P.buffs.dmg?1+P.buffs.dmg.v/100:1;
@@ -1047,7 +1097,7 @@ function dropAt(x,z,obj){
     m.position.set(rf(-.2,.2),.2+rf(0,.12),rf(-.2,.2));g.add(m);}}
   else if(obj.kind==="potion"){const m=new THREE.Mesh(potGeo,new THREE.MeshBasicMaterial({color:obj.pot==="hp"?0xd8342a:0x3a7fe0}));
     m.position.y=.22;g.add(m);}
-  else{const col=RARITY[obj.item.rarity].hex;
+  else{const col=(RARITY[obj.item.rarity]||RARITY[0]).hex;
     const m=new THREE.Mesh(new THREE.BoxGeometry(.34,.34,.34),new THREE.MeshBasicMaterial({color:col}));
     m.position.y=.32;g.add(m);
     const gl=new THREE.PointLight(col,.9,4.5,2);gl.position.y=.5;g.add(gl);
@@ -1063,6 +1113,8 @@ function rollDrop(e){
   const ch=e.boss?1:e.elite?.75:.2;
   if(RND()<ch)dropAt(e.x+rf(-.8,.8),e.z+rf(-.8,.8),{kind:"item",item:rollItem(L,e.boss||e.elite)});
   if(e.boss)for(let i=0;i<2;i++)dropAt(e.x+rf(-1.6,1.6),e.z+rf(-1.6,1.6),{kind:"item",item:rollItem(L,true)});
+  if((e.elite||e.boss)&&RND()<(e.boss?.62:.2))
+    dropAt(e.x+rf(-1,1),e.z+rf(-1,1),{kind:"item",item:rollRune()});
   if(RND()<.22)dropAt(e.x+rf(-.8,.8),e.z+rf(-.8,.8),{kind:"potion",pot:RND()<.65?"hp":"mp"});
 }
 const partGeo=new THREE.BoxGeometry(.13,.13,.13),partPool=[];
@@ -1215,7 +1267,7 @@ const PANELS=["pc","inv","sk","qs","npc"];
 function togglePanel(id,force){
   const el=$(id),on=force!==undefined?force:!el.classList.contains("on");
   el.classList.toggle("on",on);
-  if(id==="npc"&&!on)$("npc").classList.remove("bank");
+  if(id==="npc"&&!on)$("npc").classList.remove("bank","smith");
   if(on){SFX.ui();
     if(id==="pc"){renderChar();sizeDoll();if($("sk").classList.contains("on"))$("sk").classList.remove("on");}
     if(id==="inv")renderBag();
@@ -1227,13 +1279,25 @@ function togglePanel(id,force){
 document.querySelectorAll("[data-close]").forEach(x=>x.addEventListener("click",()=>{togglePanel(x.dataset.close,false);renderTabs();}));
 $("track").addEventListener("click",()=>{togglePanel("qs",true);renderTabs();});
 function itemHTML(it,cmp){
-  const r=RARITY[it.rarity];
+  if(it.type==="rune"){
+    return`<div class="n" style="color:${RARITY[it.rarity]?RARITY[it.rarity].c:"#6f9ede"}">${it.name}</div>
+      <div style="color:#8a7f70;font-size:11px">符文 · 第 ${it.rarity||1} 阶</div>
+      <div class="a" style="margin-top:4px">+${it.v} ${modName(it.k)}</div>
+      <div class="h">左键无效 · 拿到铁匠处镶进稀有以上装备 · 右键丢弃</div>`;
+  }
+  ensureGear(it);
+  const r=RARITY[it.rarity]||RARITY[0];
   const sn=(SLOTDEF.find(s=>(s.t||s.k)===it.type)||{n:it.type}).n;
   let h=`<div class="n" style="color:${r.c}">${it.name}</div>
-    <div style="color:#8a7f70;font-size:11px">${r.n} · ${sn} · 物品等级 ${it.ilvl}${it.cls?" · "+CLASSES[it.cls].n+"专用":""}</div>`;
+    <div style="color:#8a7f70;font-size:11px">${r.n} · ${sn} · 物品等级 ${it.ilvl}${it.cls?" · "+CLASSES[it.cls].n+"专用":""}${it.reforged?` · 重铸 ${it.reforged} 次`:""}</div>`;
   if(it.dmgMax)h+=`<div style="margin-top:4px">伤害 ${it.dmgMin} - ${it.dmgMax}</div>`;
   if(it.armor)h+=`<div style="margin-top:4px">护甲 +${it.armor}</div>`;
-  it.affixes.forEach(a=>h+=`<div class="a">+${a.v} ${a.n}</div>`);
+  (it.affixes||[]).forEach(a=>h+=`<div class="a">+${a.v} ${a.n}</div>`);
+  if(it.sockets&&it.sockets.length){
+    it.sockets.forEach(s=>{
+      h+=s?`<div class="a">孔 · ${s.n}（+${s.v} ${modName(s.k)}）</div>`:`<div class="h">空孔</div>`;
+    });
+  }
   if(it.cls&&it.cls!==P.cls)h+=`<div style="color:#c05a4a;margin-top:4px">你的职业无法使用</div>`;
   if(cmp){
     const cur=it.type==="ring"?(P.equip.ring1||P.equip.ring2):P.equip[it.type];
@@ -1650,6 +1714,7 @@ function addToBag(it){if(P.bag.length>=CFG.BAG)return false;P.bag.push(it);retur
 function afterEquipChange(){refreshMax(false);rebuildPlayer();renderChar();renderBag();hideTip();saveSoon();}
 function equipFromBag(i){
   const it=P.bag[i];if(!it)return;
+  if(it.type==="rune"){hint("符文要拿到铁匠处镶嵌");return;}
   if(it.cls&&it.cls!==P.cls){hint("你的职业无法使用这件武器");return;}
   let key=it.type;
   if(it.type==="ring")key=P.equip.ring1?(P.equip.ring2?"ring1":"ring2"):"ring1";
@@ -1662,7 +1727,7 @@ function equipFromBag(i){
 
 /* ═════════ 17. NPC ═════════ */
 const NPCDEF=[
- {id:"kaden",n:"铁匠 卡登",t:"制式武装",g:"⚒",dx:-9,dz:-4,
+ {id:"kaden",n:"铁匠 卡登",t:"制式 · 重铸 · 镶嵌",g:"⚒",dx:-9,dz:-4,
    look:{body:0x6a4a2a,skin:0xb98a5a,leg:0x3a2a1a,helm:0x8a7a5a,weapon:0xc0b8a6,wkind:"sword"}},
  {id:"mara",n:"药剂商 玛拉",t:"药水与补给",g:"⚗",dx:9,dz:-4,
    look:{body:0x3a5a6a,skin:0xd0a888,leg:0x2a3a45,cape:0x2a4a5a}},
@@ -1735,15 +1800,18 @@ function giveWonItem(it,msg){
   else{P.gold+=sellPrice(it);say("箱子和行囊都满了，东西折成了金币。");}
 }
 function openNPC(id){
-  $("npc").classList.remove("bank");
+  $("npc").classList.remove("bank","smith");
   if(id==="stash"){openStash();return;}
   if(id==="board"){openBoard();return;}
   if(id==="waystone"){openWaystone();return;}
   const n=NPCDEF.find(x=>x.id===id);
   let body=`<div class="npchead"><div class="av">${n.g}</div><div><div class="nn">${n.n}</div><div class="nt">${n.t}</div></div></div>`;
   if(id==="kaden"){
-    body+=`<div class="dlg">"要花活去找广场上那个扔骰子的。我这儿只打制式件——不漂亮，但不会在你背后裂开。"</div>
+    $("npc").classList.add("smith");
+    body+=`<div class="dlg">"制式件我这儿有。词缀打偏了拿来重铸。稀有以上能开孔——符文从精英和首领身上撬。"</div>
       <div class="subttl">制式装备（金币 ${P.gold}）</div><div class="shopgrid" id="stock"></div>
+      <div class="subttl">重铸词缀</div><div id="reforgebox"></div>
+      <div class="subttl">打孔与符文</div><div id="socketbox"></div>
       <div class="subttl">出售你的物品</div><div class="shopgrid" id="mysell"></div>`;
   }else if(id==="mara"){
     body+=`<div class="dlg">"红瓶止血，蓝瓶醒神。别指望它们能救一个已经躺下的人。"</div>
@@ -1778,7 +1846,7 @@ function openNPC(id){
   }
   UI.npcbody.innerHTML=body;
   togglePanel("npc",true);
-  if(id==="kaden")fillSmith();
+  if(id==="kaden"){fillSmith();fillReforge();fillSockets();}
   if(id==="vaun"){
     fillGambleShop();
     UI.npcbody.querySelectorAll("[data-stake]").forEach(b=>b.addEventListener("click",()=>{
@@ -1817,12 +1885,141 @@ function fillSmith(){
   ms.innerHTML="";
   P.bag.forEach((it,i)=>{
     const d=document.createElement("div");d.className="sitem";
-    d.innerHTML=`<span class="g">${it.glyph}</span><span class="n" style="color:${RARITY[it.rarity].c}">${it.name}</span><span class="p">+${sellPrice(it)} 金</span>`;
+    const rr=RARITY[it.rarity]||RARITY[0];
+    d.innerHTML=`<span class="g">${it.glyph}</span><span class="n" style="color:${rr.c}">${it.name}</span><span class="p">+${sellPrice(it)} 金</span>`;
     d.addEventListener("mouseenter",ev=>showTip(ev,itemHTML(it,false)));
     d.addEventListener("mouseleave",hideTip);
     d.addEventListener("click",()=>{P.gold+=sellPrice(it);P.bag.splice(i,1);SFX.gold();saveSoon();openNPC("kaden");renderBag();});
     ms.appendChild(d);});
   if(!P.bag.length)ms.innerHTML=`<div style="color:#8a7f70;font-size:12px">行囊是空的。</div>`;
+}
+let socketPick=null;
+function reforgeCost(it){return Math.round((70+it.ilvl*22+it.rarity*85)*(1+(it.reforged||0)*.65));}
+function punchCost(it){return Math.round((140+it.ilvl*28+it.rarity*110)*(1+(it.sockets||[]).length*.8));}
+function maxSockets(it){return it.rarity>=3?2:it.rarity>=2?1:0;}
+function smithGear(){
+  const out=[];
+  SLOTDEF.forEach(sd=>{const it=P.equip[sd.k];if(it){ensureGear(it);out.push({loc:"e"+sd.k,it,where:"已装备 · "+sd.n});}});
+  P.bag.forEach((it,i)=>{if(it&&it.type!=="rune"){ensureGear(it);out.push({loc:"b"+i,it,where:"行囊"});}});
+  return out;
+}
+function gearAt(loc){
+  if(!loc)return null;
+  if(loc.charAt(0)==="b")return P.bag[+loc.slice(1)]||null;
+  return P.equip[loc.slice(1)]||null;
+}
+function afterSmith(){socketPick=null;hideTip();refreshMax(false);rebuildPlayer();renderChar();renderBag();saveSoon();openNPC("kaden");}
+function fillReforge(){
+  const box=$("reforgebox");if(!box)return;
+  const list=smithGear().filter(g=>(RARITY[g.it.rarity]||{}).af>0);
+  if(!list.length){box.innerHTML=`<div style="color:#8a7f70;font-size:12px">没有带词缀的装备。魔法品质以上才能重铸。</div>`;return;}
+  box.innerHTML="";
+  list.forEach(g=>{
+    const it=g.it,cost=reforgeCost(it),r=RARITY[it.rarity];
+    const aff=it.affixes.length?it.affixes.map(a=>`+${a.v} ${a.n}`).join(" · "):"无词缀";
+    const d=document.createElement("div");d.className="gcard";
+    d.innerHTML=`<div class="gn" style="color:${r.c}">${it.glyph} ${it.name}</div>
+      <div class="gm">${g.where} · ${r.n} · 已重铸 ${it.reforged||0} 次<br>${aff}</div>
+      <div class="act" data-reforge="${g.loc}">重铸 ${cost} 金</div>`;
+    d.querySelector("[data-reforge]").addEventListener("click",()=>doReforge(g.loc));
+    d.addEventListener("mouseenter",ev=>showTip(ev,itemHTML(it,false)));
+    d.addEventListener("mouseleave",hideTip);
+    box.appendChild(d);
+  });
+}
+function doReforge(loc){
+  const it=gearAt(loc);if(!it||it.type==="rune")return;
+  if(!(RARITY[it.rarity]||{}).af){hint("普通装备没有词缀可重铸");return;}
+  const cost=reforgeCost(it);
+  if(P.gold<cost){hint("金币不足");return;}
+  P.gold-=cost;rollAffixes(it);it.reforged=(it.reforged||0)+1;
+  SFX.level();say(`重铸 <span style="color:${RARITY[it.rarity].c}">${it.name}</span>`);
+  afterSmith();
+}
+function fillSockets(){
+  const box=$("socketbox");if(!box)return;
+  if(socketPick){
+    const host=gearAt(socketPick.loc);
+    if(!host){socketPick=null;}
+    else{
+      const runes=P.bag.map((it,i)=>({it,i})).filter(x=>x.it&&x.it.type==="rune");
+      box.innerHTML=`<div class="gm" style="margin-bottom:8px">把符文镶进「${host.name}」的第 ${socketPick.idx+1} 孔。
+        <span class="act" id="sockcancel">取消</span></div>`;
+      if(!runes.length)box.innerHTML+=`<div style="color:#8a7f70;font-size:12px">行囊里没有符文。去打精英和首领。</div>`;
+      runes.forEach(({it,i})=>{
+        const d=document.createElement("div");d.className="sitem";
+        d.innerHTML=`<span class="g">${it.glyph}</span><span class="n" style="color:${(RARITY[it.rarity]||RARITY[0]).c}">${it.name}</span>
+          <span class="p">+${it.v} ${modName(it.k)}</span>`;
+        d.addEventListener("click",()=>doSocketIn(socketPick.loc,socketPick.idx,i));
+        box.appendChild(d);
+      });
+      const c=$("sockcancel");if(c)c.addEventListener("click",()=>{socketPick=null;openNPC("kaden");});
+      return;
+    }
+  }
+  const list=smithGear().filter(g=>g.it.rarity>=2||(g.it.sockets&&g.it.sockets.length));
+  if(!list.length){box.innerHTML=`<div style="color:#8a7f70;font-size:12px">稀有以上装备才能开孔。符文从精英与首领掉落。</div>`;return;}
+  box.innerHTML="";
+  list.forEach(g=>{
+    const it=g.it,max=maxSockets(it),have=(it.sockets||[]).length,r=RARITY[it.rarity]||RARITY[0];
+    const d=document.createElement("div");d.className="gcard";
+    let socks=`<div class="sock">`;
+    (it.sockets||[]).forEach((s,idx)=>{
+      socks+=s?`<i title="${s.n}">${(runeById(s.id)||{}).g||"◆"}</i>`:`<i class="empty" data-in="${g.loc}:${idx}" title="空孔">○</i>`;
+    });
+    socks+=`</div>`;
+    d.innerHTML=`<div class="gn" style="color:${r.c}">${it.glyph} ${it.name}</div>
+      <div class="gm">${g.where} · ${r.n} · 孔 ${have} / ${max||have}</div>${socks}
+      <div style="margin-top:6px">
+        ${have<max?`<span class="act" data-punch="${g.loc}">打孔 ${punchCost(it)} 金</span>`:""}
+        ${(it.sockets||[]).some(Boolean)?`<span class="act" data-out="${g.loc}">取出符文</span>`:""}
+      </div>`;
+    const punch=d.querySelector("[data-punch]");
+    if(punch)punch.addEventListener("click",()=>doPunch(g.loc));
+    d.querySelectorAll("[data-in]").forEach(el=>el.addEventListener("click",()=>{
+      const p=el.dataset.in.split(":");socketPick={loc:p[0],idx:+p[1]};openNPC("kaden");}));
+    const out=d.querySelector("[data-out]");
+    if(out)out.addEventListener("click",()=>doSocketOut(g.loc));
+    d.addEventListener("mouseenter",ev=>showTip(ev,itemHTML(it,false)));
+    d.addEventListener("mouseleave",hideTip);
+    box.appendChild(d);
+  });
+}
+function doPunch(loc){
+  const it=gearAt(loc);if(!it||it.type==="rune")return;
+  const max=maxSockets(it);
+  if((it.sockets||[]).length>=max){hint("不能再开孔了");return;}
+  const cost=punchCost(it);
+  if(P.gold<cost){hint("金币不足");return;}
+  P.gold-=cost;it.sockets=it.sockets||[];it.sockets.push(null);
+  SFX.ui();say(`给 <span style="color:${RARITY[it.rarity].c}">${it.name}</span> 开了一孔。`);
+  afterSmith();
+}
+function doSocketIn(loc,idx,bagI){
+  const it=gearAt(loc),rune=P.bag[bagI];
+  if(!it||!rune||rune.type!=="rune"){socketPick=null;openNPC("kaden");return;}
+  it.sockets=it.sockets||[];
+  if(idx<0||idx>=it.sockets.length){hint("没有这个孔");socketPick=null;openNPC("kaden");return;}
+  if(it.sockets[idx]){hint("这个孔已经有符文了");return;}
+  it.sockets[idx]={id:rune.runeId,n:rune.name,k:rune.k,v:rune.v};
+  P.bag.splice(bagI,1);socketPick=null;
+  SFX.loot();say(`镶入 <span style="color:#e2c47f">${rune.name}</span>`);
+  afterSmith();
+}
+function doSocketOut(loc){
+  const it=gearAt(loc);if(!it||!it.sockets)return;
+  const filled=it.sockets.filter(Boolean);
+  if(!filled.length)return;
+  if(P.bag.length+filled.length>CFG.BAG){hint("行囊装不下取出的符文");return;}
+  it.sockets=it.sockets.map(s=>{
+    if(!s)return s;
+    const rune=makeRuneItem(s.id,s.v,s.n);
+    rune.k=s.k;rune.v=s.v;
+    P.bag.push(rune);
+    return null;
+  });
+  SFX.loot();say("符文已取出。");
+  afterSmith();
 }
 function fillGambleShop(){
   const st=$("stock");if(!st)return;
@@ -2358,7 +2555,7 @@ function takeItem(i){
   else{
     if(P.bag.length>=CFG.BAG){hint("行囊已满");return;}
     P.bag.push(it.item);SFX.loot();
-    const r=RARITY[it.item.rarity];
+    const r=RARITY[it.item.rarity]||RARITY[0];
     floatText(it.x,1.4,it.z,it.item.name,r.c,16);
     say(`拾取 <span style="color:${r.c}">${it.item.name}</span>`);
     if($("inv").classList.contains("on"))renderBag();
@@ -2876,9 +3073,9 @@ function applySave(d){
   P.bountyDun=d.bountyDun&&typeof d.bountyDun==="object"?d.bountyDun:{};
   P.trackId=typeof d.trackId==="string"&&questById(d.trackId)?d.trackId:"";
   itemSeq=Math.max(itemSeq,n(d.itemSeq));
-  P.bag.forEach(it=>{if(it.id>itemSeq)itemSeq=it.id;});
-  SLOTDEF.forEach(s=>{const it=P.equip[s.k];if(it&&it.id>itemSeq)itemSeq=it.id;});
-  stashItems().forEach(it=>{if(it&&it.id>itemSeq)itemSeq=it.id;});
+  P.bag.forEach(it=>{ensureGear(it);if(it.id>itemSeq)itemSeq=it.id;});
+  SLOTDEF.forEach(s=>{const it=P.equip[s.k];if(it){ensureGear(it);if(it.id>itemSeq)itemSeq=it.id;}});
+  stashItems().forEach(it=>{if(it){ensureGear(it);if(it.id>itemSeq)itemSeq=it.id;}});
   ensureBounties();
   P.alive=true;
   refreshMax(false);
@@ -2921,7 +3118,7 @@ function restartRun(){
 function startingWeapon(cls){
   const base=BASES.weapon[cls][0];
   return{id:++itemSeq,type:"weapon",glyph:base.g,rarity:0,name:"磨损的"+base.n,ilvl:1,
-    dmgMin:base.d[0],dmgMax:base.d[1],armor:0,affixes:[],spd:base.sp,cls};
+    dmgMin:base.d[0],dmgMax:base.d[1],armor:0,affixes:[],spd:base.sp,cls,sockets:[],reforged:0};
 }
 function startNew(name,cls){
   P.name=name;P.cls=cls;
@@ -2976,6 +3173,7 @@ loop();
 setInterval(()=>saveNow(true),60000);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)saveNow(true);});
 window.addEventListener("beforeunload",()=>saveNow(true));
+window.__GLOAMTEST={openNPC,P,pStats,rollItem,rollRune,rollAffixes,reforgeCost,punchCost,maxSockets,ensureGear,doReforge,doPunch,doSocketIn,doSocketOut,gearAt};
 })();
 </script>
 </body>
