@@ -1,0 +1,5 @@
+{
+  "char_warrior": { "path": "models/char_warrior.glb?v=3", "scale": 1.0, "yOffset": 0 },
+  "char_mage":    { "path": "models/char_mage.glb?v=3",    "scale": 1.0, "yOffset": 0 },
+  "char_archer":  { "path": "models/char_archer.glb?v=3",  "scale": 1.0, "yOffset": 0 }
+}

@@ -227,6 +227,49 @@ function waitServer() {
       Object.keys(P.equip).forEach(k => { P.equip[k] = orig.equip[k] || null; });
     }, smithOrig);
 
+    console.log("\n[e2e achievements]");
+    const ach = await page.evaluate(() => {
+      const T = window.__GLOAMTEST;
+      const before = Object.keys(T.P.ach || {}).length;
+      T.P.kills = Math.max(T.P.kills || 0, 1);
+      T.achCheck();
+      T.togglePanel("ach", true);
+      const toast = document.getElementById("achtoast");
+      const list = document.getElementById("achlist");
+      const tab = [...document.querySelectorAll("#tabs .tab")].some(t => (t.textContent || "").indexOf("功绩") >= 0);
+      const ser = T.P.ach && T.P.ach.kill1;
+      return {
+        hook: !!(T.ACH && T.achCheck && T.ACH.length >= 20),
+        unlocked: !!T.P.ach.kill1,
+        grew: Object.keys(T.P.ach).length > before,
+        toast: !!(toast && toast.classList.contains("on") && document.getElementById("achtoast-n").textContent.indexOf("第一滴血") >= 0),
+        panel: !!(document.getElementById("ach") && document.getElementById("ach").classList.contains("on")),
+        listed: !!(list && list.textContent.indexOf("第一滴血") >= 0),
+        tab,
+        gold: T.P.gold,
+        silentOld: (function(){
+          T.P.kills = 100;
+          const name = document.getElementById("achtoast-n").textContent;
+          T.achCheck(true);
+          return !!T.P.ach.kill100 && document.getElementById("achtoast-n").textContent === name;
+        })()
+      };
+    });
+    ok("ach: test hook and catalog", !!(ach && ach.hook));
+    ok("ach: first kill unlocks 第一滴血", !!(ach && ach.unlocked && ach.grew));
+    ok("ach: toast shows name", !!(ach && ach.toast));
+    ok("ach: panel lists unlocked feat", !!(ach && ach.panel && ach.listed));
+    ok("ach: HUD tab 功绩 Y", !!(ach && ach.tab));
+    ok("ach: silent check grants without extra toast flash", !!(ach && ach.silentOld));
+
+    await page.evaluate(() => {
+      const T = window.__GLOAMTEST;
+      T.togglePanel("ach", false);
+      T.P.kills = 0;
+      delete T.P.ach.kill1;
+      delete T.P.ach.kill100;
+    });
+
     await page.goto(BASE + "/index.html");
     await page.evaluate(() => {
       const raw = JSON.parse(localStorage.getItem("gloamrift-saves-v1"));

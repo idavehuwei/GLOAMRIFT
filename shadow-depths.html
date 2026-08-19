@@ -7,6 +7,9 @@
 <script src="js/saves.js"></script>
 <script>if(!GloamSave.getBoot())location.replace("index.html");</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/meshopt_decoder.js"></script>
 <style>
 :root{
   --abyss:#08070a;--brass:#b08d4f;--brass-hi:#e2c47f;--blood:#8e1b1b;--blood-hi:#d94430;
@@ -85,141 +88,204 @@ canvas{display:block}
 #track .obj.done .mark{color:#7ec87e}
 #track .empty{color:#8a7f70}
 
-.panel{display:none;pointer-events:auto;padding:14px 16px 16px}
+.panel{display:none;pointer-events:auto;padding:18px 20px 18px;
+  background:
+    radial-gradient(ellipse 80% 36% at 50% -8%,rgba(176,141,79,.11),transparent 58%),
+    linear-gradient(180deg,#221c16 0%,#12100c 58%,#0b0907 100%);
+  border:1px solid #6b5731;
+  box-shadow:0 0 0 1px #0a0806 inset,0 0 0 5px rgba(8,6,5,.5) inset,0 18px 52px rgba(0,0,0,.78)}
 .panel.on{display:block}
-.panel h3{font-family:var(--serif);font-size:14px;color:var(--brass-hi);letter-spacing:.18em;text-align:center;margin-bottom:11px;flex:none}
-.panel .x{position:absolute;right:9px;top:7px;color:#8a7f70;cursor:pointer;font-size:15px}
+.panel h3{font-family:var(--serif);font-size:15px;color:var(--brass-hi);letter-spacing:.32em;text-align:center;
+  margin-bottom:14px;flex:none;padding-bottom:10px;border-bottom:1px solid rgba(176,141,79,.28)}
+.panel .x{position:absolute;right:14px;top:12px;color:#8a7f70;cursor:pointer;font-size:16px;z-index:2}
 .panel .x:hover{color:var(--brass-hi)}
+.panel::before{content:"";position:absolute;inset:6px;border:1px solid rgba(176,141,79,.2);pointer-events:none}
+.panel::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    linear-gradient(#d4b56a,#d4b56a) 11px 11px/18px 1px no-repeat,
+    linear-gradient(#d4b56a,#d4b56a) 11px 11px/1px 18px no-repeat,
+    linear-gradient(#d4b56a,#d4b56a) calc(100% - 29px) 11px/18px 1px no-repeat,
+    linear-gradient(#d4b56a,#d4b56a) calc(100% - 12px) 11px/1px 18px no-repeat,
+    linear-gradient(#d4b56a,#d4b56a) 11px calc(100% - 12px)/18px 1px no-repeat,
+    linear-gradient(#d4b56a,#d4b56a) 11px calc(100% - 29px)/1px 18px no-repeat,
+    linear-gradient(#d4b56a,#d4b56a) calc(100% - 29px) calc(100% - 12px)/18px 1px no-repeat,
+    linear-gradient(#d4b56a,#d4b56a) calc(100% - 12px) calc(100% - 29px)/1px 18px no-repeat}
 
-#pc{left:14px;top:88px;width:700px;max-height:calc(100vh - 250px);overflow:hidden;display:none;flex-direction:column}
+#pc{left:16px;top:70px;width:min(760px,calc(100vw - 470px));height:calc(100vh - 210px);max-height:none;
+  overflow:hidden;display:none;flex-direction:column}
 #pc.on{display:flex}
-.pc-body{display:flex;gap:16px;align-items:stretch;min-height:0;flex:1}
-.pc-left{flex:none;display:grid;gap:6px;
+.pc-body{display:flex;gap:18px;align-items:stretch;min-height:0;flex:1}
+.pc-left{flex:none;display:grid;gap:7px;
   grid-template-areas:
     ". helm amulet"
     "weapon doll offhand"
     "gloves doll armor"
     "belt doll boots"
     "ring1 . ring2";
-  grid-template-columns:54px 210px 54px;grid-template-rows:54px 1fr 1fr 1fr 54px;min-height:360px}
-#doll{grid-area:doll;width:100%;height:100%;min-height:220px;display:block;
-  background:radial-gradient(ellipse at 50% 70%,#20180f,#0b0908 72%);border:1px solid #3a2f1f}
-.eq{width:54px;height:54px;border:1px solid #34291b;background:#0e0b09;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;cursor:pointer;font-size:9px;color:#6d6355}
-.eq:hover{border-color:var(--brass-hi)}
-.eq .g{font-size:18px;line-height:1.1}
+  grid-template-columns:62px 250px 62px;grid-template-rows:62px 1fr 1fr 1fr 62px;min-height:400px}
+#doll{grid-area:doll;width:100%;height:100%;min-height:260px;display:block;
+  background:
+    radial-gradient(ellipse at 50% 72%,#2a2014,#0b0908 74%);
+  border:1px solid #4a3b26;box-shadow:0 0 28px rgba(0,0,0,.55) inset}
+.eq{width:62px;height:62px;border:1px solid #3d3122;background:linear-gradient(180deg,#16120e,#0c0a08);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;
+  font-size:9px;color:#6d6355;position:relative}
+.eq:hover{border-color:var(--brass-hi);box-shadow:0 0 10px rgba(176,141,79,.22)}
+.eq .g{font-size:22px;line-height:1.1}
+.eq .eq-l{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:8px;letter-spacing:.08em;
+  color:#6a6155;pointer-events:none}
 .eq-helm{grid-area:helm}.eq-amulet{grid-area:amulet}.eq-weapon{grid-area:weapon}
 .eq-offhand{grid-area:offhand}.eq-gloves{grid-area:gloves}.eq-armor{grid-area:armor}
 .eq-belt{grid-area:belt}.eq-boots{grid-area:boots}.eq-ring1{grid-area:ring1}.eq-ring2{grid-area:ring2}
-.pc-right{flex:1;min-width:0;overflow-y:auto;padding-right:4px}
-.pc-meta{font-size:12px;color:#9e937f;margin-bottom:8px;line-height:1.55}
-.pc-meta b{color:var(--brass-hi);font-weight:400;font-family:var(--serif)}
-.attr{font-size:12.5px;line-height:1.85}
-.arow{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.arow b{color:var(--brass-hi);font-weight:400}
-.plus{width:17px;height:17px;line-height:15px;text-align:center;border:1px solid #6b5731;color:#e2c47f;
+.pc-right{flex:1;min-width:0;overflow-y:auto;padding-right:6px}
+.pc-meta{margin-bottom:10px;line-height:1.45}
+.pc-meta .pc-name{font-family:var(--serif);font-size:22px;color:var(--brass-hi);letter-spacing:.06em}
+.pc-meta .pc-cls{font-size:12px;color:#9e937f;margin-top:2px;letter-spacing:.08em}
+.pc-power{display:flex;align-items:baseline;gap:10px;margin-top:8px;padding:8px 10px;
+  background:#0e0b09;border:1px solid #3a2f1f}
+.pc-power span{font-size:10px;letter-spacing:.2em;color:#8a7f70}
+.pc-power b{font-family:var(--serif);font-size:26px;color:#e8cf95;font-weight:400;letter-spacing:.04em}
+.pc-xp{margin-top:8px;height:6px;background:#0a0806;border:1px solid #3a2f1f}
+.pc-xp i{display:block;height:100%;background:linear-gradient(90deg,#6b5320,var(--brass-hi))}
+.pc-tabs{display:flex;gap:0;margin:12px 0 8px;border-bottom:1px solid #2a2118}
+.ptab{padding:6px 12px;font-family:var(--serif);font-size:12px;letter-spacing:.12em;color:#8a7f70;
+  cursor:pointer;border:1px solid transparent;border-bottom:none;margin-bottom:-1px}
+.ptab:hover{color:var(--brass-hi)}
+.ptab.on{color:var(--brass-hi);border-color:#6b5731;background:linear-gradient(180deg,#1d1812,#12100c)}
+.attr{font-size:13px;line-height:1.9}
+.arow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:1px 2px}
+.arow:hover{background:rgba(176,141,79,.06)}
+.arow b{color:var(--brass-hi);font-weight:400;font-family:var(--serif)}
+.plus{width:18px;height:18px;line-height:16px;text-align:center;border:1px solid #6b5731;color:#e2c47f;
   cursor:pointer;font-size:12px;margin-left:7px;flex:none}
 .plus:hover{background:#3a2f1f}
-.grouphd{color:#e2c47f;font-size:11px;letter-spacing:.14em;margin:10px 0 5px;border-top:1px solid #2a2118;padding-top:8px}
+.grouphd{color:#e2c47f;font-size:10.5px;letter-spacing:.2em;margin:12px 0 6px;border-top:1px solid #2a2118;padding-top:9px}
 
-#inv{right:14px;top:110px;width:352px}
-.invtop{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ash);margin-bottom:8px}
-.grid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
-.cell{aspect-ratio:1;border:1px solid #34291b;background:#0e0b09;display:flex;align-items:center;
-  justify-content:center;font-size:17px;cursor:pointer}
-.cell:hover{border-color:var(--brass-hi)}
+#inv{right:16px;top:70px;width:420px;height:calc(100vh - 210px);display:none;flex-direction:column;overflow:hidden}
+#inv.on{display:flex}
+.invtop{display:none}
+.invsub{font-size:11px;color:#8a7f70;letter-spacing:.1em;text-align:center;margin:-6px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;flex:1;align-content:start;overflow-y:auto;min-height:0}
+.cell{aspect-ratio:1;border:1px solid #3d3122;background:linear-gradient(180deg,#14110d,#0c0a08);
+  display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer}
+.cell:hover{border-color:var(--brass-hi);box-shadow:0 0 8px rgba(176,141,79,.2)}
+.invfoot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:12px;
+  border-top:1px solid rgba(176,141,79,.22);font-size:13px;color:var(--ash)}
+.invfoot #invgold{font-family:var(--serif);font-size:16px;color:#f5c451;letter-spacing:.06em}
 
-#sk{left:14px;top:110px;width:360px;max-height:calc(100vh - 290px);overflow-y:auto}
-.skrow{display:flex;gap:10px;padding:8px;border:1px solid #2a2118;margin-bottom:6px;background:#0f0c0a;cursor:pointer}
+#sk{left:16px;top:70px;width:min(900px,72vw);height:calc(100vh - 210px);overflow:hidden;
+  display:none;flex-direction:column}
+#sk.on{display:flex}
+#skpts{font-size:12px;color:#9e937f;margin-bottom:12px;text-align:center;letter-spacing:.06em}
+.skbody{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;min-height:0;flex:1}
+#sklist{overflow-y:auto;padding-right:6px;border-right:1px solid #2a2118}
+#skdetail{overflow-y:auto;padding:4px 4px 4px 6px}
+.skrow{display:flex;gap:12px;padding:10px 11px;border:1px solid #2a2118;margin-bottom:7px;background:#0f0c0a;cursor:pointer}
 .skrow:hover{border-color:#6b5731}
+.skrow.on{border-color:var(--brass);background:#1a1510}
 .skrow.locked{opacity:.42}
-.skrow .ico{width:38px;height:38px;flex:none;border:1px solid #4a3b26;display:flex;align-items:center;justify-content:center;font-size:19px}
-.skrow .nm{font-family:var(--serif);font-size:13px;color:var(--brass-hi)}
-.skrow .ds{font-size:11px;color:#9e937f;line-height:1.5;margin-top:2px}
+.skrow .ico{width:44px;height:44px;flex:none;border:1px solid #4a3b26;display:flex;align-items:center;
+  justify-content:center;font-size:22px;background:#120e0a}
+.skrow .nm{font-family:var(--serif);font-size:14px;color:var(--brass-hi)}
+.skrow .ds{font-size:11.5px;color:#9e937f;line-height:1.5;margin-top:3px}
 .skrow .rk{font-size:11px;color:#7ea9d8}
-.learn{margin-left:auto;align-self:center;padding:5px 10px;font-size:11px;border:1px solid #6b5731;color:#e2c47f;flex:none}
+.learn{margin-left:auto;align-self:center;padding:6px 12px;font-size:11px;border:1px solid #6b5731;color:#e2c47f;flex:none}
 .learn:hover{background:#3a2f1f}
+.skd-ico{width:64px;height:64px;border:1px solid #6b5731;display:flex;align-items:center;justify-content:center;
+  font-size:32px;background:#120e0a;margin:0 auto 12px}
+.skd-n{font-family:var(--serif);font-size:22px;color:var(--brass-hi);text-align:center;letter-spacing:.06em}
+.skd-meta{font-size:11px;color:#8a7f70;text-align:center;letter-spacing:.12em;margin:6px 0 12px}
+.skd-d{font-size:13.5px;line-height:1.85;color:#cfc4ae;border-left:2px solid #6b5731;padding-left:12px}
+.skd-act{margin-top:16px;text-align:center}
 
-#qs{left:50%;top:88px;transform:translateX(-50%);width:min(740px,94vw);max-height:min(68vh,calc(100vh - 250px));
+#qs{left:50%;top:70px;transform:translateX(-50%);width:min(920px,94vw);height:calc(100vh - 210px);
   overflow:hidden;display:none;flex-direction:column}
 #qs.on{display:flex}
-.qlog{display:grid;grid-template-columns:250px 1fr;gap:14px;min-height:0;flex:1}
-.qnav{overflow-y:auto;border-right:1px solid #2a2118;padding-right:10px}
-.qsec{font-size:10px;letter-spacing:.18em;color:var(--ash);margin:12px 0 5px}
+.qlog{display:grid;grid-template-columns:280px 1fr;gap:18px;min-height:0;flex:1}
+.qnav{overflow-y:auto;border-right:1px solid #2a2118;padding-right:12px}
+.qsec{font-size:10px;letter-spacing:.22em;color:var(--ash);margin:14px 0 6px}
 .qsec:first-child{margin-top:0}
-.qrow{padding:8px 9px;border:1px solid #2a2118;background:#0f0c0a;margin-bottom:5px;cursor:pointer}
+.qrow{padding:9px 11px;border:1px solid #2a2118;background:#0f0c0a;margin-bottom:6px;cursor:pointer}
 .qrow:hover{border-color:#6b5731}
 .qrow.on{border-color:var(--brass);background:#1a1510}
-.qrow .qn{font-family:var(--serif);font-size:13px;color:var(--brass-hi)}
+.qrow .qn{font-family:var(--serif);font-size:14px;color:var(--brass-hi)}
 .qrow .qs{font-size:11px;color:#7ea9d8;margin-top:3px}
 .qrow.done .qn{color:#8a9a7a}
-.qdetail{overflow-y:auto;min-height:280px}
-.qdetail .qh{font-family:var(--serif);font-size:20px;color:var(--brass-hi);letter-spacing:.04em}
-.qdetail .qw{font-size:11px;color:var(--ash);letter-spacing:.12em;margin:4px 0 10px}
-.qdetail .qd{font-size:12.5px;line-height:1.85;color:#a89b83;border-left:2px solid #4a3b26;padding-left:11px}
-.qdetail .qobj{margin-top:14px}
-.qdetail .obj{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;color:#cfc4ae;margin-top:6px}
+.qdetail{overflow-y:auto;min-height:280px;padding:4px 6px 8px 8px}
+.qdetail .qh{font-family:var(--serif);font-size:26px;color:var(--brass-hi);letter-spacing:.04em;line-height:1.15}
+.qdetail .qw{font-size:11px;color:var(--ash);letter-spacing:.16em;margin:8px 0 14px}
+.qdetail .qd{font-size:14px;line-height:1.9;color:#cfc4ae;border-left:2px solid #6b5731;padding-left:14px}
+.qdetail .qobj{margin-top:18px}
+.qdetail .obj{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:#cfc4ae;margin-top:8px}
 .qdetail .obj.done{color:#7ec87e}
-.qbar{height:7px;background:#0a0806;border:1px solid #3a2f1f;margin-top:8px}
+.qbar{height:8px;background:#0a0806;border:1px solid #3a2f1f;margin-top:10px}
 .qbar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#6b5320,var(--brass-hi))}
-.qdetail .qr{font-size:12px;color:#c8a45c;margin-top:12px}
-.qcard{border:1px solid #2a2118;background:#0f0c0a;padding:10px 12px;margin-bottom:8px}
-.qcard .qn{font-family:var(--serif);font-size:13px;color:var(--brass-hi)}
-.qcard .qd{font-size:11.5px;color:#9e937f;line-height:1.6;margin-top:4px}
-.qcard .qp{font-size:11.5px;color:#7ea9d8;margin-top:5px}
+.qdetail .qr{font-size:13px;color:#c8a45c;margin-top:16px}
+.qcard{border:1px solid #2a2118;background:#0f0c0a;padding:12px 14px;margin-bottom:8px}
+.qcard .qn{font-family:var(--serif);font-size:14px;color:var(--brass-hi)}
+.qcard .qd{font-size:12px;color:#9e937f;line-height:1.65;margin-top:4px}
+.qcard .qp{font-size:12px;color:#7ea9d8;margin-top:6px}
 .qcard .qr{font-size:11px;color:#c8a45c;margin-top:5px}
 .qcard.done{border-color:#4d6b3c}
 
-#npc{left:50%;top:50%;transform:translate(-50%,-50%);width:580px;max-height:76vh;overflow-y:auto}
-#npc.bank{width:min(820px,94vw)}
-#npc.smith{width:min(640px,94vw)}
+#npc{left:50%;top:50%;transform:translate(-50%,-50%);width:min(680px,92vw);max-height:80vh;overflow-y:auto}
+#npc.bank{width:min(920px,94vw)}
+#npc.smith{width:min(740px,94vw)}
 #npc .grid{margin:6px 0 10px}
 .bankcols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .bankcol .subttl{margin-top:0}
 .bankcol .grid{margin:0}
-.npchead{display:flex;gap:12px;align-items:center;margin-bottom:10px}
-.npchead .av{width:52px;height:52px;border:1px solid #4a3b26;display:flex;align-items:center;justify-content:center;font-size:26px;background:#100d0a}
-.npchead .nn{font-family:var(--serif);font-size:16px;color:var(--brass-hi)}
-.npchead .nt{font-size:11px;color:var(--ash)}
-.dlg{font-size:12.5px;line-height:1.9;color:#a89b83;border-left:2px solid #4a3b26;padding-left:11px;margin-bottom:12px}
-.shopgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
-.sitem{border:1px solid #2a2118;background:#0f0c0a;padding:8px 10px;cursor:pointer;display:flex;gap:9px;align-items:center}
+.npchead{display:flex;gap:14px;align-items:center;margin-bottom:14px;padding-bottom:12px;
+  border-bottom:1px solid rgba(176,141,79,.22)}
+.npchead .av{width:72px;height:72px;border:1px solid #6b5731;display:flex;align-items:center;justify-content:center;
+  font-size:34px;background:radial-gradient(circle at 50% 30%,#2a2218,#100d0a);flex:none}
+.npchead .nn{font-family:var(--serif);font-size:20px;color:var(--brass-hi);letter-spacing:.06em}
+.npchead .nt{font-size:12px;color:var(--ash);letter-spacing:.14em;margin-top:3px}
+.dlg{font-family:var(--serif);font-size:15px;line-height:1.75;color:#cfc4ae;
+  border-left:2px solid #6b5731;padding:4px 0 6px 14px;margin:0 0 8px}
+.dlg .ask{display:block;font-size:11px;letter-spacing:.14em;color:#8a7f70;margin-bottom:6px}
+.talklist{margin:0 0 12px}
+.shopgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.sitem{border:1px solid #2a2118;background:#0f0c0a;padding:10px 12px;cursor:pointer;display:flex;gap:10px;align-items:center}
 .sitem:hover{border-color:var(--brass-hi)}
-.sitem .g{font-size:20px}
-.sitem .n{font-size:12px}
-.sitem .p{margin-left:auto;font-size:11.5px;color:#f5c451;flex:none}
-.subttl{font-size:11px;letter-spacing:.16em;color:var(--ash);margin:12px 0 7px;border-bottom:1px solid #2a2118;padding-bottom:4px}
-.act{display:inline-block;padding:8px 18px;margin:4px 6px 0 0;font-family:var(--serif);font-size:12.5px;letter-spacing:.08em;
+.sitem .g{font-size:22px}
+.sitem .n{font-size:13px}
+.sitem .p{margin-left:auto;font-size:12px;color:#f5c451;flex:none}
+.subttl{font-size:11px;letter-spacing:.2em;color:var(--ash);margin:14px 0 8px;border-bottom:1px solid #2a2118;padding-bottom:5px}
+.act{display:inline-block;padding:9px 20px;margin:4px 6px 0 0;font-family:var(--serif);font-size:13px;letter-spacing:.1em;
   color:#e8cf95;background:linear-gradient(180deg,#2c2218,#120e0a);border:1px solid #6b5731;cursor:pointer}
-.act:hover{border-color:var(--brass-hi);color:#fff3d6}
+.act:hover{border-color:var(--brass-hi);color:#fff3d6;box-shadow:0 0 12px rgba(176,141,79,.22)}
 .act.dis{opacity:.35;pointer-events:none}
 .act.pick{border-color:var(--brass-hi);color:#fff3d6;box-shadow:0 0 10px rgba(176,141,79,.25)}
-.act.big{display:block;text-align:center;padding:11px 18px;margin-top:8px}
+.act.big{display:block;text-align:center;padding:13px 18px;margin-top:10px}
 .sitem.off{opacity:.4;pointer-events:none}
-.board-recite{font-family:var(--serif);font-size:13px;color:#cfc7b4;background:#0f0c0a;border:1px solid #3a2f1e;
-  border-left:2px solid var(--brass);padding:9px 12px;margin:4px 0 2px}
+.board-recite{font-family:var(--serif);font-size:15px;color:#cfc7b4;background:#0f0c0a;border:1px solid #3a2f1e;
+  border-left:2px solid var(--brass);padding:12px 14px;margin:6px 0 4px}
 .diebox{display:flex;flex-direction:column;align-items:center;margin:8px 0 12px}
-.die{width:64px;height:64px;border:1px solid #6b5731;background:#120e0a;display:flex;align-items:center;
-  justify-content:center;font-family:var(--serif);font-size:30px;color:#e2c47f;letter-spacing:0}
+.die{width:72px;height:72px;border:1px solid #6b5731;background:#120e0a;display:flex;align-items:center;
+  justify-content:center;font-family:var(--serif);font-size:34px;color:#e2c47f;letter-spacing:0}
 .die.win{border-color:#4d6b3c;color:#7ec87e}
 .die.lose{border-color:#6d2a22;color:#c05a4a}
-.dieres{font-size:12px;color:#9e937f;margin-top:8px;text-align:center;line-height:1.6;min-height:20px}
-.gcard{border:1px solid #2a2118;background:#0f0c0a;padding:9px 11px;margin-bottom:7px}
-.gcard .gn{font-family:var(--serif);font-size:13px}
-.gcard .gm{font-size:11px;color:#8a7f70;margin-top:3px;line-height:1.55}
+.dieres{font-size:13px;color:#9e937f;margin-top:8px;text-align:center;line-height:1.6;min-height:20px}
+.gcard{border:1px solid #2a2118;background:#0f0c0a;padding:11px 13px;margin-bottom:8px}
+.gcard .gn{font-family:var(--serif);font-size:14px}
+.gcard .gm{font-size:12px;color:#8a7f70;margin-top:3px;line-height:1.55}
 .sock{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
-.sock i{width:26px;height:26px;border:1px solid #4a3b26;background:#120e0a;display:inline-flex;
+.sock i{width:28px;height:28px;border:1px solid #4a3b26;background:#120e0a;display:inline-flex;
   align-items:center;justify-content:center;font-size:14px;font-style:normal;cursor:pointer}
 .sock i.empty{opacity:.4;font-size:11px;color:#6d6355}
 .sock i:hover{border-color:var(--brass-hi)}
-.dcard{border:1px solid #2a2118;background:#0f0c0a;padding:10px 12px;margin-bottom:8px}
-.dcard .dn{font-family:var(--serif);font-size:13px;color:var(--brass-hi)}
-.dcard .dm{font-size:11.5px;color:#9e937f;line-height:1.6;margin-top:3px}
+.dcard{border:1px solid #2a2118;background:#0f0c0a;padding:12px 14px;margin-bottom:8px}
+.dcard .dn{font-family:var(--serif);font-size:14px;color:var(--brass-hi)}
+.dcard .dm{font-size:12px;color:#9e937f;line-height:1.65;margin-top:4px}
 
-#tip{position:absolute;padding:9px 12px;width:248px;font-size:12px;line-height:1.6;display:none;z-index:60}
-#tip .n{font-family:var(--serif);font-size:13px;margin-bottom:3px}
+#tip{position:absolute;padding:0;width:300px;font-size:12.5px;line-height:1.65;display:none;z-index:60;overflow:hidden}
+#tip .tip-hd{padding:9px 12px 8px;border-bottom:1px solid rgba(0,0,0,.35)}
+#tip .n{font-family:var(--serif);font-size:15px;margin-bottom:2px;letter-spacing:.03em}
+#tip .tip-sub{font-size:11px;opacity:.85}
+#tip .tip-body{padding:9px 12px 11px}
 #tip .a{color:#7ea9d8}
-#tip .h{color:var(--ash);font-size:11px;margin-top:5px;border-top:1px solid #3a2f1f;padding-top:5px}
+#tip .h{color:var(--ash);font-size:11px;margin-top:7px;border-top:1px solid #3a2f1f;padding-top:6px}
 .float{position:absolute;font-family:var(--serif);font-weight:bold;pointer-events:none;white-space:nowrap;
   text-shadow:0 2px 4px #000,0 0 10px rgba(0,0,0,.9);transform:translate(-50%,-50%)}
 .wlabel{position:absolute;font-family:var(--serif);font-size:12px;pointer-events:none;
@@ -239,12 +305,26 @@ canvas{display:block}
 #savetoast{position:absolute;right:14px;bottom:82px;font-size:11px;letter-spacing:.12em;color:#e2c47f;
   opacity:0;transition:opacity .35s;pointer-events:none;text-shadow:0 0 10px #000}
 #savetoast.on{opacity:1}
+#ach{left:50%;top:70px;transform:translateX(-50%);width:min(920px,94vw);height:calc(100vh - 210px);
+  overflow:hidden;display:none;flex-direction:column}
+#ach.on{display:flex}
+#ach .qlog{flex:1;min-height:0}
+#achtoast{position:absolute;left:50%;top:118px;transform:translateX(-50%) translateY(-8px);width:min(360px,86vw);
+  padding:12px 16px 13px;text-align:center;pointer-events:none;opacity:0;z-index:55;
+  transition:opacity .28s,transform .28s}
+#achtoast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+#achtoast .k{font-size:10px;letter-spacing:.28em;color:#8a7f70}
+#achtoast .n{font-family:var(--serif);font-size:20px;color:var(--brass-hi);margin-top:4px;letter-spacing:.06em}
+#achtoast .d{font-size:12px;color:#a89b83;margin-top:5px;line-height:1.5}
+#tabs{flex-wrap:wrap;justify-content:center}
 #pause,#xfer{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;
   background:radial-gradient(ellipse at 50% 42%,rgba(20,14,8,.55),rgba(4,3,5,.94) 65%);pointer-events:auto;z-index:80}
 #pause.on,#xfer.on{display:flex}
-#pause .sheet,#xfer .sheet{width:min(420px,90vw);padding:22px 24px 20px;text-align:center;position:relative;
-  background:linear-gradient(180deg,#241d17 0%,#14110d 60%,#0d0b09 100%);
-  border:1px solid #4a3b26;box-shadow:0 0 0 1px #0a0806 inset,0 10px 36px rgba(0,0,0,.7)}
+#pause .sheet,#xfer .sheet{width:min(460px,90vw);padding:28px 28px 24px;text-align:center;position:relative;
+  background:
+    radial-gradient(ellipse 80% 40% at 50% -8%,rgba(176,141,79,.12),transparent 58%),
+    linear-gradient(180deg,#241d17 0%,#14110d 60%,#0d0b09 100%);
+  border:1px solid #6b5731;box-shadow:0 0 0 1px #0a0806 inset,0 0 0 5px rgba(8,6,5,.45) inset,0 18px 48px rgba(0,0,0,.75)}
 #pause h2,#xfer h2{font-family:var(--serif);font-size:16px;letter-spacing:.28em;color:var(--brass-hi);font-weight:400}
 #pause .pm{margin-top:8px;font-size:12px;color:var(--ash);letter-spacing:.06em}
 #pause .btn,#xfer .btn{display:block;width:100%;margin-top:8px;padding:11px 18px;letter-spacing:.16em;font-size:13px}
@@ -271,13 +351,19 @@ canvas{display:block}
 #dead.on{display:flex}
 #dead h2{font-family:var(--serif);font-size:46px;letter-spacing:.24em;color:#c0392b;text-shadow:0 0 34px rgba(180,30,20,.5)}
 @media (max-width:1180px){#track{display:none}}
+@media (max-width:1100px){
+  #pc{width:min(96vw,760px);left:50%;transform:translateX(-50%);height:auto;max-height:calc(100vh - 210px);top:auto;bottom:146px}
+  #inv{width:min(96vw,420px);left:50%;right:auto;transform:translateX(-50%);top:auto;bottom:146px;height:auto;max-height:52vh}
+  #sk{width:min(96vw,900px);left:50%;transform:translateX(-50%);top:auto;bottom:146px;height:auto;max-height:62vh}
+}
 @media (max-width:860px){
-  #pc,#sk{top:auto;bottom:146px;max-height:62vh}
+  #pc,#sk,#inv,#ach{top:auto;bottom:146px;max-height:62vh;height:auto}
   #pc{left:50%;transform:translateX(-50%);width:min(96vw,700px)}
   .pc-body{flex-direction:column;overflow-y:auto}
-  .pc-left{margin:0 auto}
-  #sk{width:290px}
-  #inv{top:auto;bottom:146px;width:300px}
+  .pc-left{margin:0 auto;grid-template-columns:54px 200px 54px}
+  .skbody{grid-template-columns:1fr}
+  #sklist{border-right:none;border-bottom:1px solid #2a2118;padding-right:0;padding-bottom:10px;max-height:32vh}
+  #inv{width:min(96vw,360px)}
   .qlog{grid-template-columns:1fr}
   .qnav{border-right:none;border-bottom:1px solid #2a2118;padding-right:0;padding-bottom:10px;max-height:28vh}
   #npc.bank{width:96vw}
@@ -317,22 +403,36 @@ canvas{display:block}
       </div>
       <div class="pc-right">
         <div class="pc-meta" id="pcmeta"></div>
+        <div class="pc-tabs" id="pctabs">
+          <div class="ptab on" data-pt="core">属性</div>
+          <div class="ptab" data-pt="off">攻击</div>
+          <div class="ptab" data-pt="def">防御</div>
+          <div class="ptab" data-pt="util">辅助</div>
+        </div>
         <div class="attr" id="attrbox"></div>
       </div>
     </div>
   </div>
   <div id="inv" class="plate panel"><span class="x" data-close="inv">✕</span><h3>行囊</h3>
-    <div class="invtop"><span id="invgold">金币 0</span><span id="invcnt">0 / 40</span></div>
+    <div class="invsub">左键装备 · 右键丢弃</div>
     <div class="grid" id="bag"></div>
+    <div class="invfoot"><span id="invgold">金币 0</span><span id="invcnt">0 / 40</span></div>
   </div>
-  <div id="sk" class="plate panel scroll"><span class="x" data-close="sk">✕</span><h3>技能</h3>
-    <div style="font-size:11.5px;color:#9e937f;margin-bottom:9px" id="skpts"></div>
-    <div id="sklist"></div>
+  <div id="sk" class="plate panel"><span class="x" data-close="sk">✕</span><h3>技能</h3>
+    <div id="skpts"></div>
+    <div class="skbody">
+      <div id="sklist"></div>
+      <div id="skdetail"></div>
+    </div>
   </div>
   <div id="qs" class="plate panel"><span class="x" data-close="qs">✕</span><h3>任务日志</h3>
     <div class="qlog"><div class="qnav" id="qlist"></div><div class="qdetail" id="qdetail"></div></div>
   </div>
+  <div id="ach" class="plate panel"><span class="x" data-close="ach">✕</span><h3 id="achtitle">功绩</h3>
+    <div class="qlog"><div class="qnav" id="achlist"></div><div class="qdetail" id="achdetail"></div></div>
+  </div>
   <div id="npc" class="plate panel scroll"><span class="x" data-close="npc">✕</span><div id="npcbody"></div></div>
+  <div id="achtoast" class="plate"><div class="k">功绩解锁</div><div class="n" id="achtoast-n"></div><div class="d" id="achtoast-d"></div></div>
 
   <div id="log"></div>
   <div id="hud">
@@ -370,7 +470,7 @@ canvas{display:block}
 
   <div id="dead"><h2>你已陨落</h2>
     <p style="margin-top:16px;color:#8f8474;font-size:13px">损失一半金币。装备与经验尚在。</p>
-    <button class="btn" id="respawn">在石桥镇醒来</button></div>
+    <button class="btn" id="respawn">在据点醒来</button></div>
 
   <div id="veil"><div class="sub">GLOAMRIFT</div><h1>下行</h1>
     <p>裂隙在呼吸</p>
@@ -419,7 +519,8 @@ const SFX=(function(){
     quest(){[659,784,988].forEach((f,i)=>setTimeout(()=>tone(f,.35,"sine",.08),i*130));},
     potion(){tone(300,.18,"sine",.07,760);},
     portal(){tone(120,.6,"sine",.08,600);},
-    ui(){tone(900,.05,"square",.03);}};
+    ui(){tone(900,.05,"square",.03);},
+    ach(){[392,523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,.28,"triangle",.1),i*80));}};
 })();
 
 /* ═════════ 1. 渲染 ═════════ */
@@ -443,24 +544,128 @@ const clock=new THREE.Clock(),dummy=new THREE.Object3D();
 const raycaster=new THREE.Raycaster(),mouseNDC=new THREE.Vector2();
 const pickPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
 
+/* ═════════ 资产注册表（GLB 骨架，缺失即回落几何体） ═════════ */
+const AssetRegistry={
+  manifest:null,cache:new Map(),loading:new Map(),loader:null,ready:false,
+  boot(){
+    if(this._boot)return this._boot;
+    this._boot=(async()=>{
+      try{
+        if(!THREE.GLTFLoader){console.warn("[asset] GLTFLoader 未加载，全程回落几何体");return;}
+        this.loader=new THREE.GLTFLoader();
+        if(window.MeshoptDecoder&&this.loader.setMeshoptDecoder)this.loader.setMeshoptDecoder(MeshoptDecoder);
+        this.manifest=await fetch("public/assets/assets.json?v="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
+        this.ready=!!this.manifest;
+        if(this.ready)console.log("[asset] 清单载入",Object.keys(this.manifest));
+      }catch(e){console.warn("[asset] boot 失败，回落几何体",e);}
+    })();
+    return this._boot;
+  },
+  // 载入一个角色资产：底模（含 idle）+ 若干动画 GLB，合并成一组 clips。失败返回 null。
+  load(id){
+    if(this.cache.has(id))return Promise.resolve(this.cache.get(id));
+    if(this.loading.has(id))return this.loading.get(id);
+    const entry=this.manifest&&this.manifest[id];
+    if(!this.loader||!entry){return Promise.resolve(null);}
+    const p=(async()=>{
+      try{
+        const base=await this.loader.loadAsync("public/assets/"+entry.path);
+        const clips=[];
+        // 底模内嵌的具名动画（已在离线步骤改名成 idle/run/attack/die）直接全收
+        (base.animations||[]).forEach(c=>clips.push(c.clone()));
+        // 兼容旧式：额外的独立动画 GLB
+        const anims=entry.anims||{};
+        for(const name of Object.keys(anims)){
+          try{
+            const g=await this.loader.loadAsync("public/assets/"+anims[name]);
+            if(g.animations&&g.animations[0]){const c=g.animations[0].clone();c.name=name;clips.push(c);}
+          }catch(e){console.warn("[asset] 动画缺失",id,name,e);}
+        }
+        const rec={scene:base.scene,clips,meta:entry};
+        this.cache.set(id,rec);return rec;
+      }catch(e){console.warn("[asset] 载入失败",id,e);this.cache.set(id,null);return null;}
+    })();
+    this.loading.set(id,p);return p;
+  },
+  get(id){return this.cache.get(id)||null;}
+};
+// 角色工厂：有资产用 GLB 骨架，否则回落到程序化几何体（humanoid/beast）
+function makeActor(kind,opt){
+  const rec=AssetRegistry.get(kind);
+  if(!rec||!rec.scene)return opt.form==="beast"?beast(opt):humanoid(opt);
+  const g=(THREE.SkeletonUtils?THREE.SkeletonUtils.clone(rec.scene):rec.scene.clone(true));
+  const s=(rec.meta&&rec.meta.scale)||1;
+  g.scale.setScalar(s);
+  const mixer=new THREE.AnimationMixer(g);
+  const actions={};
+  rec.clips.forEach(c=>{const a=mixer.clipAction(c);a.enabled=true;actions[c.name]=a;});
+  let skinned=null;g.traverse(o=>{if(o.isMesh&&!skinned)skinned=o;});
+  // 自动落地：按包围盒把最低点对齐到 y=0，兼容任意模型原点（可用 manifest.yOffset 微调）
+  g.updateWorldMatrix(true,true);
+  const bb=new THREE.Box3().setFromObject(g);
+  if(isFinite(bb.min.y))g.position.y=-bb.min.y+((rec.meta&&rec.meta.yOffset)||0);
+  const wrap=new THREE.Group();wrap.add(g);
+  const cur=actions.idle||actions[Object.keys(actions)[0]];
+  if(cur)cur.play();
+  return{group:wrap,mixer,actions,rigged:true,cur:cur?(actions.idle?"idle":Object.keys(actions)[0]):null,
+    torso:skinned||{material:{color:{setHex(){}}}},armL:null,armR:null,legL:null,legR:null,head:null,beast:false};
+}
+
 /* ═════════ 2. 世界配置 ═════════ */
 const AREA={
- town:{id:"town",n:"石桥镇",kind:"town",lvl:1,
-   pal:{floor:[.50,.46,.36],fog:0x2a2620,sky:0x2e2a24,amb:.86,sun:.75,sunc:0xffd9a8,dens:.014}},
- waste:{id:"waste",n:"落石荒原",kind:"field",lvl:3,seed:11,mobs:["wolf","boar","bandit"],block:"rock",
+ town:{id:"town",n:"石桥镇",kind:"town",ch:1,skin:"stone",seed:99,lvl:1,
+   pal:{floor:[.50,.46,.36],fog:0x2a2620,sky:0x2e2a24,amb:.86,sun:.75,sunc:0xffd9a8,dens:.014},
+   exits:[{to:"waste",label:"城门 · 落石荒原"},{kind:"rift",label:"裂隙入口"}]},
+ rime:{id:"rime",n:"白喉隘口",kind:"town",ch:2,skin:"ice",seed:201,lvl:24,
+   pal:{floor:[.62,.66,.74],fog:0x6a8498,sky:0x7a96aa,amb:.88,sun:.78,sunc:0xdfeaff,dens:.015},
+   houses:[[-15,-10,6,5],[9,-11,7,5],[-6,-13,6,4],[-17,6,6,4],[13,7,6,4],[-12,11,5,4]],
+   exits:[{to:"frost",label:"北门 · 冰湖"},{to:"ash",label:"南路 · 灰烬峡谷"},{to:"harbor",label:"东路 · 潮灯港"}]},
+ harbor:{id:"harbor",n:"潮灯港",kind:"town",ch:3,skin:"dock",seed:301,lvl:35,
+   pal:{floor:[.42,.38,.32],fog:0x243440,sky:0x2a3c48,amb:.78,sun:.7,sunc:0xc8d8e8,dens:.017},
+   houses:[[-14,-9,7,5],[10,-10,6,5],[-5,-13,6,4],[-16,5,5,4],[12,6,7,5],[-11,10,6,4]],
+   exits:[{to:"shore",label:"码头 · 沉船海岸"},{to:"rime",label:"北路 · 白喉隘口"},{to:"sink",label:"西路 · 沉降残镇"}]},
+ sink:{id:"sink",n:"沉降残镇",kind:"town",ch:4,skin:"ruin",seed:401,lvl:50,
+   pal:{floor:[.32,.28,.30],fog:0x1a141c,sky:0x161218,amb:.58,sun:.42,sunc:0x8a6ab0,dens:.022},
+   houses:[[-15,-10,6,4],[8,-11,6,5],[-4,-13,5,4],[-16,6,5,4],[11,7,6,4],[-12,10,5,4]],
+   exits:[{to:"sinkf",label:"井口 · 沉降区"},{to:"harbor",label:"海岸回头"},{to:"well",label:"更深 · 桥墩井口"}]},
+ well:{id:"well",n:"桥墩井口",kind:"town",ch:5,skin:"nail",seed:501,lvl:65,
+   pal:{floor:[.36,.30,.26],fog:0x1c1210,sky:0x18100e,amb:.55,sun:.4,sunc:0xc08050,dens:.024},
+   houses:[[-12,-9,6,4],[8,-10,6,4],[-5,-12,5,4],[-14,5,5,4],[10,6,5,4]],
+   exits:[{to:"shaft",label:"下行 · 桥墩井道"},{to:"sink",label:"回沉降残镇"}]},
+ waste:{id:"waste",n:"落石荒原",kind:"field",ch:1,lvl:3,seed:11,mobs:["wolf","boar","bandit"],block:"rock",shape:"waste",
    pal:{floor:[.44,.40,.28],fog:0x39382e,sky:0x3d3c31,amb:.72,sun:.8,sunc:0xffe0b0,dens:.017},
    marks:[{kind:"travel",to:"town",label:"石桥镇",x:-24,z:14},
           {kind:"travel",to:"wood",label:"暮语林地",x:24,z:-16},
           {kind:"dungeon",to:"crypt",label:"哭嚎墓窖",x:2,z:-20}]},
- wood:{id:"wood",n:"暮语林地",kind:"field",lvl:9,seed:22,mobs:["spider","treant","banditbow"],block:"tree",
+ wood:{id:"wood",n:"暮语林地",kind:"field",ch:1,lvl:9,seed:22,mobs:["spider","treant","banditbow"],block:"tree",shape:"wood",
    pal:{floor:[.24,.34,.22],fog:0x1e2a20,sky:0x22301f,amb:.62,sun:.62,sunc:0xbfe0a0,dens:.024},
    marks:[{kind:"travel",to:"waste",label:"落石荒原",x:-24,z:16},
           {kind:"travel",to:"ash",label:"灰烬峡谷",x:24,z:-14},
           {kind:"dungeon",to:"nest",label:"腐丝蛛巢",x:-4,z:-21}]},
- ash:{id:"ash",n:"灰烬峡谷",kind:"field",lvl:17,seed:33,mobs:["lavabeast","ashmage","golem"],block:"spire",
+ ash:{id:"ash",n:"灰烬峡谷",kind:"field",ch:1,lvl:17,seed:33,mobs:["lavabeast","ashmage","golem"],block:"spire",shape:"ash",
    pal:{floor:[.36,.24,.20],fog:0x30181a,sky:0x2c1618,amb:.58,sun:.6,sunc:0xff9a6a,dens:.026},
    marks:[{kind:"travel",to:"wood",label:"暮语林地",x:-24,z:16},
-          {kind:"dungeon",to:"fort",label:"熔火要塞",x:12,z:-19}]}
+          {kind:"travel",to:"rime",label:"白喉隘口",x:-28,z:-24},
+          {kind:"dungeon",to:"fort",label:"熔火要塞",x:12,z:-19}]},
+ frost:{id:"frost",n:"北境冰湖",kind:"field",ch:2,lvl:24,seed:44,mobs:["frostwolf","icespider","rimeknight"],block:"pillar",shape:"frost",hz:"ice",
+   pal:{floor:[.62,.68,.76],fog:0x8aa8bc,sky:0x9eb6c8,amb:.9,sun:.85,sunc:0xdfeaff,dens:.016},
+   marks:[{kind:"travel",to:"rime",label:"白喉隘口",x:-24,z:16},
+          {kind:"dungeon",to:"abbey",label:"断桥修道院",x:6,z:-21},
+          {kind:"dungeon",to:"belfry",label:"湖底钟窖",x:18,z:8}]},
+ shore:{id:"shore",n:"沉船海岸",kind:"field",ch:3,lvl:35,seed:55,mobs:["drowned","wrecker","brinewolf"],block:"wreck",shape:"shore",
+   pal:{floor:[.48,.42,.32],fog:0x2a3844,sky:0x2e4250,amb:.7,sun:.68,sunc:0xc8d8e8,dens:.02},
+   marks:[{kind:"travel",to:"harbor",label:"潮灯港",x:-24,z:16},
+          {kind:"dungeon",to:"tide",label:"潮下墓场",x:4,z:-18},
+          {kind:"dungeon",to:"hull",label:"朽舟腹",x:20,z:6}]},
+ sinkf:{id:"sinkf",n:"沉降区",kind:"field",ch:4,lvl:52,seed:66,mobs:["wraith","ghoul","brute"],block:"rock",shape:"sink",
+   pal:{floor:[.26,.22,.26],fog:0x120e16,sky:0x100c14,amb:.5,sun:.32,sunc:0x7a5aa0,dens:.03},
+   marks:[{kind:"travel",to:"sink",label:"沉降残镇",x:-24,z:16},
+          {kind:"dungeon",to:"ledger",label:"账房",x:2,z:-20},
+          {kind:"dungeon",to:"chorus",label:"众议厅",x:18,z:4}]},
+ shaft:{id:"shaft",n:"桥墩井道",kind:"field",ch:5,lvl:66,seed:77,mobs:["brute","wraith","golem"],block:"rock",shape:"shaft",
+   pal:{floor:[.30,.24,.20],fog:0x140c0c,sky:0x100808,amb:.48,sun:.3,sunc:0xc07040,dens:.032},
+   marks:[{kind:"travel",to:"well",label:"桥墩井口",x:-24,z:16},
+          {kind:"dungeon",to:"nail",label:"钉底",x:4,z:-22}]}
 };
 const DUNGEONS=[
  {id:"crypt",n:"哭嚎墓窖",lvl:6,floors:2,boss:"boneking",mobs:["skeleton","ghoul"],from:"waste",
@@ -468,14 +673,36 @@ const DUNGEONS=[
  {id:"nest",n:"腐丝蛛巢",lvl:12,floors:2,boss:"broodmother",mobs:["spider","ghoul","wraith"],from:"wood",
    desc:"林子最深处的一张网，大到能兜住一整支商队。"},
  {id:"fort",n:"熔火要塞",lvl:20,floors:3,boss:"lord",mobs:["imp","brute","wraith"],from:"ash",
-   desc:"裂隙的第一批仆从在这里筑巢，也把门锁在了里面。"}
+   desc:"裂隙的第一批仆从在这里筑巢，也把门锁在了里面。"},
+ {id:"abbey",n:"断桥修道院",lvl:27,floors:3,boss:"osser",mobs:["rimeknight","icespider","wraith"],from:"frost",
+   desc:"唱起来就不能停。主祭还在唱。",pal:"ice"},
+ {id:"belfry",n:"湖底钟窖",lvl:32,floors:2,boss:"singer",mobs:["icespider","wraith","rimeknight"],from:"frost",
+   desc:"钟在湖底。声音从冰里往上爬。",pal:"ice"},
+ {id:"tide",n:"潮下墓场",lvl:38,floors:2,boss:"tideguide",mobs:["drowned","wrecker","ghoul"],from:"shore",
+   desc:"退潮才看得见的沟。旗在前面晃，别跟着。",pal:"sea"},
+ {id:"hull",n:"朽舟腹",lvl:45,floors:2,boss:"gray",mobs:["drowned","wrecker","brinewolf"],from:"shore",
+   desc:"最大那条船的肚子。有人还在凿。",pal:"sea"},
+ {id:"ledger",n:"账房",lvl:55,floors:2,boss:"seven",mobs:["wraith","imp","brute"],from:"sinkf",
+   desc:"七本账同时翻开。影子不会排队。",pal:"deep"},
+ {id:"chorus",n:"众议厅",lvl:62,floors:2,boss:"voice",mobs:["wraith","imp","ghoul"],from:"sinkf",
+   desc:"没有身体，只有一声声赞成。把会开停。",pal:"deep"},
+ {id:"nail",n:"钉底",lvl:70,floors:1,boss:"kor",mobs:["brute","wraith","golem"],from:"shaft",
+   desc:"最早被钉住的那个要挣出来。按回去。",pal:"nail"}
 ];
 const dunById=id=>DUNGEONS.find(d=>d.id===id);
 const RIFT_PAL={floor:[.32,.30,.26],fog:0x06050a,sky:0x06050a,amb:.55,sun:.3,sunc:0x6a7ab0,dens:.026};
+const DUN_PAL={
+ ice:{floor:[.46,.52,.60],fog:0x152028,sky:0x121c24,amb:.5,sun:.26,sunc:0xa8c8e0,dens:.03},
+ sea:{floor:[.26,.24,.22],fog:0x0c161c,sky:0x0a1418,amb:.48,sun:.24,sunc:0x6a8aaa,dens:.032},
+ deep:{floor:[.20,.18,.22],fog:0x08060c,sky:0x06050a,amb:.42,sun:.18,sunc:0x6a4a80,dens:.036},
+ nail:{floor:[.26,.20,.16],fog:0x10080a,sky:0x0a0606,amb:.4,sun:.2,sunc:0xc07040,dens:.034}
+};
+function hubId(){return P.hub&&AREA[P.hub]&&AREA[P.hub].kind==="town"?P.hub:"town";}
+function hubName(){return AREA[hubId()].n;}
 
-const W={grid:null,rooms:[],group:null,enemies:[],items:[],props:[],projectiles:[],npcs:[],marks:[],
+const W={grid:null,paint:null,rooms:[],group:null,enemies:[],items:[],props:[],projectiles:[],npcs:[],marks:[],
   torches:[],explored:null,area:null,boss:null,riftDepth:0,riftDeepest:1,dunFloor:1,dun:null,
-  discovered:{town:true},dark:false};
+  discovered:{town:true},dark:false,hzAcc:0};
 const tX=x=>Math.round(x/CFG.TILE+CFG.MAP/2), tZ=z=>Math.round(z/CFG.TILE+CFG.MAP/2);
 const wX=t=>(t-CFG.MAP/2)*CFG.TILE, gi=(x,y)=>y*CFG.MAP+x;
 function walk(x,y){if(x<0||y<0||x>=CFG.MAP||y>=CFG.MAP)return false;return W.grid[gi(x,y)]===1;}
@@ -504,43 +731,192 @@ function genRooms(seed){
   for(let i=1;i<rooms.length;i++)corr(rooms[i-1].cx,rooms[i-1].cy,rooms[i].cx,rooms[i].cy);
   for(let i=0;i<3&&rooms.length>3;i++){const a=pick(rooms),b=pick(rooms);if(a!==b)corr(a.cx,a.cy,b.cx,b.cy);}
   for(let i=0;i<M;i++){g[gi(i,0)]=0;g[gi(i,M-1)]=0;g[gi(0,i)]=0;g[gi(M-1,i)]=0;}
-  W.grid=g;W.rooms=rooms;W.explored=new Uint8Array(M*M);
+  const paint=new Uint8Array(M*M);
+  for(let y=0;y<M;y++)for(let x=0;x<M;x++){
+    if(!g[gi(x,y)])continue;
+    let inRoom=false;
+    for(const r of rooms)if(x>=r.x+1&&x<r.x+r.w-1&&y>=r.y+1&&y<r.y+r.h-1){inRoom=true;break;}
+    paint[gi(x,y)]=inRoom?3:1;
+  }
+  W.grid=g;W.paint=paint;W.rooms=rooms;W.explored=new Uint8Array(M*M);
 }
 /* ── 地面区域生成 ── */
-function genField(area){
-  RND=mulberry32(area.seed*2654435761>>>0);
-  const M=CFG.MAP,g=new Uint8Array(M*M);
-  const c=M>>1;
-  for(let y=4;y<M-4;y++)for(let x=4;x<M-4;x++){
-    const dx=(x-c)/(M/2-5),dy=(y-c)/(M/2-5);
-    if(dx*dx+dy*dy<1.05)g[gi(x,y)]=1;
+let NSEED=0;
+function n2(x,y){const s=Math.sin((x+NSEED)*12.9898+(y-NSEED)*78.233)*43758.5453;return s-Math.floor(s);}
+function protectMarks(g,area,rad){
+  const M=CFG.MAP,c=M>>1;
+  const pts=[[c,c]].concat((area.marks||[]).map(m=>[tX(m.x),tZ(m.z)]));
+  pts.forEach(([x,y])=>{
+    for(let dy=-rad;dy<=rad;dy++)for(let dx=-rad;dx<=rad;dx++){
+      const xx=x+dx,yy=y+dy;
+      if(xx>0&&yy>0&&xx<M-1&&yy<M-1)g[gi(xx,yy)]=1;
+    }
+  });
+  return pts;
+}
+function carveRoad(g,paint,x0,y0,x1,y1,code){
+  const M=CFG.MAP;let x=x0,y=y0,guard=0;
+  while(guard++<480){
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+      const xx=clamp(x+dx,1,M-2),yy=clamp(y+dy,1,M-2);
+      g[gi(xx,yy)]=1;
+      if((dx|dy)===0||Math.abs(dx)+Math.abs(dy)===1)paint[gi(xx,yy)]=code||2;
+    }
+    if(x===x1&&y===y1)break;
+    if(x!==x1&&(y===y1||((x+y)&1)))x+=x1>x?1:-1;
+    else if(y!==y1)y+=y1>y?1:-1;
+    else x+=x1>x?1:-1;
   }
-  const keep=[[c,c]];
-  (area.marks||[]).forEach(m=>keep.push([tX(m.x*1),tZ(m.z*1)]));
-  for(let i=0;i<130;i++){
-    const cx=ri(6,M-7),cy=ri(6,M-7),r=ri(1,3);
-    if(keep.some(([kx,ky])=>Math.hypot(cx-kx,cy-ky)<7))continue;
+}
+function paintAlong(g,paint,x0,y0,x1,y1,code){
+  const M=CFG.MAP;let x=x0,y=y0,guard=0;
+  while(guard++<480){
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+      const xx=clamp(x+dx,1,M-2),yy=clamp(y+dy,1,M-2);
+      if(g[gi(xx,yy)])paint[gi(xx,yy)]=code||2;
+    }
+    if(x===x1&&y===y1)break;
+    if(x!==x1&&(y===y1||((x+y)&1)))x+=x1>x?1:-1;
+    else if(y!==y1)y+=y1>y?1:-1;
+    else x+=x1>x?1:-1;
+  }
+}
+function punchHoles(g,keep,n,rmin,rmax,safe){
+  const M=CFG.MAP;
+  for(let i=0;i<n;i++){
+    const cx=ri(6,M-7),cy=ri(6,M-7),r=ri(rmin,rmax);
+    if(keep.some(([kx,ky])=>Math.hypot(cx-kx,cy-ky)<safe))continue;
     for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x++){
       if(x<1||y<1||x>=M-1||y>=M-1)continue;
-      if(Math.hypot(x-cx,y-cy)<=r+RND()*.6)g[gi(x,y)]=0;}
+      if(Math.hypot(x-cx,y-cy)<=r+n2(x,y)*.6)g[gi(x,y)]=0;
+    }
   }
-  // 主路：横穿区域
-  for(let x=5;x<M-5;x++){const y=c+Math.round(Math.sin(x*.18)*3);
-    for(let d=-1;d<=1;d++)g[gi(x,clamp(y+d,1,M-2))]=1;}
-  W.grid=g;W.rooms=[{x:c-10,y:c-10,w:20,h:20,cx:c,cy:c}];
+}
+function genField(area){
+  RND=mulberry32(area.seed*2654435761>>>0);
+  NSEED=area.seed||1;
+  const M=CFG.MAP,g=new Uint8Array(M*M),paint=new Uint8Array(M*M),c=M>>1;
+  const shape=area.shape||area.id;
+  if(shape==="wood"){
+    for(let y=4;y<M-4;y++)for(let x=4;x<M-4;x++){
+      const dx=(x-c)/(M/2-5),dy=(y-c)/(M/2-5);
+      const blob=n2(x*.13,y*.13)*.24+n2(x*.31,y*.27)*.1;
+      if(dx*dx+dy*dy<.86+blob)g[gi(x,y)]=1;
+    }
+    for(let i=0;i<7;i++){
+      const cx=ri(10,M-11),cy=ri(10,M-11),r=ri(3,5);
+      for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x++)
+        if(x>2&&y>2&&x<M-3&&y<M-3&&Math.hypot(x-cx,y-cy)<r)g[gi(x,y)]=1;
+    }
+  }else if(shape==="ash"){
+    for(let y=5;y<M-5;y++)for(let x=4;x<M-4;x++){
+      const dx=(x-c)/(M/2-4),dy=(y-c)/(M/2-7);
+      const ridge=Math.abs(dy)>.52+.1*Math.sin(x*.28);
+      if(dx*dx*.62+dy*dy*1.65<1.02 && !ridge)g[gi(x,y)]=1;
+    }
+    for(let i=0;i<10;i++){
+      const cx=ri(10,M-11),cy=ri(c-6,c+10),r=ri(2,4);
+      for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x++){
+        if(x<2||y<2||x>=M-2||y>=M-2)continue;
+        if(Math.hypot(x-cx,y-cy)<=r){g[gi(x,y)]=0;paint[gi(x,y)]=10;}
+      }
+    }
+    for(let x=8;x<M-8;x++){
+      const y=c+9+Math.round(Math.sin(x*.2)*2);
+      for(let d=-1;d<=0;d++){const yy=clamp(y+d,2,M-3);g[gi(x,yy)]=0;paint[gi(x,yy)]=10;}
+    }
+  }else if(shape==="frost"){
+    for(let y=4;y<M-4;y++)for(let x=4;x<M-4;x++){
+      const dx=(x-c)/(M/2-5),dy=(y-c)/(M/2-5),r2=dx*dx+dy*dy,n=n2(x*.2,y*.2);
+      if(r2<1.02+n*.05 && r2>.26+n*.04){g[gi(x,y)]=1;paint[gi(x,y)]=1;}
+      else if(r2<=.26+n*.04 && r2<.95)paint[gi(x,y)]=11;
+    }
+    for(let y=c-14;y<=c+14;y++)for(let x=c-1;x<=c+1;x++){g[gi(x,y)]=1;paint[gi(x,y)]=5;}
+    for(let x=c-10;x<=c+10;x++)for(let y=c-1;y<=c+1;y++){g[gi(x,y)]=1;paint[gi(x,y)]=5;}
+  }else if(shape==="shore"){
+    for(let y=2;y<M-2;y++)for(let x=4;x<M-4;x++){
+      const dx=(x-c)/(M/2-4),dy=(y-c)/(M/2-4);
+      const coast=c+4+Math.round(Math.sin(x*.21)*6+Math.sin(x*.07)*3+n2(x,y)*2);
+      if(y<coast && dx*dx+dy*dy*1.2<1.14){
+        g[gi(x,y)]=1;paint[gi(x,y)]=y>coast-5?7:1;
+      }else if(y>=coast && Math.abs(x-c)<M/2-2)paint[gi(x,y)]=9;
+    }
+  }else if(shape==="sink"){
+    for(let y=5;y<M-5;y++)for(let x=5;x<M-5;x++){
+      const dx=(x-c)/(M/2-6),dy=(y-c)/(M/2-6);
+      const blob=n2(x*.17,y*.19)*.28;
+      if(dx*dx*1.15+dy*dy*.9<.78+blob)g[gi(x,y)]=1;
+    }
+  }else if(shape==="shaft"){
+    for(let y=4;y<M-4;y++)for(let x=c-7;x<=c+7;x++){
+      const w=3+Math.round(Math.sin(y*.22)*2+n2(x,y)*1.5);
+      if(Math.abs(x-c)<=w)g[gi(x,y)]=1;
+    }
+  }else{
+    for(let y=4;y<M-4;y++)for(let x=4;x<M-4;x++){
+      const dx=(x-c)/(M/2-4),dy=(y-c)/(M/2-5);
+      if(dx*dx*.88+dy*dy*1.12<1.0+n2(x*.16,y*.16)*.08)g[gi(x,y)]=1;
+    }
+    for(let k=0;k<2;k++){
+      const x0=ri(8,M-9),y0=ri(8,M-9),len=ri(10,16),diag=RND()<.5?1:-1;
+      for(let i=0;i<len;i++){
+        const x=x0+i,y=y0+i*diag;
+        if(x<3||y<3||x>=M-3||y>=M-3)continue;
+        for(let d=-1;d<=1;d++)g[gi(x,clamp(y+d,2,M-3))]=0;
+      }
+    }
+  }
+  const keep=protectMarks(g,area,4);
+  if(shape==="wood")punchHoles(g,keep,200,1,3,6);
+  else if(shape==="frost"||shape==="shore")punchHoles(g,keep,50,1,2,8);
+  else if(shape==="ash")punchHoles(g,keep,40,1,2,8);
+  else if(shape==="shaft")punchHoles(g,keep,18,1,2,7);
+  else if(shape==="sink")punchHoles(g,keep,90,1,3,6);
+  else punchHoles(g,keep,90,1,3,7);
+  protectMarks(g,area,3);
+  for(let i=0;i<keep.length;i++){
+    const a=keep[i],b=keep[(i+1)%keep.length];
+    carveRoad(g,paint,a[0],a[1],b[0],b[1],2);
+  }
+  for(let i=0;i<M;i++){g[gi(i,0)]=0;g[gi(i,M-1)]=0;g[gi(0,i)]=0;g[gi(M-1,i)]=0;}
+  for(let y=1;y<M-1;y++)for(let x=1;x<M-1;x++){
+    if(!g[gi(x,y)]||paint[gi(x,y)])continue;
+    if(shape==="wood")paint[gi(x,y)]=4;
+    else if(shape==="ash")paint[gi(x,y)]=6;
+    else if(shape==="frost"){
+      let ice=false;
+      for(let dy=-1;dy<=1&&!ice;dy++)for(let dx=-1;dx<=1;dx++)if(paint[gi(x+dx,y+dy)]===11)ice=true;
+      paint[gi(x,y)]=ice?5:1;
+    }else if(shape==="shore")paint[gi(x,y)]=paint[gi(x,y)]||1;
+    else if(shape==="sink")paint[gi(x,y)]=n2(x,y)>.55?6:1;
+    else if(shape==="shaft")paint[gi(x,y)]=3;
+    else paint[gi(x,y)]=n2(x,y)>.72?4:1;
+  }
+  W.grid=g;W.paint=paint;W.rooms=[{x:c-10,y:c-10,w:20,h:20,cx:c,cy:c}];
   W.explored=new Uint8Array(M*M);
 }
 /* ── 城镇 ── */
 const TOWN_HOUSES=[[-16,-11,7,5],[8,-12,8,5],[-4,-14,7,4],[-18,5,6,5],[12,6,6,5],[-14,10,6,4]];
-function genTown(){
-  RND=mulberry32(99);
+function genTown(area){
+  area=area||AREA.town;
+  RND=mulberry32((area.seed||99)>>>0);
+  const houses=area.houses||TOWN_HOUSES;
   const M=CFG.MAP,g=new Uint8Array(M*M),c=M>>1,hw=20,hh=15;
   for(let y=c-hh;y<=c+hh;y++)for(let x=c-hw;x<=c+hw;x++){
     const dx=(x-c)/hw,dy=(y-c)/hh;
     if(dx*dx+dy*dy<1.08)g[gi(x,y)]=1;}
-  TOWN_HOUSES.forEach(([x,y,w,h])=>{for(let yy=c+y;yy<c+y+h;yy++)for(let xx=c+x;xx<c+x+w;xx++)
+  houses.forEach(([x,y,w,h])=>{for(let yy=c+y;yy<c+y+h;yy++)for(let xx=c+x;xx<c+x+w;xx++)
     if(xx>0&&yy>0&&xx<M&&yy<M)g[gi(xx,yy)]=0;});
-  W.grid=g;W.rooms=[{x:c-hw,y:c-hh,w:hw*2,h:hh*2,cx:c,cy:c}];
+  const paint=new Uint8Array(M*M);
+  for(let y=0;y<M;y++)for(let x=0;x<M;x++)if(g[gi(x,y)])paint[gi(x,y)]=1;
+  for(let x=c-14;x<=c+14;x++)for(let d=-1;d<=1;d++)if(g[gi(x,c+d)])paint[gi(x,c+d)]=2;
+  for(let y=c-10;y<=c+10;y++)for(let d=-1;d<=1;d++)if(g[gi(c+d,y)])paint[gi(c+d,y)]=2;
+  for(let y=c-5;y<=c+5;y++)for(let x=c-5;x<=c+5;x++)if(g[gi(x,y)])paint[gi(x,y)]=3;
+  [[-18,-8],[18,-8],[0,-18],[-20,14],[10,16],[0,20],[wX(c+17),wX(c+3)]].forEach(([wx,wz])=>{
+    paintAlong(g,paint,c,c,tX(wx),tZ(wz),2);
+  });
+  for(let y=c-5;y<=c+5;y++)for(let x=c-5;x<=c+5;x++)if(g[gi(x,y)])paint[gi(x,y)]=3;
+  W.grid=g;W.paint=paint;W.rooms=[{x:c-hw,y:c-hh,w:hw*2,h:hh*2,cx:c,cy:c}];
   W.explored=new Uint8Array(M*M).fill(1);
 }
 
@@ -627,148 +1003,446 @@ function buildScene(kind,pal,area){
   const G=new THREE.Group();W.group=G;scene.add(G);
   const M=CFG.MAP,T=CFG.TILE,dark=(kind==="rift"||kind==="dungeon");
   W.dark=dark;
-  // 地面
+  const under=new THREE.Mesh(new THREE.PlaneGeometry(M*T+8,M*T+8),
+    new THREE.MeshLambertMaterial({color:dark?0x0a090c:(area&&area.id==="frost"?0x1a2832:area&&area.id==="shore"?0x0c1822:0x1a1812)}));
+  under.rotation.x=-Math.PI/2;under.position.y=-.42;G.add(under);
   const ft=[];
   for(let y=0;y<M;y++)for(let x=0;x<M;x++)if(W.grid[gi(x,y)]===1)ft.push([x,y]);
   const floor=new THREE.InstancedMesh(new THREE.BoxGeometry(T,.5,T),new THREE.MeshLambertMaterial({color:0xffffff}),ft.length);
-  const col=new THREE.Color(),base=pal.floor;
+  const col=new THREE.Color(),base=pal.floor,paint=W.paint;
   ft.forEach(([x,y],i)=>{
-    dummy.position.set(wX(x),-.25,wX(y));dummy.rotation.set(0,0,0);dummy.scale.set(1,1,1);dummy.updateMatrix();
+    const p=paint?paint[gi(x,y)]||1:1;
+    const sy=p===2?.7:p===3?.9:p===5?.62:p===7?.68:p===6?.78:.82+RND()*.26;
+    dummy.position.set(wX(x)+rf(-.04,.04),-.25*sy,wX(y)+rf(-.04,.04));
+    dummy.rotation.set(0,(p===3?((x+y)&1)*.02:0),0);
+    dummy.scale.set(.96+RND()*.05,sy,.96+RND()*.05);dummy.updateMatrix();
     floor.setMatrixAt(i,dummy.matrix);
-    const v=.78+RND()*.42;
-    col.setRGB(base[0]*v,base[1]*v,base[2]*v);
+    let v=.72+RND()*.38,r=base[0],g0=base[1],b=base[2];
+    if(p===2){v=.6+RND()*.16;r=base[0]*.7;g0=base[1]*.68;b=base[2]*.6;}
+    else if(p===3){v=.78+RND()*.14;r=.42+RND()*.06;g0=.4+RND()*.05;b=.36+RND()*.04;}
+    else if(p===4){v=.7+RND()*.28;r=.18+RND()*.04;g0=.3+RND()*.06;b=.14+RND()*.03;}
+    else if(p===5){v=.88+RND()*.12;r=.72;g0=.82;b=.9;}
+    else if(p===6){v=.55+RND()*.22;r=.38;g0=.18;b=.14;}
+    else if(p===7){v=.78+RND()*.18;r=.62;g0=.54;b=.36;}
+    col.setRGB(r*v,g0*v,b*v);
     floor.setColorAt(i,col);});
   floor.instanceMatrix.needsUpdate=true;if(floor.instanceColor)floor.instanceColor.needsUpdate=true;
   G.add(floor);
-  // 阻挡物
+  const edges=[];
+  for(let y=1;y<M-1;y++)for(let x=1;x<M-1;x++){
+    if(W.grid[gi(x,y)]!==1)continue;
+    if(walk(x-1,y)&&walk(x+1,y)&&walk(x,y-1)&&walk(x,y+1))continue;
+    edges.push([x,y]);
+  }
+  if(edges.length){
+    const skirt=new THREE.InstancedMesh(new THREE.BoxGeometry(T*1.04,1.2,T*1.04),new THREE.MeshLambertMaterial({color:0xffffff}),edges.length);
+    edges.forEach(([x,y],i)=>{
+      dummy.position.set(wX(x),-.78,wX(y));dummy.rotation.set(0,0,0);dummy.scale.set(1,1,1);dummy.updateMatrix();
+      skirt.setMatrixAt(i,dummy.matrix);
+      const v=.26+RND()*.14;col.setRGB(base[0]*v*.75,base[1]*v*.72,base[2]*v*.68);skirt.setColorAt(i,col);
+    });
+    skirt.instanceMatrix.needsUpdate=true;if(skirt.instanceColor)skirt.instanceColor.needsUpdate=true;G.add(skirt);
+  }
+  scatterFloorBits(G,kind,pal,ft);
+  buildHazSurfaces(G);
   if(dark){
-    const wt=blockedTiles();
-    const walls=new THREE.InstancedMesh(new THREE.BoxGeometry(T,4.6,T),new THREE.MeshLambertMaterial({color:0xffffff}),wt.length);
-    wt.forEach(([x,y],i)=>{
-      dummy.position.set(wX(x),2+RND()*.16,wX(y));dummy.rotation.set(0,RND()<.5?0:Math.PI/2,0);
-      dummy.scale.set(1,1,1);dummy.updateMatrix();walls.setMatrixAt(i,dummy.matrix);
-      const v=.24+RND()*.13;col.setRGB(v*.95,v*.9,v*.86);walls.setColorAt(i,col);});
-    walls.instanceMatrix.needsUpdate=true;if(walls.instanceColor)walls.instanceColor.needsUpdate=true;G.add(walls);
+    buildDungeonWalls(G);
   }else if(kind==="field"){
     buildFieldBlockers(G,area.block);
+    buildFieldLandmarks(G,area);
   }else if(kind==="town"){
-    buildTownProps(G);
+    buildTownProps(G,area);
   }
   return G;
+}
+function scatterFloorBits(G,kind,pal,ft){
+  const n=Math.min(220,Math.floor(ft.length*.18));
+  if(!n)return;
+  const geo=new THREE.BoxGeometry(.28,.07,.22);
+  const bits=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:0xffffff}),n);
+  const col=new THREE.Color();let k=0;
+  for(let i=0;i<n*3&&k<n;i++){
+    const t=ft[ri(0,ft.length-1)],x=wX(t[0])+rf(-.7,.7),z=wX(t[1])+rf(-.7,.7);
+    if(!canStand(x,z,.2))continue;
+    dummy.position.set(x,.04,z);dummy.rotation.set(0,RND()*TAU,rf(-.1,.1));
+    dummy.scale.set(rf(.6,1.4),rf(.5,1.2),rf(.6,1.3));dummy.updateMatrix();
+    bits.setMatrixAt(k,dummy.matrix);
+    const v=.45+RND()*.4,p=W.paint?W.paint[gi(t[0],t[1])]:1;
+    if(p===4)col.setRGB(.16*v,.28*v,.12*v);
+    else if(p===5)col.setRGB(.78*v,.86*v,.92*v);
+    else if(p===6)col.setRGB(.4*v,.16*v,.12*v);
+    else if(p===7)col.setRGB(.55*v,.46*v,.3*v);
+    else if(kind==="town")col.setRGB(.38*v,.34*v,.28*v);
+    else col.setRGB(.28*v,.26*v,.22*v);
+    bits.setColorAt(k,col);k++;
+  }
+  bits.count=k;bits.instanceMatrix.needsUpdate=true;if(bits.instanceColor)bits.instanceColor.needsUpdate=true;
+  G.add(bits);
+}
+function buildHazSurfaces(G){
+  if(!W.paint)return;
+  const M=CFG.MAP,water=[],lava=[],ice=[];
+  for(let y=1;y<M-1;y++)for(let x=1;x<M-1;x++){
+    if(W.grid[gi(x,y)]===1)continue;
+    const p=W.paint[gi(x,y)];
+    if(p===9)water.push([x,y]);
+    else if(p===10)lava.push([x,y]);
+    else if(p===11)ice.push([x,y]);
+  }
+  function lay(list,col,h,op){
+    if(!list.length)return;
+    const mesh=new THREE.InstancedMesh(new THREE.BoxGeometry(CFG.TILE+.04,.12,CFG.TILE+.04),
+      new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op}),list.length);
+    list.forEach(([x,y],i)=>{
+      dummy.position.set(wX(x),h,wX(y));dummy.rotation.set(0,0,0);dummy.scale.set(1,1,1);dummy.updateMatrix();
+      mesh.setMatrixAt(i,dummy.matrix);});
+    mesh.instanceMatrix.needsUpdate=true;G.add(mesh);
+  }
+  lay(water,0x1c4a66,-.08,.78);
+  lay(lava,0xff4a18,-.02,.88);
+  lay(ice,0xb8d8ee,-.06,.82);
+  if(W.area&&W.area.id==="shore"){
+    const sea=new THREE.Mesh(new THREE.PlaneGeometry(150,72),
+      new THREE.MeshBasicMaterial({color:0x163848,transparent:true,opacity:.55}));
+    sea.rotation.x=-Math.PI/2;sea.position.set(0,-.18,40);G.add(sea);
+  }
+  if(W.area&&W.area.id==="frost"){
+    const lake=new THREE.Mesh(new THREE.CircleGeometry(16,28),
+      new THREE.MeshBasicMaterial({color:0x7eb4d0,transparent:true,opacity:.45}));
+    lake.rotation.x=-Math.PI/2;lake.position.set(0,-.14,0);G.add(lake);
+  }
 }
 function blockedTiles(){
   const M=CFG.MAP,out=[];
   for(let y=1;y<M-1;y++)for(let x=1;x<M-1;x++){
     if(W.grid[gi(x,y)]!==0)continue;
+    const p=W.paint?W.paint[gi(x,y)]:0;
+    if(p===9||p===10||p===11)continue;
     let near=false;
     for(let dy=-1;dy<=1&&!near;dy++)for(let dx=-1;dx<=1;dx++)if(walk(x+dx,y+dy)){near=true;break;}
     if(near)out.push([x,y]);}
   return out;
 }
+function buildDungeonWalls(G){
+  const wt=blockedTiles(),col=new THREE.Color();
+  const walls=new THREE.InstancedMesh(new THREE.BoxGeometry(CFG.TILE,4.4,CFG.TILE),new THREE.MeshLambertMaterial({color:0xffffff}),wt.length);
+  const caps=new THREE.InstancedMesh(new THREE.BoxGeometry(CFG.TILE+.12,.22,CFG.TILE+.12),new THREE.MeshLambertMaterial({color:0xffffff}),wt.length);
+  const pillars=[];
+  wt.forEach(([x,y],i)=>{
+    const h=4.1+RND()*.7;
+    dummy.position.set(wX(x),h*.48,wX(y));dummy.rotation.set(0,0,0);
+    dummy.scale.set(1,h/4.4,1);dummy.updateMatrix();walls.setMatrixAt(i,dummy.matrix);
+    const v=.2+RND()*.12;col.setRGB(v*.98,v*.92,v*.86);walls.setColorAt(i,col);
+    dummy.position.set(wX(x),h+.08,wX(y));dummy.scale.set(1,1,1);dummy.updateMatrix();
+    caps.setMatrixAt(i,dummy.matrix);col.setRGB(v*1.15,v*1.05,v*.95);caps.setColorAt(i,col);
+    const n=walk(x,y-1),s=walk(x,y+1),e=walk(x+1,y),w=walk(x-1,y);
+    if((n||s)&&(e||w)&&RND()<.7)pillars.push([x,y,h]);
+  });
+  walls.instanceMatrix.needsUpdate=true;caps.instanceMatrix.needsUpdate=true;
+  if(walls.instanceColor)walls.instanceColor.needsUpdate=true;
+  if(caps.instanceColor)caps.instanceColor.needsUpdate=true;
+  G.add(walls,caps);
+  if(pillars.length){
+    const colm=new THREE.InstancedMesh(new THREE.BoxGeometry(.55,5.2,.55),new THREE.MeshLambertMaterial({color:0x2a2622}),pillars.length);
+    pillars.forEach(([x,y,h],i)=>{
+      dummy.position.set(wX(x),h*.52,wX(y));dummy.rotation.set(0,0,0);dummy.scale.set(1,h/5.2,1);dummy.updateMatrix();
+      colm.setMatrixAt(i,dummy.matrix);});
+    colm.instanceMatrix.needsUpdate=true;G.add(colm);
+  }
+}
 function buildFieldBlockers(G,style){
   const tiles=blockedTiles(),col=new THREE.Color();
   if(style==="tree"){
-    const trunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.22,.3,2.6,6),
-      new THREE.MeshLambertMaterial({color:0x4a3520}),tiles.length);
-    const leaf=new THREE.InstancedMesh(new THREE.ConeGeometry(1.35,3.2,7),
-      new THREE.MeshLambertMaterial({color:0xffffff}),tiles.length);
+    const n=tiles.length;
+    const trunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.18,.32,3.1,7),new THREE.MeshLambertMaterial({color:0x4a3520}),n);
+    const leaf1=new THREE.InstancedMesh(new THREE.ConeGeometry(1.45,2.6,8),new THREE.MeshLambertMaterial({color:0xffffff}),n);
+    const leaf2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.05,2.1,8),new THREE.MeshLambertMaterial({color:0xffffff}),n);
+    const bush=new THREE.InstancedMesh(new THREE.SphereGeometry(.55,6,5),new THREE.MeshLambertMaterial({color:0xffffff}),Math.min(90,n));
+    let bi=0;
     tiles.forEach(([x,y],i)=>{
-      const px=wX(x)+rf(-.3,.3),pz=wX(y)+rf(-.3,.3);
-      dummy.position.set(px,1.3,pz);dummy.rotation.set(0,RND()*TAU,0);dummy.scale.set(1,1,1);dummy.updateMatrix();
+      const px=wX(x)+rf(-.25,.25),pz=wX(y)+rf(-.25,.25),tall=.85+RND()*.45;
+      dummy.position.set(px,1.55*tall,pz);dummy.rotation.set(0,RND()*TAU,0);dummy.scale.set(1,tall,1);dummy.updateMatrix();
       trunk.setMatrixAt(i,dummy.matrix);
-      dummy.position.set(px,3.1+RND()*.5,pz);dummy.scale.setScalar(.85+RND()*.4);dummy.updateMatrix();
-      leaf.setMatrixAt(i,dummy.matrix);
-      const v=.6+RND()*.5;col.setRGB(.16*v,.34*v,.18*v);leaf.setColorAt(i,col);});
-    trunk.instanceMatrix.needsUpdate=true;leaf.instanceMatrix.needsUpdate=true;
-    if(leaf.instanceColor)leaf.instanceColor.needsUpdate=true;
-    G.add(trunk,leaf);
-  }else if(style==="spire"){
-    const rock=new THREE.InstancedMesh(new THREE.ConeGeometry(1.15,4.2,5),
-      new THREE.MeshLambertMaterial({color:0xffffff}),tiles.length);
-    tiles.forEach(([x,y],i)=>{
-      dummy.position.set(wX(x)+rf(-.3,.3),1.9+RND()*.6,wX(y)+rf(-.3,.3));
-      dummy.rotation.set(rf(-.1,.1),RND()*TAU,rf(-.1,.1));dummy.scale.set(1,.8+RND()*.7,1);dummy.updateMatrix();
-      rock.setMatrixAt(i,dummy.matrix);
-      const v=.4+RND()*.4;col.setRGB(.3*v,.16*v,.14*v);rock.setColorAt(i,col);});
-    rock.instanceMatrix.needsUpdate=true;if(rock.instanceColor)rock.instanceColor.needsUpdate=true;G.add(rock);
-    // 熔岩坑
-    for(let i=0;i<14;i++){
+      dummy.position.set(px,3.05*tall,pz);dummy.scale.setScalar((.9+RND()*.35)*tall);dummy.updateMatrix();
+      leaf1.setMatrixAt(i,dummy.matrix);
+      const v=.55+RND()*.5;col.setRGB(.14*v,.32*v,.16*v);leaf1.setColorAt(i,col);
+      dummy.position.set(px,4.15*tall,pz);dummy.scale.setScalar((.7+RND()*.3)*tall);dummy.updateMatrix();
+      leaf2.setMatrixAt(i,dummy.matrix);
+      col.setRGB(.18*v,.38*v,.18*v);leaf2.setColorAt(i,col);
+      if(bi<bush.count&&RND()<.28){
+        dummy.position.set(px+rf(-1.1,1.1),.42,pz+rf(-1.1,1.1));dummy.scale.setScalar(.7+RND()*.6);dummy.updateMatrix();
+        bush.setMatrixAt(bi,dummy.matrix);col.setRGB(.12*v,.28*v,.12*v);bush.setColorAt(bi,col);bi++;
+      }
+    });
+    trunk.instanceMatrix.needsUpdate=true;leaf1.instanceMatrix.needsUpdate=true;leaf2.instanceMatrix.needsUpdate=true;
+    if(leaf1.instanceColor)leaf1.instanceColor.needsUpdate=true;
+    if(leaf2.instanceColor)leaf2.instanceColor.needsUpdate=true;
+    bush.count=bi;bush.instanceMatrix.needsUpdate=true;if(bush.instanceColor)bush.instanceColor.needsUpdate=true;
+    G.add(trunk,leaf1,leaf2,bush);
+    for(let i=0;i<8;i++){
       const t=pick(tiles);if(!t)break;
-      const m=new THREE.Mesh(new THREE.CircleGeometry(rf(1,2.2),12),
-        new THREE.MeshBasicMaterial({color:0xff5a1e,transparent:true,opacity:.65}));
-      m.rotation.x=-Math.PI/2;m.position.set(wX(t[0])+rf(-2,2),.06,wX(t[1])+rf(-2,2));G.add(m);
-      const l=new THREE.PointLight(0xff5a1e,.7,9,2);l.position.set(m.position.x,1,m.position.z);G.add(l);
+      const log=new THREE.Mesh(new THREE.CylinderGeometry(.16,.2,rf(2.2,3.4),7),new THREE.MeshLambertMaterial({color:0x3a2a18}));
+      log.rotation.z=Math.PI/2;log.rotation.y=RND()*TAU;
+      log.position.set(wX(t[0])+rf(-.4,.4),.18,wX(t[1])+rf(-.4,.4));G.add(log);
     }
-  }else{
-    const rock=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1.15,0),
-      new THREE.MeshLambertMaterial({color:0xffffff}),tiles.length);
+  }else if(style==="spire"){
+    const rock=new THREE.InstancedMesh(new THREE.ConeGeometry(1.05,4.4,6),new THREE.MeshLambertMaterial({color:0xffffff}),tiles.length);
+    const shard=new THREE.InstancedMesh(new THREE.ConeGeometry(.45,2.2,5),new THREE.MeshLambertMaterial({color:0xffffff}),tiles.length);
     tiles.forEach(([x,y],i)=>{
-      dummy.position.set(wX(x)+rf(-.3,.3),.5+RND()*.5,wX(y)+rf(-.3,.3));
-      dummy.rotation.set(RND()*TAU,RND()*TAU,RND()*TAU);dummy.scale.setScalar(.7+RND()*.7);dummy.updateMatrix();
+      dummy.position.set(wX(x)+rf(-.25,.25),2.05+RND()*.55,wX(y)+rf(-.25,.25));
+      dummy.rotation.set(rf(-.08,.08),RND()*TAU,rf(-.08,.08));dummy.scale.set(1,.85+RND()*.7,1);dummy.updateMatrix();
       rock.setMatrixAt(i,dummy.matrix);
-      const v=.45+RND()*.4;col.setRGB(.4*v,.37*v,.31*v);rock.setColorAt(i,col);});
-    rock.instanceMatrix.needsUpdate=true;if(rock.instanceColor)rock.instanceColor.needsUpdate=true;G.add(rock);
-    // 枯草
-    for(let i=0;i<90;i++){
-      const x=rf(-52,52),z=rf(-52,52);
-      if(!canStand(x,z,.4))continue;
-      const b=box(.09,rf(.4,.8),.09,0x6b6440);b.position.set(x,.3,z);b.rotation.y=RND()*TAU;G.add(b);
+      const v=.38+RND()*.42;col.setRGB(.32*v,.15*v,.13*v);rock.setColorAt(i,col);
+      dummy.position.set(wX(x)+rf(-.9,.9),1.1+RND()*.4,wX(y)+rf(-.9,.9));
+      dummy.scale.set(1,.6+RND()*.8,1);dummy.updateMatrix();
+      shard.setMatrixAt(i,dummy.matrix);col.setRGB(.4*v,.18*v,.14*v);shard.setColorAt(i,col);});
+    rock.instanceMatrix.needsUpdate=true;shard.instanceMatrix.needsUpdate=true;
+    if(rock.instanceColor)rock.instanceColor.needsUpdate=true;
+    if(shard.instanceColor)shard.instanceColor.needsUpdate=true;
+    G.add(rock,shard);
+    for(let i=0;i<6;i++){
+      const t=pick(tiles);if(!t)break;
+      const m=new THREE.Mesh(new THREE.CircleGeometry(rf(1.1,2.4),14),
+        new THREE.MeshBasicMaterial({color:0xff5a1e,transparent:true,opacity:.62}));
+      m.rotation.x=-Math.PI/2;m.position.set(wX(t[0])+rf(-1.6,1.6),.05,wX(t[1])+rf(-1.6,1.6));G.add(m);
+      const ring=new THREE.Mesh(new THREE.RingGeometry(m.geometry.parameters.radius*.55,m.geometry.parameters.radius*1.05,14),
+        new THREE.MeshBasicMaterial({color:0xff9a3a,transparent:true,opacity:.35,side:THREE.DoubleSide}));
+      ring.rotation.x=-Math.PI/2;ring.position.copy(m.position);ring.position.y=.06;G.add(ring);
+      const l=new THREE.PointLight(0xff5a1e,.55,8,2);l.position.set(m.position.x,.9,m.position.z);G.add(l);
     }
+  }else if(style==="pillar"){
+    const n=tiles.length;
+    const shaft=new THREE.InstancedMesh(new THREE.CylinderGeometry(.22,.38,3.6,7),new THREE.MeshLambertMaterial({color:0xffffff}),n);
+    const cap=new THREE.InstancedMesh(new THREE.ConeGeometry(.55,1.1,7),new THREE.MeshLambertMaterial({color:0xffffff}),n);
+    const mound=new THREE.InstancedMesh(new THREE.SphereGeometry(.7,6,5),new THREE.MeshLambertMaterial({color:0xffffff}),n);
+    tiles.forEach(([x,y],i)=>{
+      const px=wX(x)+rf(-.2,.2),pz=wX(y)+rf(-.2,.2),h=.8+RND()*.7;
+      dummy.position.set(px,1.8*h,pz);dummy.rotation.set(rf(-.05,.05),RND()*TAU,rf(-.05,.05));dummy.scale.set(1,h,1);dummy.updateMatrix();
+      shaft.setMatrixAt(i,dummy.matrix);
+      const v=.75+RND()*.3;col.setRGB(.78*v,.86*v,.92*v);shaft.setColorAt(i,col);
+      dummy.position.set(px,3.55*h,pz);dummy.scale.setScalar(.7+RND()*.4);dummy.updateMatrix();
+      cap.setMatrixAt(i,dummy.matrix);col.setRGB(.86*v,.92*v,.98*v);cap.setColorAt(i,col);
+      dummy.position.set(px,.28,pz);dummy.scale.setScalar(.6+RND()*.5);dummy.updateMatrix();
+      mound.setMatrixAt(i,dummy.matrix);col.setRGB(.7*v,.78*v,.84*v);mound.setColorAt(i,col);
+    });
+    shaft.instanceMatrix.needsUpdate=true;cap.instanceMatrix.needsUpdate=true;mound.instanceMatrix.needsUpdate=true;
+    if(shaft.instanceColor)shaft.instanceColor.needsUpdate=true;
+    if(cap.instanceColor)cap.instanceColor.needsUpdate=true;
+    if(mound.instanceColor)mound.instanceColor.needsUpdate=true;
+    G.add(shaft,cap,mound);
+  }else if(style==="wreck"){
+    const n=tiles.length;
+    const rib=new THREE.InstancedMesh(new THREE.BoxGeometry(.18,1.8,2.4),new THREE.MeshLambertMaterial({color:0xffffff}),n);
+    const mast=new THREE.InstancedMesh(new THREE.CylinderGeometry(.08,.12,3.4,6),new THREE.MeshLambertMaterial({color:0x4a3a28}),Math.ceil(n/3));
+    let mi=0;
+    tiles.forEach(([x,y],i)=>{
+      dummy.position.set(wX(x)+rf(-.3,.3),.7+RND()*.4,wX(y)+rf(-.3,.3));
+      dummy.rotation.set(rf(-.2,.2),RND()*TAU,rf(-.15,.25));dummy.scale.set(1,rf(.6,1.3),rf(.7,1.2));dummy.updateMatrix();
+      rib.setMatrixAt(i,dummy.matrix);
+      const v=.4+RND()*.35;col.setRGB(.32*v,.24*v,.16*v);rib.setColorAt(i,col);
+      if(mi<mast.count&&RND()<.28){
+        dummy.position.set(wX(x),1.6,wX(y));dummy.rotation.set(rf(-.25,.25),0,rf(-.2,.2));dummy.scale.set(1,1,1);dummy.updateMatrix();
+        mast.setMatrixAt(mi,dummy.matrix);mi++;
+      }
+    });
+    mast.count=mi;
+    rib.instanceMatrix.needsUpdate=true;mast.instanceMatrix.needsUpdate=true;
+    if(rib.instanceColor)rib.instanceColor.needsUpdate=true;
+    G.add(rib,mast);
+  }else{
+    const rock=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1.05,0),new THREE.MeshLambertMaterial({color:0xffffff}),tiles.length);
+    const pebble=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.38,0),new THREE.MeshLambertMaterial({color:0xffffff}),tiles.length);
+    const grass=new THREE.InstancedMesh(new THREE.BoxGeometry(.08,.55,.08),new THREE.MeshLambertMaterial({color:0xffffff}),160);
+    tiles.forEach(([x,y],i)=>{
+      dummy.position.set(wX(x)+rf(-.25,.25),.55+RND()*.4,wX(y)+rf(-.25,.25));
+      dummy.rotation.set(RND()*TAU,RND()*TAU,RND()*TAU);dummy.scale.set(rf(.7,1.15),rf(.55,1.05),rf(.7,1.2));dummy.updateMatrix();
+      rock.setMatrixAt(i,dummy.matrix);
+      const v=.42+RND()*.4;col.setRGB(.42*v,.38*v,.31*v);rock.setColorAt(i,col);
+      dummy.position.set(wX(x)+rf(-1.1,1.1),.16,wX(y)+rf(-1.1,1.1));dummy.scale.setScalar(.5+RND()*.7);dummy.updateMatrix();
+      pebble.setMatrixAt(i,dummy.matrix);col.setRGB(.36*v,.33*v,.28*v);pebble.setColorAt(i,col);});
+    let gsi=0;
+    for(let i=0;i<280&&gsi<grass.count;i++){
+      const x=rf(-52,52),z=rf(-52,52);if(!canStand(x,z,.3))continue;
+      dummy.position.set(x,rf(.18,.38),z);dummy.rotation.set(rf(-.15,.15),RND()*TAU,rf(-.1,.1));
+      dummy.scale.set(1,rf(.7,1.5),1);dummy.updateMatrix();
+      grass.setMatrixAt(gsi,dummy.matrix);
+      const v=.5+RND()*.45;col.setRGB(.38*v,.36*v,.2*v);grass.setColorAt(gsi,col);gsi++;
+    }
+    grass.count=gsi;
+    rock.instanceMatrix.needsUpdate=true;pebble.instanceMatrix.needsUpdate=true;grass.instanceMatrix.needsUpdate=true;
+    if(rock.instanceColor)rock.instanceColor.needsUpdate=true;
+    if(pebble.instanceColor)pebble.instanceColor.needsUpdate=true;
+    if(grass.instanceColor)grass.instanceColor.needsUpdate=true;
+    G.add(rock,pebble,grass);
   }
 }
-function buildTownProps(G){
-  const c=CFG.MAP>>1;
-  TOWN_HOUSES.forEach(([x,y,w,h],idx)=>{
-    const px=wX(c+x+w/2-.5),pz=wX(c+y+h/2-.5);
-    const bw=w*CFG.TILE,bd=h*CFG.TILE;
-    const wall=box(bw,3.4,bd,idx%2?0x6b5a44:0x7a6a52);wall.position.set(px,1.7,pz);G.add(wall);
-    const roof=new THREE.Mesh(new THREE.ConeGeometry(Math.max(bw,bd)*.78,2.1,4),
-      new THREE.MeshLambertMaterial({color:0x5a2a22}));
-    roof.position.set(px,4.5,pz);roof.rotation.y=Math.PI/4;G.add(roof);
-    const door=box(1.1,1.9,.2,0x3a2a18);door.position.set(px,.95,pz+bd/2+.05);G.add(door);
-    const win=box(.7,.7,.2,0xffd88a);win.position.set(px-bw*.28,2.1,pz+bd/2+.05);G.add(win);
-    const win2=win.clone();win2.position.x=px+bw*.28;G.add(win2);
-  });
-  // 井
-  const well=new THREE.Mesh(new THREE.CylinderGeometry(1.05,1.15,1,10),new THREE.MeshLambertMaterial({color:0x6a6258}));
-  well.position.set(wX(c-3),.5,wX(c+3));G.add(well);
-  // 摊位与围栏
-  const keepSvc=[[-20,14],[10,16],[0,20],[8,4]];
-  for(let i=0;i<10;i++){
-    const x=wX(c)+rf(-24,24),z=wX(c)+rf(-16,16);
-    if(!canStand(x,z,1.2))continue;
-    if(keepSvc.some(([sx,sz])=>Math.hypot(x-sx,z-sz)<4.5))continue;
-    const s=box(1.7,.9,1.2,0x5b4126);s.position.set(x,.45,z);s.rotation.y=RND()*TAU;G.add(s);
-    const cloth=box(1.9,.12,1.4,pick([0x8a3a3a,0x3a5a8a,0x6a6a2a]));cloth.position.set(x,1.15,z);
-    cloth.rotation.y=s.rotation.y;G.add(cloth);
+function buildFieldLandmarks(G,area){
+  const tiles=blockedTiles();
+  if(!tiles.length)return;
+  const t=tiles[tiles.length>>2]||tiles[0];
+  const x=wX(t[0]),z=wX(t[1]);
+  if(area.id==="waste"){
+    const base=box(2.4,.5,2.4,0x6a6258);base.position.set(x,.25,z);G.add(base);
+    const wall=box(1.8,3.6,1.8,0x5a5248);wall.position.set(x,2.1,z);G.add(wall);
+    const ruin=box(1.2,1.4,.4,0x4a443c);ruin.position.set(x+.9,3.9,z);ruin.rotation.z=.4;G.add(ruin);
+  }else if(area.id==="wood"){
+    for(let i=0;i<6;i++){
+      const a=i/6*TAU,st=box(.35,1.1,.35,0x4a4034);
+      st.position.set(x+Math.cos(a)*3.2,.55,z+Math.sin(a)*3.2);G.add(st);
+    }
+  }else if(area.id==="ash"){
+    const arch=box(4.2,.5,.6,0x4a3028);arch.position.set(x,3.4,z);G.add(arch);
+    const p1=box(.55,3.4,.55,0x3a2420);p1.position.set(x-1.8,1.7,z);G.add(p1);
+    const p2=box(.55,3.4,.55,0x3a2420);p2.position.set(x+1.8,1.7,z);G.add(p2);
+  }else if(area.id==="frost"){
+    for(let i=0;i<3;i++){
+      const ob=box(.45,4.2+i*.4,.45,0xc8d8e8);
+      ob.position.set(x+i*2.2,2.2,z-i*1.4);ob.rotation.y=.3;G.add(ob);
+    }
+  }else if(area.id==="shore"){
+    const hull=box(5.5,1.1,1.8,0x3a2a1c);hull.position.set(x,0.7,z);hull.rotation.y=.5;hull.rotation.z=.18;G.add(hull);
+    const mast=box(.16,4.2,.16,0x4a3a28);mast.position.set(x,.2,z);mast.rotation.z=.35;G.add(mast);
+  }else if(area.id==="sinkf"){
+    const col=box(1.1,4.6,1.1,0x3a3238);col.position.set(x,2.3,z);G.add(col);
+    const top=box(2.2,.35,2.2,0x2a2228);top.position.set(x,4.7,z);G.add(top);
+  }else if(area.id==="shaft"){
+    const n1=box(.4,6.2,.4,0x6a5a50);n1.position.set(x,3.1,z);G.add(n1);
+    const n2=box(.9,.22,.9,0x8a7a70);n2.position.set(x,6.3,z);G.add(n2);
   }
-  // 灯柱（夜间光源）
+}
+function buildHouse(G,px,pz,bw,bd,idx,skin){
+  skin=skin||"stone";
+  const stone=skin==="ice"?0x8a96a0:skin==="dock"?0x5a5348:skin==="ruin"?0x4a3e3a:skin==="nail"?0x5a4a40:idx%2?0x6a6258:0x5e5850;
+  const plaster=skin==="ice"?0x9aa8b4:skin==="dock"?0x7a6a58:skin==="ruin"?0x4e403c:skin==="nail"?0x6a5a4c:idx%3===0?0x8a7a62:idx%3===1?0x7a6a52:0x6e6458;
+  const timber=skin==="ice"?0x5a4a40:0x4a3424;
+  const roofC=skin==="ice"?0x6a7a88:skin==="dock"?0x3a4a58:skin==="ruin"?0x2a2220:skin==="nail"?0x4a3228:idx%3===0?0x5a2a22:idx%3===1?0x4a3228:0x3a3a44;
+  const found=box(bw+.4,.38,bd+.4,stone);found.position.set(px,.19,pz);G.add(found);
+  const wall=box(bw,2.85,bd,plaster);wall.position.set(px,1.78,pz);G.add(wall);
+  [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx,sz])=>{
+    const p=box(.2,3.05,.2,timber);p.position.set(px+sx*(bw/2-.08),1.72,pz+sz*(bd/2-.08));G.add(p);});
+  const mid=box(bw+.06,.14,.16,timber);mid.position.set(px,2.35,pz+bd/2+.03);G.add(mid);
+  const midB=box(bw+.06,.14,.16,timber);midB.position.set(px,2.35,pz-bd/2-.03);G.add(midB);
+  const mid2=box(.16,.14,bd+.06,timber);mid2.position.set(px-bw/2-.03,2.35,pz);G.add(mid2);
+  const mid3=box(.16,.14,bd+.06,timber);mid3.position.set(px+bw/2+.03,2.35,pz);G.add(mid3);
+  const eave=box(bw+.2,.18,.22,timber);eave.position.set(px,3.28,pz+bd/2+.04);G.add(eave);
+  const rw=bw+.95,rd=bd+.55;
+  const rL=box(rw,.16,rd*.58,roofC);rL.position.set(px,3.72,pz-rd*.22);rL.rotation.x=.52;G.add(rL);
+  const rR=box(rw,.16,rd*.58,roofC);rR.position.set(px,3.72,pz+rd*.22);rR.rotation.x=-.52;G.add(rR);
+  const ridge=box(rw+.1,.1,.14,timber);ridge.position.set(px,4.22,pz);G.add(ridge);
+  const gableA=box(.18,1.4,bd+.08,plaster);gableA.position.set(px-rw/2+.18,3.82,pz);G.add(gableA);
+  const gableB=box(.18,1.4,bd+.08,plaster);gableB.position.set(px+rw/2-.18,3.82,pz);G.add(gableB);
+  const chim=box(.5,1.45,.5,0x5a4a40);chim.position.set(px+bw*.26,4.55,pz-bd*.18);G.add(chim);
+  const cap=box(.62,.12,.62,0x3a322c);cap.position.set(px+bw*.26,5.3,pz-bd*.18);G.add(cap);
+  const faceZ=pz+bd/2;
+  const step=box(1.7,.16,.55,stone);step.position.set(px,.1,faceZ+.28);G.add(step);
+  const jamb=box(1.25,1.85,.12,timber);jamb.position.set(px,1.05,faceZ+.05);G.add(jamb);
+  const door=box(.92,1.62,.1,0x3a2416);door.position.set(px,.98,faceZ+.12);G.add(door);
+  const knob=box(.06,.06,.08,0xc4a15a);knob.position.set(px+.32,1.0,faceZ+.18);G.add(knob);
+  [-.34,.34].forEach(ox=>{
+    const frame=box(.82,.82,.12,timber);frame.position.set(px+ox*bw,2.18,faceZ+.06);G.add(frame);
+    const glass=new THREE.Mesh(new THREE.BoxGeometry(.58,.58,.08),new THREE.MeshBasicMaterial({color:0xffd088}));
+    glass.position.set(px+ox*bw,2.18,faceZ+.12);G.add(glass);
+    const mull=box(.06,.58,.04,timber);mull.position.set(px+ox*bw,2.18,faceZ+.16);G.add(mull);
+  });
+}
+function buildTownProps(G,area){
+  area=area||AREA.town;
+  const houses=area.houses||TOWN_HOUSES,skin=area.skin||"stone";
+  const c=CFG.MAP>>1;
+  houses.forEach(([x,y,w,h],idx)=>{
+    const px=wX(c+x+w/2-.5),pz=wX(c+y+h/2-.5);
+    buildHouse(G,px,pz,w*CFG.TILE,h*CFG.TILE,idx,skin);
+  });
+  const wx=wX(c-3),wz=wX(c+3);
+  const well=new THREE.Mesh(new THREE.CylinderGeometry(1.08,1.2,.95,12),new THREE.MeshLambertMaterial({color:0x6a6258}));
+  well.position.set(wx,.48,wz);G.add(well);
+  const water=new THREE.Mesh(new THREE.CircleGeometry(.78,12),new THREE.MeshBasicMaterial({color:0x3a5a6a,transparent:true,opacity:.75}));
+  water.rotation.x=-Math.PI/2;water.position.set(wx,.92,wz);G.add(water);
+  const p1=box(.12,1.6,.12,0x4a3424);p1.position.set(wx-.7,1.4,wz);G.add(p1);
+  const p2=p1.clone();p2.position.x=wx+.7;G.add(p2);
+  const beam=box(1.7,.12,.12,0x4a3424);beam.position.set(wx,2.22,wz);G.add(beam);
+  const bucket=new THREE.Mesh(new THREE.CylinderGeometry(.16,.18,.22,8),new THREE.MeshLambertMaterial({color:0x5a3a22}));
+  bucket.position.set(wx,.2,wz+1.15);G.add(bucket);
+  const keepSvc=[[-20,14],[10,16],[0,20],[8,4]];
+  for(let i=0;i<9;i++){
+    const x=wX(c)+rf(-22,22),z=wX(c)+rf(-14,14);
+    if(!canStand(x,z,1.3))continue;
+    if(keepSvc.some(([sx,sz])=>Math.hypot(x-sx,z-sz)<4.5))continue;
+    const stall=new THREE.Group();stall.position.set(x,0,z);stall.rotation.y=RND()*TAU;
+    const postA=box(.1,1.35,.1,0x4a3424);postA.position.set(-.7,.68,0);stall.add(postA);
+    const postB=box(.1,1.35,.1,0x4a3424);postB.position.set(.7,.68,0);stall.add(postB);
+    const bar=box(1.7,.1,.1,0x4a3424);bar.position.set(0,1.38,0);stall.add(bar);
+    const cloth=box(1.85,.08,1.15,pick([0x8a3a3a,0x3a5a8a,0x6a6a2a,0x5a4a2a]));
+    cloth.position.set(0,1.32,-.15);cloth.rotation.x=.18;stall.add(cloth);
+    const crate=box(.7,.45,.55,0x5b4126);crate.position.set(rf(-.4,.4),.24,.55);stall.add(crate);
+    G.add(stall);
+  }
+  const gx=wX(c+17),gz=wX(c+3);
+  const gp1=box(.55,3.2,.55,0x6a6258);gp1.position.set(gx-2.1,1.6,gz);G.add(gp1);
+  const gp2=box(.55,3.2,.55,0x6a6258);gp2.position.set(gx+2.1,1.6,gz);G.add(gp2);
+  const lint=box(5.1,.45,.7,0x5a5248);lint.position.set(gx,3.35,gz);G.add(lint);
+  const cap1=box(.7,.18,.7,0x4a443c);cap1.position.set(gx-2.1,3.3,gz);G.add(cap1);
+  const cap2=box(.7,.18,.7,0x4a443c);cap2.position.set(gx+2.1,3.3,gz);G.add(cap2);
   W.torches=[];
-  const fg=new THREE.SphereGeometry(.24,7,6),fm=new THREE.MeshBasicMaterial({color:0xffc47a});
+  const fg=new THREE.SphereGeometry(.22,8,7),fm=new THREE.MeshBasicMaterial({color:0xffc47a});
   [[-12,0],[12,0],[0,-8],[0,7],[-8,10],[8,-10]].forEach(([dx,dz])=>{
     const x=wX(c+dx),z=wX(c+dz);
-    const post=box(.18,2.6,.18,0x3d2c1c);post.position.set(x,1.3,z);G.add(post);
-    const m=new THREE.Mesh(fg,fm);m.position.set(x,2.7,z);G.add(m);
-    W.torches.push({x,z,y:2.7,mesh:m,ph:RND()*TAU});
+    const post=box(.16,2.7,.16,0x3d2c1c);post.position.set(x,1.35,z);G.add(post);
+    const arm=box(.55,.08,.08,0x3d2c1c);arm.position.set(x+.28,2.55,z);G.add(arm);
+    const cage=box(.28,.28,.28,0x2a2018);cage.position.set(x+.5,2.5,z);G.add(cage);
+    const m=new THREE.Mesh(fg,fm);m.position.set(x+.5,2.5,z);G.add(m);
+    W.torches.push({x:x+.5,z,y:2.5,mesh:m,ph:RND()*TAU});
   });
+  [-2.1,2.1].forEach(ox=>{
+    const m=new THREE.Mesh(fg,fm);m.position.set(gx+ox,2.7,gz+.4);G.add(m);
+    W.torches.push({x:gx+ox,z:gz+.4,y:2.7,mesh:m,ph:RND()*TAU});
+  });
+  if(skin==="ice"){
+    const bell=box(.8,2.8,.8,0xb8c8d4);bell.position.set(wX(c),2.2,wX(c-6));G.add(bell);
+    const capb=new THREE.Mesh(new THREE.ConeGeometry(.7,1.1,6),new THREE.MeshLambertMaterial({color:0xd0e0ee}));
+    capb.position.set(wX(c),4.1,wX(c-6));G.add(capb);
+  }else if(skin==="dock"){
+    const pier=box(10,.22,2.2,0x4a3a2a);pier.position.set(wX(c+6),.12,wX(c+12));G.add(pier);
+    const mast=box(.14,4.4,.14,0x3a2a1c);mast.position.set(wX(c+8),2.2,wX(c+12));G.add(mast);
+  }else if(skin==="ruin"){
+    const crack=box(8,.08,.35,0x1a1018);crack.position.set(0,.06,wX(c+2));G.add(crack);
+  }else if(skin==="nail"){
+    const nail=box(.45,5.2,.45,0x6a6258);nail.position.set(0,2.7,0);G.add(nail);
+    const head=box(1.1,.28,1.1,0x8a8278);head.position.set(0,5.4,0);G.add(head);
+  }
 }
 function buildDarkProps(G){
   W.torches=[];
-  const fg=new THREE.SphereGeometry(.26,7,6),fm=new THREE.MeshBasicMaterial({color:0xffb257});
+  const fg=new THREE.SphereGeometry(.2,8,7),fm=new THREE.MeshBasicMaterial({color:0xffb257});
   W.rooms.forEach(r=>{[[r.x,r.cy],[r.x+r.w-1,r.cy],[r.cx,r.y],[r.cx,r.y+r.h-1]].forEach(([x,y])=>{
-    if(RND()<.45)return;
-    const m=new THREE.Mesh(fg,fm);m.position.set(wX(x),2.5,wX(y));G.add(m);
-    W.torches.push({x:wX(x),z:wX(y),y:2.5,mesh:m,ph:RND()*TAU});});});
+    if(RND()<.4)return;
+    const px=wX(x),pz=wX(y);
+    const br=box(.12,.55,.12,0x3a2a18);br.position.set(px,2.15,pz);G.add(br);
+    const m=new THREE.Mesh(fg,fm);m.position.set(px,2.55,pz);G.add(m);
+    W.torches.push({x:px,z:pz,y:2.55,mesh:m,ph:RND()*TAU});});});
   W.props=[];
-  const bg=new THREE.CylinderGeometry(.42,.36,.9,8),bm=new THREE.MeshLambertMaterial({color:0x5a3d22});
-  const kg=new THREE.BoxGeometry(.5,.14,.16),km=new THREE.MeshLambertMaterial({color:0x9c9179});
+  const bg=new THREE.CylinderGeometry(.4,.34,.95,10),bm=new THREE.MeshLambertMaterial({color:0x5a3d22});
+  const hoop=new THREE.TorusGeometry(.41,.035,6,10),hm=new THREE.MeshLambertMaterial({color:0x3a2a18});
+  const kg=new THREE.BoxGeometry(.48,.12,.16),km=new THREE.MeshLambertMaterial({color:0x9c9179});
+  const crateG=new THREE.BoxGeometry(.7,.55,.7),crateM=new THREE.MeshLambertMaterial({color:0x4a3828});
   W.rooms.forEach(r=>{
-    for(let i=0,n=ri(1,4);i<n;i++){
+    for(let i=0,n=ri(2,5);i<n;i++){
       const x=wX(ri(r.x+1,r.x+r.w-2)),z=wX(ri(r.y+1,r.y+r.h-2));
-      if(RND()<.62){const m=new THREE.Mesh(bg,bm);m.position.set(x+rf(-.5,.5),.45,z+rf(-.5,.5));
-        m.rotation.y=RND()*TAU;G.add(m);W.props.push({mesh:m,x:m.position.x,z:m.position.z,alive:true});}
-      else for(let k=0,kn=ri(2,4);k<kn;k++){const b=new THREE.Mesh(kg,km);
-        b.position.set(x+rf(-1,1),.07,z+rf(-1,1));b.rotation.set(0,RND()*TAU,0);G.add(b);}}
+      const roll=RND();
+      if(roll<.5){
+        const m=new THREE.Mesh(bg,bm);m.position.set(x+rf(-.4,.4),.48,z+rf(-.4,.4));m.rotation.y=RND()*TAU;G.add(m);
+        const h1=new THREE.Mesh(hoop,hm);h1.position.copy(m.position);h1.position.y+=.22;h1.rotation.x=Math.PI/2;G.add(h1);
+        const h2=h1.clone();h2.position.y-=.4;G.add(h2);
+        W.props.push({mesh:m,x:m.position.x,z:m.position.z,alive:true});
+      }else if(roll<.78){
+        const cr=new THREE.Mesh(crateG,crateM);cr.position.set(x,.28,z);cr.rotation.y=RND()*TAU;G.add(cr);
+        W.props.push({mesh:cr,x:cr.position.x,z:cr.position.z,alive:true});
+      }else{
+        for(let k=0,kn=ri(3,5);k<kn;k++){
+          const b=new THREE.Mesh(kg,km);b.position.set(x+rf(-1.1,1.1),.07,z+rf(-1.1,1.1));
+          b.rotation.set(rf(-.2,.2),RND()*TAU,rf(-.15,.15));G.add(b);}
+      }
+    }
   });
 }
 
@@ -974,9 +1648,10 @@ const P={name:"流浪者",cls:"warrior",x:0,z:0,dir:0,lvl:1,xp:0,xpNext:60,gold:
   equip:{},bag:[],potHp:5,potMp:4,ranks:{},barSkills:[null,null,null,null,null,null],
   cds:{},potCd:0,alive:true,hitFlash:0,kills:0,eliteKills:0,bossKills:0,killByType:{},cleared:{},
   shield:0,shieldT:0,invuln:0,buffs:{},casting:null,castT:0,channel:null,
-  pickupTarget:null,npcTarget:null,lastHold:0,lastChase:0,onMark:null,trackId:"",
+  pickupTarget:null,npcTarget:null,lastHold:0,lastChase:0,onMark:null,trackId:"",hub:"town",
   bountyDay:"",bountyList:[],bountyClaimed:{},bountyChest:false,bountyPotless:0,bountyDun:{},
-  nameForgotten:false,recallNotes:0,codex:[],relics:[],flags:{}};
+  nameForgotten:false,recallNotes:0,codex:[],relics:[],flags:{},
+  ach:{},stats:{deaths:0,goldLooted:0,maxRarity:0,reforged:0,punched:0,socketed:0,recalled:0,recited:0,bounties:0}};
 SLOTDEF.forEach(s=>P.equip[s.k]=null);
 
 let pModel=null;
@@ -996,11 +1671,17 @@ function playerLook(){
 }
 function rebuildPlayer(){
   const look=playerLook();
+  const kind="char_"+P.cls;
   if(pModel)scene.remove(pModel.group);
-  pModel=humanoid(look);
+  // 有骨架资产就用 GLB，否则回落到几何体 humanoid
+  pModel=AssetRegistry.get(kind)?makeActor(kind,look):humanoid(look);
   pModel.group.position.set(P.x,0,P.z);
   scene.add(pModel.group);
   rebuildDoll(look);
+  // 资产尚未载入：先用方块，后台拉取成功后无缝换成 GLB（永不阻塞、永不中断）
+  if(!pModel.rigged&&AssetRegistry.ready&&AssetRegistry.manifest&&AssetRegistry.manifest[kind]){
+    AssetRegistry.load(kind).then(rec=>{if(rec&&rec.scene&&P.cls&&kind==="char_"+P.cls)rebuildPlayer();});
+  }
 }
 function pStats(){
   const s={str:P.base.str,dex:P.base.dex,vit:P.base.vit,ene:P.base.ene,
@@ -1048,6 +1729,14 @@ const ETYPES={
   ashmage:{n:"灰烬巫师",body:0x4a2a4a,skin:0x9a6aa0,leg:0x2a182a,hood:0x3a1a3a,aura:0xc86aff,
     hp:120,dmg:[20,32],speed:3,range:12,xp:110,scale:1.05,atkCd:2.2,ranged:true,pcolor:0xc86aff},
   golem:{n:"碎石魔像",body:0x5a5450,skin:0x6a635c,leg:0x3a3632,hp:320,dmg:[26,40],speed:2.6,range:3,xp:170,scale:1.7,atkCd:2.4},
+  frostwolf:{n:"霜狼",form:"beast",body:0xb8c8d4,skin:0xd0dce6,leg:0x8aa0b0,tail:1,hp:210,dmg:[22,34],speed:4.8,range:2.1,xp:120,scale:1.08,atkCd:1.15},
+  icespider:{n:"冰结蛛",form:"beast",body:0x8aa8c0,skin:0xc0d4e4,leg:0x5a7088,tail:1,hp:160,dmg:[20,32],speed:4.4,range:2.1,xp:110,scale:1,atkCd:1.3},
+  rimeknight:{n:"霜铠骑士",body:0x6a7a8a,skin:0xc8d4de,leg:0x3a4a58,helm:0xa8c0d0,weapon:0xc8e4ff,wkind:"sword",
+    hp:280,dmg:[26,40],speed:3.2,range:2.5,xp:160,scale:1.15,atkCd:1.7},
+  drowned:{n:"溺尸",body:0x3a5a52,skin:0x6a8a7a,leg:0x2a3a36,hp:240,dmg:[24,36],speed:2.6,range:2.2,xp:140,scale:1.12,atkCd:1.8},
+  wrecker:{n:"沉船匪",body:0x4a3a32,skin:0xa89070,leg:0x2a221c,helm:0x5a4a3a,weapon:0xb0a090,wkind:"sword",
+    hp:220,dmg:[22,34],speed:3.5,range:2.3,xp:130,scale:1.05,atkCd:1.55},
+  brinewolf:{n:"盐须狼",form:"beast",body:0x6a7268,skin:0x8a9288,leg:0x4a5248,tail:1,hp:200,dmg:[20,32],speed:4.5,range:2,xp:125,scale:1.05,atkCd:1.2},
   // 地下
   skeleton:{n:"骷髅战士",body:0xd9d3c0,skin:0xe6e1d2,leg:0x8f8874,helm:0x776b52,weapon:0x9aa3ad,wkind:"sword",
     hp:40,dmg:[6,11],speed:3.5,range:2.2,xp:18,scale:1,atkCd:1.5},
@@ -1059,14 +1748,28 @@ const ETYPES={
   wraith:{n:"哀嚎怨魂",body:0x2a4a5a,skin:0x4a7a8a,leg:0x1a2a35,aura:0x5fd8ff,
     hp:64,dmg:[12,20],speed:4.3,range:2.3,xp:44,scale:1.05,atkCd:1.3},
   // Boss
-  boneking:{n:"白骨之王 · 塞克拉",body:0xe8e2cf,skin:0xf0ead8,leg:0xa89f88,helm:0xc8b070,weapon:0xd8d0b0,wkind:"sword",
+  boneking:{n:"白骨女王 · 塞克拉",body:0xe8e2cf,skin:0xf0ead8,leg:0xa89f88,helm:0xc8b070,weapon:0xd8d0b0,wkind:"sword",
     aura:0xfff0a0,hp:900,dmg:[24,38],speed:3.3,range:9,xp:700,scale:2.05,atkCd:1.7,boss:true,ranged:true,skill:"nova",pcolor:0xf0e0a0},
   broodmother:{n:"织母 · 阿拉卡",form:"beast",body:0x3a1a4a,skin:0x7a2a8a,leg:0x201030,aura:0xc86aff,tail:1,
     hp:1500,dmg:[30,46],speed:3.6,range:3,xp:1400,scale:2.4,atkCd:1.6,boss:true,skill:"summon"},
   lord:{n:"恐惧领主 · 瓦拉克",body:0x3b1030,skin:0x8a2050,leg:0x210a1c,helm:0xb0303c,weapon:0xe0503c,wkind:"sword",
     aura:0xff3a3a,hp:2600,dmg:[38,58],speed:3.6,range:8.5,xp:3000,scale:2.2,atkCd:1.5,boss:true,ranged:true,skill:"slam",pcolor:0xff3a2a},
   grom:{n:"腐化巨兽 · 格罗姆",body:0x4a6a2a,skin:0x6a8a3a,leg:0x2a3a18,weapon:0x8a7a5a,wkind:"sword",aura:0x9aff5a,
-    hp:1800,dmg:[34,52],speed:3.9,range:3.4,xp:1800,scale:2.3,atkCd:1.9,boss:true,skill:"slam"}
+    hp:1800,dmg:[34,52],speed:3.9,range:3.4,xp:1800,scale:2.3,atkCd:1.9,boss:true,skill:"slam"},
+  osser:{n:"主祭 · 奥赛尔",body:0x4a5a6a,skin:0xd0dce6,leg:0x2a3848,hood:0x3a4a5a,weapon:0xa8d0ff,wkind:"staff",wlen:1.6,
+    aura:0x8fd3ff,hp:2800,dmg:[32,50],speed:3.1,range:9,xp:3200,scale:1.9,atkCd:1.6,boss:true,ranged:true,skill:"nova",pcolor:0x8fd3ff},
+  singer:{n:"无名唱者",body:0xc8d4de,skin:0xe8eef4,leg:0x8aa0b0,aura:0xdfeaff,
+    hp:3600,dmg:[36,54],speed:3.4,range:8,xp:4500,scale:2.1,atkCd:1.5,boss:true,ranged:true,skill:"nova",pcolor:0xdfeaff},
+  tideguide:{n:"引水人",body:0x2a4a52,skin:0x6a8a82,leg:0x1a2a2e,hood:0x1a3038,weapon:0x4a7a6a,wkind:"staff",
+    aura:0x4ad0c0,hp:3000,dmg:[34,52],speed:3.2,range:10,xp:3800,scale:1.85,atkCd:1.7,boss:true,ranged:true,skill:"summon",pcolor:0x4ad0c0},
+  gray:{n:"凿船者 · 格雷",body:0x4a3a30,skin:0xa89070,leg:0x2a221c,helm:0x5a4a3a,weapon:0xc8b090,wkind:"sword",
+    aura:0xc8a060,hp:4200,dmg:[40,62],speed:3.3,range:3.2,xp:5200,scale:2.0,atkCd:1.55,boss:true,skill:"slam"},
+  seven:{n:"七影",body:0x2a1a30,skin:0x6a4a80,leg:0x1a1020,aura:0x9a5cff,
+    hp:3800,dmg:[38,58],speed:3.6,range:3.4,xp:5600,scale:1.7,atkCd:1.4,boss:true,skill:"summon"},
+  voice:{n:"众议之声",body:0x3a3a4a,skin:0x8a8a9a,leg:0x222230,aura:0xc8c0ff,
+    hp:4600,dmg:[42,64],speed:3.5,range:9,xp:6800,scale:2.0,atkCd:1.45,boss:true,ranged:true,skill:"nova",pcolor:0xc8c0ff},
+  kor:{n:"钉底 · 柯尔",body:0x6a4a3a,skin:0xc8a080,leg:0x3a2a22,helm:0x8a7a5a,weapon:0xc0b090,wkind:"sword",
+    aura:0xffa060,hp:5200,dmg:[48,72],speed:3.2,range:3.6,xp:8000,scale:1.6,atkCd:1.6,boss:true,skill:"slam"}
 };
 const RIFT_BOSSES=["boneking","grom","lord","broodmother"];
 const RIFT_MOBS=["skeleton","ghoul","imp","wraith","brute","spider"];
@@ -1192,7 +1895,8 @@ const UI={hpfill:$("hpfill"),mpfill:$("mpfill"),hpnum:$("hpnum"),mpnum:$("mpnum"
   xpbar:$("xpbar"),zoneN:$("zone-n"),zoneL:$("zone-l"),bar:$("bar"),tabs:$("tabs"),buffs:$("buffs"),
   target:$("target"),tname:$("tname"),tlvl:$("tlvl"),tbar:$("tbar"),
   bag:$("bag"),attrbox:$("attrbox"),pcmeta:$("pcmeta"),invgold:$("invgold"),invcnt:$("invcnt"),
-  sklist:$("sklist"),skpts:$("skpts"),qlist:$("qlist"),qdetail:$("qdetail"),trackbody:$("trackbody"),npcbody:$("npcbody"),
+  sklist:$("sklist"),skpts:$("skpts"),skdetail:$("skdetail"),qlist:$("qlist"),qdetail:$("qdetail"),achlist:$("achlist"),achdetail:$("achdetail"),
+  trackbody:$("trackbody"),npcbody:$("npcbody"),
   tip:$("tip"),log:$("log"),hint:$("hint"),ui:$("ui"),cast:$("cast"),castf:$("castf"),
   mm:$("minimap").getContext("2d")};
 function say(t,c){const d=document.createElement("div");d.innerHTML=t;if(c)d.style.color=c;
@@ -1221,15 +1925,25 @@ function project(x,y,z){_v.set(x,y,z).project(camera);
 
 /* ═════════ 12. 任务 ═════════ */
 const QUESTS=[
- {id:"q1",n:"荒原的狼群",d:"落石荒原的狼群开始咬牲口了。杀死 8 只灰狼。",type:"killtype",t:"wolf",need:8,xp:150,gold:180,req:null},
- {id:"q2",n:"不再抢东西的强盗",d:"荒原上的强盗不抢东西了，只是站着念叨。清理 6 个劫掠者，看看那个「喊名字的」头目要找什么。",type:"killtype",t:"bandit",need:6,xp:260,gold:260,req:"q1"},
- {id:"q3",n:"哭嚎墓窖",d:"旧墓地里的声音越来越响。深入墓窖，斩杀白骨之王塞克拉。",type:"dungeon",t:"crypt",need:1,xp:700,gold:600,item:true,req:"q2"},
- {id:"q4",n:"林中的丝",d:"暮语林地的树上挂满了丝。烧掉 10 只腐丝蛛。",type:"killtype",t:"spider",need:10,xp:900,gold:700,req:"q3"},
- {id:"q5",n:"织母阿拉卡",d:"顺着丝找到蛛巢，杀掉那个母体。",type:"dungeon",t:"nest",need:1,xp:1600,gold:1200,item:true,req:"q4"},
- {id:"q6",n:"裂隙初探",d:"石桥镇下方的裂隙没有底。先下到第 3 层看看。",type:"rift",need:3,xp:1200,gold:900,req:"q3"},
- {id:"q7",n:"灰烬试炼",d:"峡谷里的东西是从裂隙爬出来的。击杀 6 只精英怪物。",type:"elite",need:6,xp:2400,gold:1600,req:"q5"},
- {id:"q8",n:"熔火要塞",d:"要塞的门从里面锁着。斩杀恐惧领主瓦拉克。",type:"dungeon",t:"fort",need:1,xp:5200,gold:3600,item:true,req:"q7"},
- {id:"q9",n:"无尽之下",d:"没有人从第 10 层回来过。你可以是第一个。",type:"rift",need:10,xp:8000,gold:6000,item:true,req:"q6"}
+ {id:"q1",n:"去荒原杀狼",d:"东边荒原的狼在咬牲口。去砍 8 只。",type:"killtype",t:"wolf",need:8,xp:150,gold:180,req:null},
+ {id:"q2",n:"去荒原砍强盗",d:"墓窖的喊声把强盗叫醒了。清掉 6 个劫掠者。先砍那个会厉啸、把死人喊起来的头目。",type:"killtype",t:"bandit",need:6,xp:260,gold:260,req:"q1"},
+ {id:"q3",n:"去墓窖砍塞克拉",d:"白骨女王塞克拉一喊，死人就站起来。进哭嚎墓窖，把她砍死。",type:"dungeon",t:"crypt",need:1,xp:700,gold:600,item:true,req:"q2"},
+ {id:"q4",n:"去林地烧蜘蛛",d:"北面林地开了。烧掉 10 只腐丝蛛。",type:"killtype",t:"spider",need:10,xp:900,gold:700,req:"q3"},
+ {id:"q5",n:"去蛛巢杀织母",d:"顺着丝找到蛛巢，杀掉织母阿拉卡。",type:"dungeon",t:"nest",need:1,xp:1600,gold:1200,item:true,req:"q4"},
+ {id:"q6",n:"下裂口三层",d:"镇子下面就是裂口。先打到第 3 层。",type:"rift",need:3,xp:1200,gold:900,req:"q3"},
+ {id:"q7",n:"去峡谷杀精英",d:"峡谷里的东西从裂口爬出来。击杀 6 只精英。",type:"elite",need:6,xp:2400,gold:1600,req:"q5"},
+ {id:"q8",n:"去要塞杀瓦拉克",d:"熔火要塞的门从里面锁着。斩杀恐惧领主瓦拉克。",type:"dungeon",t:"fort",need:1,xp:5200,gold:3600,item:true,req:"q7"},
+ {id:"q9",n:"下到裂口第十层",d:"没有人从第 10 层回来过。你可以是第一个。",type:"rift",need:10,xp:8000,gold:6000,item:true,req:"q6"},
+ {id:"q10",n:"去冰湖杀霜狼",d:"北面冻住了。去白喉隘口后面的冰湖，砍 8 只霜狼。",type:"killtype",t:"frostwolf",need:8,xp:2800,gold:1800,req:"q8"},
+ {id:"q11",n:"去修道院杀奥赛尔",d:"断桥修道院里有人还在唱。等他吸气，砍死主祭奥赛尔。",type:"dungeon",t:"abbey",need:1,xp:4200,gold:2800,item:true,req:"q10"},
+ {id:"q12",n:"去钟窖砸无名唱者",d:"钟在湖底。下去把无名唱者砸哑。",type:"dungeon",t:"belfry",need:1,xp:5600,gold:3600,item:true,req:"q11"},
+ {id:"q13",n:"去海岸杀溺尸",d:"东边十一条船沉了。去潮灯港外的海岸，清 10 具溺尸。",type:"killtype",t:"drowned",need:10,xp:4800,gold:3000,req:"q12"},
+ {id:"q14",n:"去潮下墓场",d:"退潮才看得见的沟。打断引水人的旗，再砍他。",type:"dungeon",t:"tide",need:1,xp:6200,gold:4000,item:true,req:"q13"},
+ {id:"q15",n:"去朽舟腹杀格雷",d:"最大那条船肚子里，有人还在凿。宰了格雷。",type:"dungeon",t:"hull",need:1,xp:7800,gold:5200,item:true,req:"q14"},
+ {id:"q16",n:"去沉降区清怨魂",d:"从裂口往下走。沉降区里的尸会挡路。砍 8 只哀嚎怨魂。",type:"killtype",t:"wraith",need:8,xp:6400,gold:4200,req:"q15"},
+ {id:"q17",n:"去账房砍七影",d:"七个影子一起冲。点哪个打哪个。",type:"dungeon",t:"ledger",need:1,xp:8600,gold:5600,item:true,req:"q16"},
+ {id:"q18",n:"去众议厅打哑声音",d:"伤口自己会说话。把众议之声打停。",type:"dungeon",t:"chorus",need:1,xp:9800,gold:6800,item:true,req:"q17"},
+ {id:"q19",n:"钉底",d:"最底下那个要挣出来。下去，按回去。",type:"dungeon",t:"nail",need:1,xp:12000,gold:9000,item:true,req:"q18"}
 ];
 const QS={};QUESTS.forEach(q=>QS[q.id]={state:q.req?"locked":"open"});
 function questProg(q){
@@ -1242,7 +1956,7 @@ function questProg(q){
 const questDone=q=>questProg(q)>=q.need;
 function unlockQuests(){QUESTS.forEach(q=>{if(QS[q.id].state==="locked"&&q.req&&QS[q.req].state==="done")QS[q.id].state="open";});}
 function questWhere(q){
-  if(q.type==="killtype")return({wolf:"落石荒原",boar:"落石荒原",bandit:"落石荒原",spider:"暮语林地",ghoul:"哭嚎墓窖"})[q.t]||"野外";
+  if(q.type==="killtype")return({wolf:"落石荒原",boar:"落石荒原",bandit:"落石荒原",spider:"暮语林地",ghoul:"哭嚎墓窖",frostwolf:"北境冰湖",drowned:"沉船海岸",wraith:"沉降区"})[q.t]||"野外";
   if(q.type==="dungeon"){const d=dunById(q.t);return d?d.n:"副本";}
   if(q.type==="rift")return"裂隙";
   if(q.type==="elite")return"灰烬峡谷";
@@ -1265,39 +1979,183 @@ function activeQuest(){for(const q of QUESTS){if(QS[q.id].state==="open"&&!quest
   for(const q of QUESTS){if(QS[q.id].state==="open")return q;}return null;}
 let qSel=null;
 function turnIn(q){
-  QS[q.id].state="done";P.gold+=q.gold;gainXP(q.xp);
-  if(q.item){const it=rollItem(Math.max(1,P.lvl),true);addToBag(it);
+  QS[q.id].state="done";P.gold+=q.gold;gainXP(q.xp);bumpGold(q.gold);
+  if(q.item){const it=rollItem(Math.max(1,P.lvl),true);addToBag(it);noteLoot(it);
     say(`奖励：<span style="color:${RARITY[it.rarity].c}">${it.name}</span>`);}
   SFX.quest();say(`<span style="color:#e2c47f">完成委托：${q.n}（+${q.gold} 金币，+${q.xp} 经验）</span>`);
   if(P.trackId===q.id)P.trackId="";
   unlockQuests();renderQuests();renderTrack();saveSoon();
   if(q.id==="q3"&&!(P.flags&&P.flags.selinForgot))selinForgetName();
+  if(q.id==="q8")setTimeout(()=>say(`<span style="color:#c8bfa6">塞琳："北面冻死了。去白喉隘口，再下冰湖砸钟。"</span>`),700);
+  if(q.id==="q12")setTimeout(()=>say(`<span style="color:#c8bfa6">塞琳："钟停了？好。东边海岸在沉船。十一条。下一个活在潮灯港。"</span>`),700);
+  if(q.id==="q15")setTimeout(()=>say(`<span style="color:#c8bfa6">塞琳："从裂口下去。底下有个厅在开会。先去沉降残镇。"</span>`),700);
+  if(q.id==="q18")setTimeout(()=>say(`<span style="color:#c8bfa6">塞琳："最底下那个要挣出来了。去桥墩井口。打完，这件事结束。"</span>`),700);
+  achCheck();
 }
 // §06 收束 · 第一次掉名字
 function selinForgetName(){
   P.flags=P.flags||{};P.flags.selinForgot=true;
   P.nameForgotten=true;refreshName();
   const lines=[
-    `<span style="color:#c8bfa6">塞琳："回来了。你叫……"</span>`,
-    `<span style="color:#8a7f70">（她停顿了很久。）"……对不起。我知道你告诉过我。就在刚才，它掉了。"</span>`,
-    `<span style="color:#c8bfa6">"这就是这镇子。你替下面的人记着，上面的人就把你忘了。总有一头要漏。"</span>`,
-    `<span style="color:#9db5ab">"往北边林子里去吧。那儿有个更旧的名字在等人念。"</span>`,
-    `<span style="color:#8a7f70">（回桥头念一遍名字，塞琳会重新记起你。暮语林地已解锁。）</span>`
+    `<span style="color:#c8bfa6">塞琳："塞克拉死了？好。你叫……算了。裂口又偷名字了。"</span>`,
+    `<span style="color:#c8bfa6">"去桥头念一遍。北面林地开了。蜘蛛、弓手，比荒原狠。去清。"</span>`,
+    `<span style="color:#8a7f70">（回桥头念一遍名字。暮语林地已解锁。）</span>`
   ];
   lines.forEach((ln,i)=>setTimeout(()=>say(ln),900*(i+1)));
+  achCheck();
+}
+
+/* ═════════ 12b. 功绩 ═════════ */
+const ACH=[
+  {id:"kill1",cat:"杀戮",n:"第一滴血",d:"砍死第一只从裂口爬出来的东西。",need:1,gold:20,prog:()=>P.kills},
+  {id:"kill100",cat:"杀戮",n:"百人斩",d:"击杀 100 只怪物。",need:100,gold:80,prog:()=>P.kills},
+  {id:"kill500",cat:"杀戮",n:"尸山",d:"击杀 500 只怪物。",need:500,gold:200,prog:()=>P.kills},
+  {id:"elite10",cat:"杀戮",n:"专打头目",d:"击杀 10 只精英。",need:10,gold:60,prog:()=>P.eliteKills},
+  {id:"elite50",cat:"杀戮",n:"头目克星",d:"击杀 50 只精英。",need:50,gold:150,prog:()=>P.eliteKills},
+  {id:"wolf20",cat:"杀戮",n:"荒原清场",d:"砍死 20 只灰狼。",need:20,gold:40,prog:()=>P.killByType.wolf||0},
+  {id:"sekhra",cat:"杀戮",n:"白骨女王",d:"砍死塞克拉。",need:1,gold:80,prog:()=>P.cleared.crypt?1:0},
+  {id:"arak",cat:"杀戮",n:"烧尽蛛巢",d:"杀掉织母阿拉卡。",need:1,gold:100,prog:()=>P.cleared.nest?1:0},
+  {id:"varak",cat:"杀戮",n:"恐惧领主",d:"斩杀瓦拉克。",need:1,gold:150,prog:()=>P.cleared.fort?1:0},
+  {id:"boss5",cat:"杀戮",n:"五个头",d:"击杀 5 个首领。",need:5,gold:120,prog:()=>P.bossKills},
+  {id:"rift1",cat:"下潜",n:"进裂口",d:"第一次走进镇子下面的裂口。",need:1,gold:30,prog:()=>P.flags&&P.flags.enteredRift?1:0},
+  {id:"rift3",cat:"下潜",n:"三层之下",d:"下到裂口第 3 层。",need:3,gold:50,prog:()=>P.flags&&P.flags.enteredRift?W.riftDeepest||0:0},
+  {id:"rift10",cat:"下潜",n:"没人回来过",d:"下到裂口第 10 层。",need:10,gold:120,prog:()=>P.flags&&P.flags.enteredRift?W.riftDeepest||0:0},
+  {id:"rift20",cat:"下潜",n:"更深",d:"下到裂口第 20 层。",need:20,gold:200,prog:()=>P.flags&&P.flags.enteredRift?W.riftDeepest||0:0},
+  {id:"lvl10",cat:"下潜",n:"站稳了",d:"升到 10 级。",need:10,gold:40,prog:()=>P.lvl},
+  {id:"lvl20",cat:"下潜",n:"还能打",d:"升到 20 级。",need:20,gold:80,prog:()=>P.lvl},
+  {id:"q1",cat:"石桥",n:"第一份活",d:"完成塞琳的第一份委托。",need:1,gold:20,prog:()=>QS.q1&&QS.q1.state==="done"?1:0},
+  {id:"q3",cat:"石桥",n:"交差",d:"把塞克拉的头提回来。",need:1,gold:60,prog:()=>QS.q3&&QS.q3.state==="done"?1:0},
+  {id:"allq",cat:"石桥",n:"板上清空",d:"完成全部主线委托。",need:19,gold:400,prog:()=>QUESTS.filter(q=>QS[q.id]&&QS[q.id].state==="done").length},
+  {id:"recite",cat:"石桥",n:"念一遍",d:"在桥头念出自己的名字。",need:1,gold:30,prog:()=>P.stats.recited||0},
+  {id:"forgotten",cat:"石桥",n:"被偷过",d:"裂口偷走过你的名字。",need:1,gold:40,hidden:true,prog:()=>P.flags&&P.flags.selinForgot?1:0},
+  {id:"bounty3",cat:"石桥",n:"今日三成",d:"领过一次悬赏日俸。",need:1,gold:50,prog:()=>P.bountyChest?1:0},
+  {id:"gold1k",cat:"搜刮",n:"口袋沉了",d:"累计搜刮 1000 金币。",need:1000,gold:40,prog:()=>P.stats.goldLooted||0},
+  {id:"gold5k",cat:"搜刮",n:"满袋",d:"累计搜刮 5000 金币。",need:5000,gold:100,prog:()=>P.stats.goldLooted||0},
+  {id:"rare",cat:"搜刮",n:"稀有货",d:"捡到一件稀有以上装备。",need:2,gold:40,prog:()=>P.stats.maxRarity||0},
+  {id:"legend",cat:"搜刮",n:"传奇",d:"捡到一件传奇装备。",need:3,gold:80,prog:()=>P.stats.maxRarity||0},
+  {id:"relic",cat:"搜刮",n:"半张纸",d:"替那个忘了名字的人记一下。",need:1,gold:30,hidden:true,prog:()=>P.flags&&P.flags.halfPaper?1:0},
+  {id:"recall",cat:"手艺",n:"想起来了",d:"回想一件想不起来的装备。",need:1,gold:20,prog:()=>P.stats.recalled||0},
+  {id:"reforge",cat:"手艺",n:"重铸一次",d:"在卡登处重铸词缀。",need:1,gold:30,prog:()=>P.stats.reforged||0},
+  {id:"punch",cat:"手艺",n:"开孔",d:"给一件装备打孔。",need:1,gold:30,prog:()=>P.stats.punched||0},
+  {id:"rune",cat:"手艺",n:"镶进去",d:"把符文镶进孔里。",need:1,gold:40,prog:()=>P.stats.socketed||0},
+  {id:"death1",cat:"下潜",n:"陨落",d:"死过一次，还爬起来了。",need:1,gold:10,hidden:true,prog:()=>P.stats.deaths||0},
+  {id:"lands",cat:"下潜",n:"走出石桥",d:"探明五章的城镇与野外。",need:11,gold:120,prog:()=>["waste","wood","ash","rime","frost","harbor","shore","sink","sinkf","well","shaft"].filter(id=>W.discovered[id]).length}
+];
+function ensureAch(){
+  if(!P.ach||typeof P.ach!=="object")P.ach={};
+  if(!P.stats||typeof P.stats!=="object")P.stats={};
+  ["deaths","goldLooted","maxRarity","reforged","punched","socketed","recalled","recited","bounties"].forEach(k=>{
+    if(!isFinite(+P.stats[k]))P.stats[k]=0;
+  });
+}
+function noteLoot(it){
+  if(!it)return;
+  ensureAch();
+  P.stats.maxRarity=Math.max(P.stats.maxRarity||0,it.rarity||0);
+}
+function bumpGold(n){
+  if(!(n>0))return;
+  ensureAch();
+  P.stats.goldLooted=(P.stats.goldLooted||0)+n;
+}
+function achById(id){return ACH.find(a=>a.id===id);}
+function achOn(id){return !!(P.ach&&P.ach[id]);}
+function achDoneN(){return ACH.filter(a=>achOn(a.id)).length;}
+let achSel=null,achQueue=[],achToastT=null;
+function pumpAchToast(){
+  if(achToastT)return;
+  const a=achQueue.shift();
+  if(!a)return;
+  $("achtoast-n").textContent=a.n;
+  $("achtoast-d").textContent=a.d;
+  $("achtoast").classList.add("on");
+  SFX.ach();
+  achToastT=setTimeout(()=>{
+    $("achtoast").classList.remove("on");
+    achToastT=null;
+    if(achQueue.length)setTimeout(pumpAchToast,280);
+  },3200);
+}
+function unlockAch(a,silent){
+  ensureAch();
+  if(!a||P.ach[a.id])return;
+  P.ach[a.id]=Date.now();
+  if(silent)return;
+  if(a.gold)P.gold+=a.gold;
+  say(`<span style="color:#e2c47f">功绩解锁：${a.n}</span>${a.gold?`（+${a.gold} 金）`:""}`);
+  achQueue.push(a);
+  pumpAchToast();
+  if($("ach").classList.contains("on"))renderAch();
+  saveSoon();
+}
+function achCheck(silent){
+  ensureAch();
+  let again=true,guard=0;
+  while(again&&guard++<48){
+    again=false;
+    ACH.forEach(a=>{
+      if(P.ach[a.id])return;
+      const need=a.need||1;
+      if((a.prog()||0)>=need){unlockAch(a,silent);again=true;}
+    });
+  }
+}
+function renderAch(){
+  ensureAch();
+  const done=achDoneN();
+  $("achtitle").textContent=`功绩  ${done} / ${ACH.length}`;
+  const cats=[];
+  ACH.forEach(a=>{if(cats.indexOf(a.cat)<0)cats.push(a.cat);});
+  if(!achSel||!achById(achSel))achSel=(ACH.find(a=>achOn(a.id))||ACH[0]).id;
+  let nav="";
+  cats.forEach(cat=>{
+    const list=ACH.filter(a=>a.cat===cat);
+    const n=list.filter(a=>achOn(a.id)).length;
+    nav+=`<div class="qsec">${cat}  ${n} / ${list.length}</div>`;
+    list.forEach(a=>{
+      const on=achOn(a.id),hide=a.hidden&&!on;
+      nav+=`<div class="qrow${achSel===a.id?" on":""}${on?" done":""}" data-ach="${a.id}">
+        <div class="qn">${hide?"？？？":a.n}</div>
+        <div class="qs">${on?"已解锁":hide?"尚未揭开":`${Math.min(a.prog()||0,a.need||1)} / ${a.need||1}`}</div></div>`;
+    });
+  });
+  UI.achlist.innerHTML=nav;
+  UI.achlist.querySelectorAll("[data-ach]").forEach(r=>r.addEventListener("click",()=>{achSel=r.dataset.ach;renderAch();}));
+  const a=achById(achSel);if(!a){UI.achdetail.innerHTML="";return;}
+  const on=achOn(a.id),hide=a.hidden&&!on,need=a.need||1,p=Math.min(a.prog()||0,need);
+  UI.achdetail.innerHTML=`<div class="skd-ico">${on?"◆":"◇"}</div>
+    <div class="qh">${hide?"？？？":a.n}</div>
+    <div class="qw">${a.cat}${on?" · 已解锁":""}</div>
+    <div class="qd">${hide?"还没揭开。去做该做的事。":a.d}</div>
+    ${hide?"":`<div class="qbar"><i style="width:${Math.round(p/need*100)}%"></i></div>
+    <div class="obj${on?" done":""}"><span>${on?"已达成":"进度"}</span><span>${p} / ${need}</span></div>`}
+    ${a.gold?`<div class="qr">${on?"已领取":"解锁奖励"} ${a.gold} 金币</div>`:""}`;
 }
 
 /* ═════════ 13. 面板 ═════════ */
-const PANELS=["pc","inv","sk","qs","npc"];
+const PANELS=["pc","inv","sk","qs","ach","npc"];
+let pcStatTab="core",skSel=null;
+function closeStoryPanels(){["qs","ach"].forEach(id=>$(id).classList.remove("on"));}
+function closeGearPanels(){["pc","inv"].forEach(id=>$(id).classList.remove("on"));}
+function openGearPanels(){
+  closeStoryPanels();$("sk").classList.remove("on");$("npc").classList.remove("on");$("npc").classList.remove("bank","smith");
+  $("pc").classList.add("on");$("inv").classList.add("on");
+  renderChar();sizeDoll();renderBag();
+}
 function togglePanel(id,force){
-  const el=$(id),on=force!==undefined?force:!el.classList.contains("on");
-  el.classList.toggle("on",on);
-  if(id==="npc"&&!on)$("npc").classList.remove("bank","smith");
-  if(on){SFX.ui();
-    if(id==="pc"){renderChar();sizeDoll();if($("sk").classList.contains("on"))$("sk").classList.remove("on");}
-    if(id==="inv")renderBag();
-    if(id==="sk"){renderSkills();if($("pc").classList.contains("on"))$("pc").classList.remove("on");}
-    if(id==="qs")renderQuests();
+  const el=$(id),want=force!==undefined?force:!el.classList.contains("on");
+  if(id==="pc"||id==="inv"){
+    if(want){SFX.ui();openGearPanels();}
+    else closeGearPanels();
+    hideTip();return;
+  }
+  el.classList.toggle("on",want);
+  if(id==="npc"&&!want)$("npc").classList.remove("bank","smith");
+  if(want){SFX.ui();
+    if(id==="sk"){closeGearPanels();closeStoryPanels();$("npc").classList.remove("on");renderSkills();}
+    if(id==="qs"){closeGearPanels();$("sk").classList.remove("on");$("ach").classList.remove("on");$("npc").classList.remove("on");renderQuests();}
+    if(id==="ach"){closeGearPanels();$("sk").classList.remove("on");$("qs").classList.remove("on");$("npc").classList.remove("on");renderAch();}
+    if(id==="npc"){closeGearPanels();$("sk").classList.remove("on");closeStoryPanels();}
   }
   hideTip();
 }
@@ -1305,29 +2163,30 @@ document.querySelectorAll("[data-close]").forEach(x=>x.addEventListener("click",
 $("track").addEventListener("click",()=>{togglePanel("qs",true);renderTabs();});
 function itemHTML(it,cmp){
   if(it.type==="rune"){
-    return`<div class="n" style="color:${RARITY[it.rarity]?RARITY[it.rarity].c:"#6f9ede"}">${it.name}</div>
-      <div style="color:#8a7f70;font-size:11px">符文 · 第 ${it.rarity||1} 阶</div>
-      <div class="a" style="margin-top:4px">+${it.v} ${modName(it.k)}</div>
-      <div class="h">左键无效 · 拿到铁匠处镶进稀有以上装备 · 右键丢弃</div>`;
+    return`<div class="tip-hd" style="background:linear-gradient(180deg,#1a3048,#101820)"><div class="n" style="color:${RARITY[it.rarity]?RARITY[it.rarity].c:"#6f9ede"}">${it.name}</div>
+      <div class="tip-sub">符文 · 第 ${it.rarity||1} 阶</div></div>
+      <div class="tip-body"><div class="a">+${it.v} ${modName(it.k)}</div>
+      <div class="h">拿到铁匠处镶进稀有以上装备 · 右键丢弃</div></div>`;
   }
   ensureGear(it);
   if(it.unknown){
     const sn0=(SLOTDEF.find(s=>(s.t||s.k)===it.type)||{n:it.type}).n;
-    return`<div class="n" style="color:#9a8f7a">想不起来的东西</div>
-      <div style="color:#8a7f70;font-size:11px">从地下带上来的 · 像是某种${sn0}</div>
-      <div class="a" style="color:#8a7f70">它是什么，你一时记不起来了。</div>
-      <div class="h">${P.recallNotes>0?"左键用回想的纸条想起它":"回石桥镇找玛拉回想，或买张回想的纸条"} · 右键丢弃</div>`;
+    return`<div class="tip-hd" style="background:linear-gradient(180deg,#2a2620,#161410)"><div class="n" style="color:#9a8f7a">想不起来的东西</div>
+      <div class="tip-sub">从地下带上来的 · 像是某种${sn0}</div></div>
+      <div class="tip-body"><div class="a" style="color:#8a7f70">它是什么，你一时记不起来了。</div>
+      <div class="h">${P.recallNotes>0?"左键用回想的纸条想起它":"回石桥镇找玛拉回想，或买张回想的纸条"} · 右键丢弃</div></div>`;
   }
   const r=RARITY[it.rarity]||RARITY[0];
   const sn=(SLOTDEF.find(s=>(s.t||s.k)===it.type)||{n:it.type}).n;
-  let h=`<div class="n" style="color:${r.c}">${it.name}</div>
-    <div style="color:#8a7f70;font-size:11px">${r.n} · ${sn} · 物品等级 ${it.ilvl}${it.cls?" · "+CLASSES[it.cls].n+"专用":""}${it.reforged?` · 重铸 ${it.reforged} 次`:""}</div>`;
-  if(it.dmgMax)h+=`<div style="margin-top:4px">伤害 ${it.dmgMin} - ${it.dmgMax}</div>`;
-  if(it.armor)h+=`<div style="margin-top:4px">护甲 +${it.armor}</div>`;
+  const hd=r.c||"#6b5731";
+  let h=`<div class="tip-hd" style="background:linear-gradient(180deg,${hd}44,#0e0b09)"><div class="n" style="color:${r.c}">${it.name}</div>
+    <div class="tip-sub">${r.n} · ${sn} · 物品等级 ${it.ilvl}${it.cls?" · "+CLASSES[it.cls].n+"专用":""}${it.reforged?` · 重铸 ${it.reforged} 次`:""}</div></div><div class="tip-body">`;
+  if(it.dmgMax)h+=`<div style="margin-top:2px">伤害 ${it.dmgMin} - ${it.dmgMax}</div>`;
+  if(it.armor)h+=`<div style="margin-top:2px">护甲 +${it.armor}</div>`;
   (it.affixes||[]).forEach(a=>h+=`<div class="a">+${a.v} ${a.n}</div>`);
   if(it.sockets&&it.sockets.length){
     it.sockets.forEach(s=>{
-      h+=s?`<div class="a">孔 · ${s.n}（+${s.v} ${modName(s.k)}）</div>`:`<div class="h">空孔</div>`;
+      h+=s?`<div class="a">孔 · ${s.n}（+${s.v} ${modName(s.k)}）</div>`:`<div class="h" style="border:none;padding:0;margin:2px 0">空孔</div>`;
     });
   }
   if(it.cls&&it.cls!==P.cls)h+=`<div style="color:#c05a4a;margin-top:4px">你的职业无法使用</div>`;
@@ -1337,40 +2196,68 @@ function itemHTML(it,cmp){
     h+=`<div class="h">${cur?(df>0?`<span style="color:#7ec87e">↑ 优于当前 (+${Math.round(df)})</span>`
       :`<span style="color:#c87e7e">↓ 劣于当前 (${Math.round(df)})</span>`):"空槽位"} · 售价 ${sellPrice(it)} 金<br>左键装备 · 右键丢弃</div>`;
   }
-  return h;
+  return h+"</div>";
+}
+function gearPower(){
+  let t=0;
+  SLOTDEF.forEach(s=>{const it=P.equip[s.k];if(it)t+=(it.ilvl||1)*8+(it.rarity||0)*14+itemScore(it)*.15;});
+  return Math.max(P.lvl*6,Math.round(t+P.lvl*4));
 }
 function renderChar(){
   $("pctitle").textContent="角色";
-  UI.pcmeta.innerHTML=`<b>${P.name}</b> · ${CLASSES[P.cls].n} · 等级 ${P.lvl}<br>经验 ${P.xp} / ${P.xpNext} · 金币 ${P.gold}`;
+  const xpPct=Math.round(P.xp/Math.max(1,P.xpNext)*100);
+  UI.pcmeta.innerHTML=`<div class="pc-name">${P.nameForgotten?"？？？":P.name}</div>
+    <div class="pc-cls">${CLASSES[P.cls].n} · 等级 ${P.lvl} · 功绩 ${achDoneN()} / ${ACH.length}</div>
+    <div class="pc-power"><span>装等</span><b>${gearPower()}</b></div>
+    <div class="pc-xp"><i style="width:${xpPct}%"></i></div>
+    <div class="pc-cls" style="margin-top:6px">经验 ${P.xp} / ${P.xpNext} · 金币 ${P.gold}</div>`;
+  document.querySelectorAll("#pctabs .ptab").forEach(t=>{
+    t.classList.toggle("on",t.dataset.pt===pcStatTab);
+    t.onclick=()=>{pcStatTab=t.dataset.pt;renderChar();};
+  });
   document.querySelectorAll("#pc .eq").forEach(old=>{
     const d=old.cloneNode(false);
     old.parentNode.replaceChild(d,old);
     const sd=SLOTDEF.find(s=>s.k===d.dataset.k);if(!sd)return;
     const it=P.equip[sd.k];
-    d.innerHTML=it?`<div class="g">${it.glyph}</div>`:`<div class="g" style="opacity:.22">${sd.g}</div>`;
+    d.innerHTML=it?`<div class="g">${it.glyph}</div><div class="eq-l">${sd.n}</div>`
+      :`<div class="g" style="opacity:.22">${sd.g}</div><div class="eq-l">${sd.n}</div>`;
     d.title=it?it.name:sd.n;
-    d.style.borderColor=it&&RARITY[it.rarity]?RARITY[it.rarity].c:"#34291b";
+    d.style.borderColor=it&&RARITY[it.rarity]?RARITY[it.rarity].c:"#3d3122";
     if(it){
-      d.addEventListener("mouseenter",ev=>showTip(ev,itemHTML(it,false)+`<div class="h">${sd.n} · 点击卸下</div>`));
+      d.addEventListener("mouseenter",ev=>showTip(ev,itemHTML(it,false)));
       d.addEventListener("mouseleave",hideTip);
       d.addEventListener("click",()=>{if(addToBag(it)){P.equip[sd.k]=null;afterEquipChange();}else hint("行囊已满");});
     }else{
-      d.addEventListener("mouseenter",ev=>showTip(ev,`<div class="n">${sd.n}</div><div class="h">空槽位</div>`));
+      d.addEventListener("mouseenter",ev=>showTip(ev,`<div class="tip-hd"><div class="n">${sd.n}</div><div class="tip-sub">空槽位</div></div>`));
       d.addEventListener("mouseleave",hideTip);
     }
   });
   const s=pStats();
   const row=(n,v,k)=>`<div class="arow"><span>${n}</span><span><b>${v}</b>${k&&P.pts>0?`<span class="plus" data-attr="${k}">+</span>`:""}</span></div>`;
-  UI.attrbox.innerHTML=
-    `<div class="grouphd" style="border:none;margin-top:0;padding-top:0">主属性${P.pts>0?` · 可分配 ${P.pts}`:""}</div>`+
-    row("力量",s.str,"str")+row("敏捷",s.dex,"dex")+row("体魄",s.vit,"vit")+row("精神",s.ene,"ene")+
-    `<div class="grouphd">战斗</div>`+
-    row("伤害",`${s.dmgMin} - ${s.dmgMax}`)+row("每秒伤害",Math.round((s.dmgMin+s.dmgMax)/2/s.atkTime))+
-    row("护甲",s.armor)+row("减伤",Math.round(100-100*(100/(100+s.armor)))+"%")+
-    row("暴击几率",s.crit.toFixed(1)+"%")+row("攻击间隔",s.atkTime.toFixed(2)+"s")+
-    row("攻击距离",CLASSES[P.cls].range+" 码")+row("生命偷取",s.leech+"%")+
-    row("移动速度",Math.round(100+s.ms)+"%")+row("生命 / 法力",`${Math.round(s.hpMax)} / ${Math.round(s.mpMax)}`)+
-    codexHTML();
+  const dr=Math.round(100-100*(100/(100+s.armor)));
+  const dps=Math.round((s.dmgMin+s.dmgMax)/2/s.atkTime);
+  let body="";
+  if(pcStatTab==="core"){
+    body=`<div class="grouphd" style="border:none;margin-top:0;padding-top:0">主属性${P.pts>0?` · 可分配 ${P.pts}`:""}</div>`+
+      row("力量",s.str,"str")+row("敏捷",s.dex,"dex")+row("体魄",s.vit,"vit")+row("精神",s.ene,"ene")+
+      `<div class="grouphd">概要</div>`+
+      row("生命",Math.round(s.hpMax))+row("法力",Math.round(s.mpMax))+row("装等",gearPower());
+  }else if(pcStatTab==="off"){
+    body=`<div class="grouphd" style="border:none;margin-top:0;padding-top:0">攻击</div>`+
+      row("伤害",`${s.dmgMin} - ${s.dmgMax}`)+row("每秒伤害",dps)+
+      row("暴击几率",s.crit.toFixed(1)+"%")+row("攻击间隔",s.atkTime.toFixed(2)+"s")+
+      row("攻击距离",CLASSES[P.cls].range+" 码")+row("生命偷取",s.leech+"%");
+  }else if(pcStatTab==="def"){
+    body=`<div class="grouphd" style="border:none;margin-top:0;padding-top:0">防御</div>`+
+      row("护甲",s.armor)+row("减伤",dr+"%")+row("生命",Math.round(s.hpMax))+
+      row("当前生命",Math.round(P.hp));
+  }else{
+    body=`<div class="grouphd" style="border:none;margin-top:0;padding-top:0">辅助</div>`+
+      row("移动速度",Math.round(100+s.ms)+"%")+row("法力",Math.round(s.mpMax))+
+      row("金币",P.gold)+row("击杀",P.kills)+row("首领",P.bossKills||0);
+  }
+  UI.attrbox.innerHTML=body+(pcStatTab==="core"?codexHTML():"");
   UI.attrbox.querySelectorAll(".plus").forEach(b=>b.addEventListener("click",()=>{
     if(P.pts<=0)return;P.pts--;P.base[b.dataset.attr]++;refreshMax(false);renderChar();SFX.ui();saveSoon();}));
 }
@@ -1392,26 +2279,41 @@ function renderBag(){
   UI.invcnt.textContent=P.bag.length+" / "+CFG.BAG;
 }
 function renderSkills(){
-  UI.skpts.innerHTML=`技能点：<b style="color:#e2c47f">${P.skPts}</b> · 学习后点击技能行，再点下方技能栏空位分配`;
+  UI.skpts.innerHTML=`技能点 <b style="color:#e2c47f">${P.skPts}</b> · 点技能查看，再点「放入技能栏」`;
+  const list=SKILLS.filter(s=>s.cls===P.cls);
+  if(!skSel||!list.some(s=>s.id===skSel))skSel=(list.find(s=>(P.ranks[s.id]||0)>0)||list[0]||{}).id;
   UI.sklist.innerHTML="";
-  SKILLS.filter(s=>s.cls===P.cls).forEach(sk=>{
+  list.forEach(sk=>{
     const rank=P.ranks[sk.id]||0,locked=P.lvl<sk.req;
-    const d=document.createElement("div");d.className="skrow"+(locked?" locked":"");
+    const d=document.createElement("div");d.className="skrow"+(locked?" locked":"")+(skSel===sk.id?" on":"");
     d.innerHTML=`<div class="ico" style="color:${rank?"#e2c47f":"#5a5245"}">${sk.g}</div>
-      <div style="flex:1"><div class="nm">${sk.n} ${rank?`<span class="rk">等级 ${rank}</span>`:""}</div>
-      <div class="ds">${sk.d(Math.max(1,rank))}</div>
-      <div class="ds" style="color:#7a705f">需要等级 ${sk.req} · 法力 ${sk.mp} · 冷却 ${sk.cd}s</div></div>
+      <div style="flex:1"><div class="nm">${sk.n} ${rank?`<span class="rk">等级 ${rank} / 5</span>`:""}</div>
+      <div class="ds">需要等级 ${sk.req} · 法力 ${sk.mp} · 冷却 ${sk.cd}s</div></div>
       ${(!locked&&P.skPts>0&&rank<5)?`<div class="learn">${rank?"强化":"学习"}</div>`:""}`;
     const lb=d.querySelector(".learn");
     if(lb)lb.addEventListener("click",ev=>{ev.stopPropagation();learnSkill(sk.id);});
-    if(rank)d.addEventListener("click",()=>{pickSkill=sk.id;hint("选择技能栏位放置 "+sk.n);renderBarUI();});
+    d.addEventListener("click",()=>{skSel=sk.id;renderSkills();});
     UI.sklist.appendChild(d);
   });
+  const sk=skById(skSel);
+  if(!sk||!UI.skdetail){if(UI.skdetail)UI.skdetail.innerHTML="";return;}
+  const rank=P.ranks[sk.id]||0,locked=P.lvl<sk.req;
+  UI.skdetail.innerHTML=`<div class="skd-ico">${sk.g}</div>
+    <div class="skd-n">${sk.n}</div>
+    <div class="skd-meta">${rank?`等级 ${rank} / 5`:"未学习"} · 法力 ${sk.mp} · 冷却 ${sk.cd} 秒</div>
+    <div class="skd-d">${sk.d(Math.max(1,rank))}</div>
+    <div class="skd-act">
+      ${(!locked&&P.skPts>0&&rank<5)?`<span class="act" id="sklearn">${rank?"强化此技能":"学习此技能"}</span>`:""}
+      ${rank?`<span class="act" id="skassign">放入技能栏</span>`:""}
+      ${locked?`<div class="ds" style="margin-top:10px">需要 ${sk.req} 级</div>`:""}
+    </div>`;
+  const ln=$("sklearn");if(ln)ln.addEventListener("click",()=>learnSkill(sk.id));
+  const as=$("skassign");if(as)as.addEventListener("click",()=>{pickSkill=sk.id;hint("选择技能栏位放置 "+sk.n);renderBarUI();});
 }
 function learnSkill(id){
   const sk=skById(id),rank=P.ranks[id]||0;
   if(P.skPts<=0||P.lvl<sk.req||rank>=5)return;
-  P.skPts--;P.ranks[id]=rank+1;
+  P.skPts--;P.ranks[id]=rank+1;skSel=id;
   if(rank===0){const free=P.barSkills.indexOf(null);if(free>=0)P.barSkills[free]=id;}
   SFX.level();say(`学会 <span style="color:#e2c47f">${sk.n}</span>${rank?`（等级 ${rank+1}）`:""}`);
   renderSkills();renderBarUI();saveSoon();
@@ -1451,11 +2353,11 @@ function renderQuests(){
     <div class="qd">${q.d}</div>
     <div class="qobj">
       <div class="obj${p>=q.need?" done":""}"><span>${p>=q.need?"■":"□"} ${questObj(q)}</span><span>${p} / ${q.need}</span></div>
-      ${ready?`<div class="obj done"><span>■ 回石桥镇向塞琳复命</span><span></span></div>`:""}
+      ${ready?`<div class="obj done"><span>■ 回据点向塞琳复命</span><span></span></div>`:""}
       <div class="qbar"><i style="width:${st.state==="done"?100:pct}%"></i></div>
     </div>
     <div class="qr">奖励：${q.gold} 金币 · ${q.xp} 经验${q.item?" · 稀有装备":""}</div>
-    ${st.state==="open"?`<div style="margin-top:14px"><span class="act" id="qpin">${tracked?"取消追踪":"追踪任务"}</span></div>`:""}`;
+    ${st.state==="open"?`<div style="margin-top:18px"><span class="act" id="qpin">${tracked?"取消追踪":"追踪此任务"}</span></div>`:""}`;
   const pin=$("qpin");
   if(pin)pin.addEventListener("click",()=>{
     P.trackId=tracked?"":q.id;renderQuests();renderTrack();saveSoon();
@@ -1468,7 +2370,7 @@ function renderTrack(){
   UI.trackbody.innerHTML=`<div class="q">${q.n}</div>
     <div class="where">${questWhere(q)}</div>
     <div class="obj${p>=q.need?" done":""}"><span class="mark">${p>=q.need?"■":"□"}</span><span>${questObj(q)}  ${p} / ${q.need}</span></div>
-    ${ready?`<div class="obj done"><span class="mark">■</span><span>回石桥镇向塞琳复命</span></div>`:""}`;
+    ${ready?`<div class="obj done"><span class="mark">■</span><span>回据点向塞琳复命</span></div>`:""}`;
 }
 let pickSkill=null;
 function renderBarUI(){
@@ -1481,8 +2383,9 @@ function renderBarUI(){
     d.addEventListener("click",()=>{
       if(pickSkill){P.barSkills[i]=pickSkill;pickSkill=null;renderBarUI();SFX.ui();saveSoon();return;}
       if(sk)castSkill(i);});
-    if(sk){d.addEventListener("mouseenter",ev=>showTip(ev,`<div class="n" style="color:#e2c47f">${sk.n} · 等级 ${P.ranks[sk.id]}</div>
-      <div>${sk.d(P.ranks[sk.id])}</div><div class="h">法力 ${sk.mp} · 冷却 ${sk.cd}s · 快捷键 ${i+1}</div>`));
+    if(sk){d.addEventListener("mouseenter",ev=>showTip(ev,`<div class="tip-hd"><div class="n" style="color:#e2c47f">${sk.n}</div>
+      <div class="tip-sub">等级 ${P.ranks[sk.id]} · 快捷键 ${i+1}</div></div>
+      <div class="tip-body"><div>${sk.d(P.ranks[sk.id])}</div><div class="h">法力 ${sk.mp} · 冷却 ${sk.cd}s</div></div>`));
       d.addEventListener("mouseleave",hideTip);}
     UI.bar.appendChild(d);
   });
@@ -1495,9 +2398,10 @@ function renderBarUI(){
 }
 function renderTabs(){
   UI.tabs.innerHTML="";
-  [["pc","角色 C"],["inv","行囊 I"],["sk","技能 S"],["qs","任务 J"]].forEach(([id,label])=>{
+  [["pc","角色 C"],["inv","行囊 I"],["sk","技能 S"],["qs","任务 J"],["ach","功绩 Y"]].forEach(([id,label])=>{
     const t=document.createElement("div");t.className="tab";t.textContent=label;
-    if($(id).classList.contains("on"))t.classList.add("on");
+    const on=id==="pc"||id==="inv"?($("pc").classList.contains("on")||$("inv").classList.contains("on")):$(id).classList.contains("on");
+    if(on)t.classList.add("on");
     t.addEventListener("click",()=>{togglePanel(id);renderTabs();});
     UI.tabs.appendChild(t);
   });
@@ -1564,9 +2468,7 @@ function killEnemy(e){
   if(e.sekhra&&!(P.flags&&P.flags.thimble)){
     P.flags=P.flags||{};P.flags.thimble=true;
     say(`<span style="color:#c8bfa6">塞克拉（战败）："……找到了。"</span>`);
-    setTimeout(()=>say(`<span style="color:#c8bfa6">"是你啊。你怎么在这儿。你不该下来的，这么冷。"</span>`),1200);
-    setTimeout(()=>say(`<span style="color:#9db5ab">她把你认成了要找的孩子，安静下来，消散了。</span>`),2400);
-    setTimeout(()=>say(`<span style="color:#8a7f70">地面浮起一行字：<i>往下走就是往回走——你离她要找的那天，又近了一层。</i></span>`),3400);
+    setTimeout(()=>say(`<span style="color:#8a7f70">（倒地。回镇向塞琳交差。北面林地的门开了。）</span>`),1400);
     dropAt(e.x,e.z,{kind:"relic",relic:RELIC_THIMBLE});
   }
   if(e.boss){
@@ -1577,8 +2479,8 @@ function killEnemy(e){
       const first=!P.cleared[W.dun.id];
       P.cleared[W.dun.id]=true;
       if(first){
-        const rw=rollItem(W.dun.lvl+3,true);addToBag(rw);
-        P.gold+=W.dun.lvl*180;
+        const rw=rollItem(W.dun.lvl+3,true);addToBag(rw);noteLoot(rw);
+        P.gold+=W.dun.lvl*180;bumpGold(W.dun.lvl*180);
         say(`<span style="color:#c8762c">首次通关 ${W.dun.n}！获得 ${rw.name} 与 ${W.dun.lvl*180} 金币。</span>`);
         SFX.quest();
       }
@@ -1588,6 +2490,7 @@ function killEnemy(e){
   if(e===P.target)P.target=null;
   renderTrack();
   if($("qs").classList.contains("on"))renderQuests();
+  achCheck();
 }
 function gainXP(n){
   P.xp+=n;
@@ -1601,6 +2504,7 @@ function gainXP(n){
     say(`<span style="color:#e2c47f">晋升至 ${P.lvl} 级</span>（+3 属性点，+1 技能点）`);
     if($("sk").classList.contains("on"))renderSkills();
     if($("pc").classList.contains("on"))renderChar();
+    achCheck();
   }
   saveSoon();
 }
@@ -1619,8 +2523,10 @@ function hurtPlayer(amount){
 function die(){
   P.alive=false;P.hp=0;P.channel=null;
   const lost=Math.floor(P.gold*.5);P.gold-=lost;
+  ensureAch();P.stats.deaths=(P.stats.deaths||0)+1;
   $("dead").classList.add("on");
   say(`你陨落于${W.area.n}，失去 ${lost} 金币。`);
+  achCheck();
   saveNow();
 }
 function nearestEnemy(x,z,range){
@@ -1782,6 +2688,7 @@ function collectRelic(rel){
   say(`<span style="color:#c8a24a">得到遗物：${rel.n}</span>`);
   if(rel.lines)rel.lines.forEach((ln,i)=>setTimeout(()=>say(ln),650*(i+1)));
   if($("pc").classList.contains("on"))renderChar();
+  achCheck();
   saveSoon();
 }
 function codexHTML(){
@@ -1797,9 +2704,10 @@ function recallFromBag(i){
   const it=P.bag[i];if(!it||!it.unknown)return;
   if(P.recallNotes<=0){hint("回石桥镇找玛拉回想，或买张回想的纸条");return;}
   P.recallNotes--;identifyItem(it);SFX.loot();
+  ensureAch();P.stats.recalled=(P.stats.recalled||0)+1;
   const r=RARITY[it.rarity]||RARITY[0];
   say(`你想起来了：<span style="color:${r.c}">${it.name}</span>`);
-  renderBag();hideTip();saveSoon();
+  renderBag();hideTip();saveSoon();achCheck();
 }
 function equipFromBag(i){
   const it=P.bag[i];if(!it)return;
@@ -1825,11 +2733,19 @@ const NPCDEF=[
    look:{body:0x3a2a18,skin:0xc9a070,leg:0x2a1a10,helm:0xb08d4f,cape:0x7a5a20}},
  {id:"selin",n:"执政官 塞琳",t:"镇务委托",g:"📜",dx:0,dz:-9,
    look:{body:0x5a2a3a,skin:0xc39a72,leg:0x3a1a25,helm:0xb08d4f,cape:0x7a2a3a}},
- {id:"bridge",n:"桥头老人",t:"念一遍名字 · 存档",g:"🪧",dx:15,dz:3,verb:"念名",
+ {id:"bridge",n:"桥头老人",t:"念一遍名字 · 存档",g:"🪧",dx:15,dz:3,verb:"念名",only:["town"],
    look:{body:0x4a4238,skin:0xb8a488,leg:0x33302a,hood:0x3a352c,cape:0x5a5040}},
  {id:"stash",n:"银行",t:"跨角色金库 · 40 格",g:"🏦",x:-20,z:14,kind:"stash",verb:"打开",labelY:1.5},
  {id:"board",n:"悬赏板",t:"每日五条",g:"📋",x:10,z:16,kind:"board",verb:"查看",labelY:2.2},
- {id:"waystone",n:"传送石碑",t:"已探明之地",g:"🗿",x:0,z:20,kind:"waystone",verb:"触摸",labelY:2.8}
+ {id:"waystone",n:"传送石碑",t:"已探明之地",g:"🗿",x:0,z:20,kind:"waystone",verb:"触摸",labelY:2.8},
+ {id:"harun",n:"守隘 哈伦",t:"白喉的风",g:"🧣",dx:-6,dz:6,only:["rime"],
+   look:{body:0x6a7a88,skin:0xc8d4de,leg:0x3a4a58,helm:0xa8c0d0,cape:0x4a5a68}},
+ {id:"wick",n:"守灯 维克",t:"十一条船",g:"🏮",dx:-6,dz:6,only:["harbor"],
+   look:{body:0x3a4a52,skin:0xb89870,leg:0x2a3038,hood:0x2a3840,cape:0x3a5058}},
+ {id:"quill",n:"学徒 奎尔",t:"没写完的账",g:"📓",dx:-6,dz:6,only:["sink"],
+   look:{body:0x3a2a40,skin:0xb8a090,leg:0x241828,hood:0x2a1a30,cape:0x4a3a58}},
+ {id:"nock",n:"守井 诺克",t:"第七根还在",g:"⛓",dx:-6,dz:6,only:["well"],
+   look:{body:0x5a4a3a,skin:0xb09070,leg:0x3a2a22,helm:0x6a5a48,cape:0x4a3a30}}
 ];
 function serviceProp(kind){
   const g=new THREE.Group();
@@ -1858,6 +2774,7 @@ function spawnNPCs(){
   W.npcs.forEach(n=>scene.remove(n.model.group));W.npcs.length=0;
   const c=CFG.MAP>>1;
   NPCDEF.forEach(d=>{
+    if(d.only&&W.area&&d.only.indexOf(W.area.id)<0)return;
     let x,z;
     if(d.x!=null){x=d.x;z=d.z;}
     else{x=wX(c+d.dx);z=wX(c+d.dz);}
@@ -1891,37 +2808,180 @@ function giveWonItem(it,msg){
   if(st.length<CFG.STASH){st.push(it);writeStash(st);say(msg+" 行囊满了，进了银行。");}
   else{P.gold+=sellPrice(it);say("箱子和行囊都满了，东西折成了金币。");}
 }
-function openNPC(id){
+function qDone(id){return !!(QS[id]&&QS[id].state==="done");}
+function beat(id){return !!(P.cleared&&P.cleared[id]);}
+function chNow(){
+  const a=W.area;if(a&&a.ch)return a.ch;
+  const h=AREA[hubId()];return(h&&h.ch)||1;
+}
+function chOpen(n){
+  if(n<=1)return true;
+  if(n===2)return qDone("q8")||W.discovered.rime||W.discovered.frost||chNow()>=2;
+  if(n===3)return qDone("q12")||W.discovered.harbor||W.discovered.shore||chNow()>=3;
+  if(n===4)return qDone("q15")||W.discovered.sink||W.discovered.sinkf||chNow()>=4;
+  if(n===5)return qDone("q18")||W.discovered.well||W.discovered.shaft||chNow()>=5;
+  return true;
+}
+const TALK={
+ selin:[
+  {id:"rift",q:"裂口是什么？",need:1,a:"镇子建在一道裂口上。下面的东西会爬上来吃人。你回镇补给，再下去打。越深越狠。"},
+  {id:"job",q:"我现在该去哪？",need:1,a:()=>{const q=activeQuest();return q?q.d:"活干完了。裂口还在。你自己决定还要不要下去。";}},
+  {id:"sekhra",q:"墓窖里在喊谁？",need:1,a:beat("crypt")?"塞克拉死了。北面林地开了。蜘蛛、弓手，比荒原狠。":"白骨女王塞克拉。她一喊，死人就站起来。进哭嚎墓窖，砍她。"},
+  {id:"wood",q:"北面林地怎么走？",need:1,when:()=>qDone("q3")||beat("crypt"),a:beat("nest")?"织母死了。峡谷还在喷灰。":"顺着丝走。烧掉蜘蛛，找到蛛巢，砍织母阿拉卡。"},
+  {id:"ash",q:"峡谷里在喷什么？",need:1,when:()=>qDone("q5")||beat("nest"),a:beat("fort")?"瓦拉克死了。北面冻死了。下一个活在白喉隘口。":"东西从裂口爬出来。熔火要塞的门从里面锁着。砍恐惧领主瓦拉克。"},
+  {id:"name",q:"为什么有人会忘我的名字？",need:1,when:()=>P.nameForgotten||qDone("q3"),a:"裂口爱偷这个。被偷了就回石桥镇桥头念一遍。念完我才想得起你是谁。"},
+  {id:"bell",q:"北面为什么冻住了？",need:2,a:beat("belfry")?"钟停了。好。东边海岸在沉船。十一条。":"钟从湖底往上爬。钟声能冻死人。去白喉隘口，再下冰湖，把它砸哑。"},
+  {id:"ships",q:"十一条船是怎么沉的？",need:3,a:beat("hull")?"格雷一条一条凿的。人已经死了。裂口更深的门开了。":"不是风暴。有人把船凿沉，他还在凿。去潮灯港，下到最大那条船肚子里，把手打断。"},
+  {id:"chorus",q:"底下那个厅在干什么？",need:4,a:beat("chorus")?"会开停了。最底下那个要挣出来。去桥墩井口。":"伤口自己会说话。一声声赞成在砸人。从沉降残镇下去，把会开停。"},
+  {id:"kor",q:"最底下是谁？",need:5,a:"最早被钉住的那个。叫柯尔。他要出来。你下去按回去。打完，这件事结束。"}
+ ],
+ kaden:[
+  {id:"iron",q:"下面的东西怕铁吗？",need:1,a:"怕。咬人也怕。武器钝了拿来，词缀打歪了重铸。稀有的能开孔。"},
+  {id:"rift",q:"裂口里都是什么？",need:1,a:"先是死人。再往下是冻的、湿的、会说话的。铁比话有用。"},
+  {id:"fire",q:"熔岩会咬铁吗？",need:1,when:()=>qDone("q5")||beat("nest")||W.discovered.ash,a:"会软。别把好刀在峡谷里泡太久。回来我给你淬火。"},
+  {id:"ice",q:"北境的冰会咬铁？",need:2,a:"会。霜结符文嵌进去，刀才不粘。钟还在响的时候，别赤手摸湖。"},
+  {id:"wedge",q:"凿船的那把凿子呢？",need:3,when:()=>beat("hull")||qDone("q15"),a:"锤头我重打成楔子了。第五章对桥墩用，不是对人。你先拿着。"},
+  {id:"nail",q:"钉子是你打的？",need:4,a:"不是我。七根钉子钉住裂口。最早那根下面还有个人。铁只能按，不能讲理。"}
+ ],
+ mara:[
+  {id:"blur",q:"地下带上来的东西为什么会糊？",need:1,a:"裂口先偷名字，再偷形状。给我看，我帮你认。急的话买纸条，六十金。自己在下面用。"},
+  {id:"name",q:"忘了名字会怎样？",need:1,a:"先是别人叫不出你。再是你自己叫不出自己。红药管血，不管这个。去桥头念。"},
+  {id:"frost",q:"冰湖上站久了会怎样？",need:2,a:"薄冰吃体温。不停杀、不停动。冻僵了喝红的来不及，先把钟砸了。"},
+  {id:"brine",q:"溺尸身上的盐？",need:3,a:"海不认账。盐进伤口会醒。蓝药管神，不管淹。退潮再打，涨潮就跑。"},
+  {id:"sink",q:"沉降区的空气为什么苦？",need:4,a:"怨魂把名字嚼碎了再吐出来。蓝药多带。别停下来听它们记账。"},
+  {id:"hold",q:"有没有药能按住人？",need:5,a:"有。苦，难喝，还要全镇一起出声。现在还早。你先活着走到井底。"}
+ ],
+ vaun:[
+  {id:"bet",q:"你赌的是什么？",need:1,a:"金币。还有你能不能活着把金币赢回来。裂口不赌，裂口直接拿。"},
+  {id:"shout",q:"荒原那声喊是什么？",need:1,a:"墓窖里的女人在练嗓。她一喊，趴着的都站起来。先砍喊的，再砍站起来的。"},
+  {id:"web",q:"林地里那层丝是什么？",need:1,when:()=>qDone("q3")||beat("crypt")||W.discovered.wood,a:"织母在下面结网。火比刀快。别站在茧中间。"},
+  {id:"ash",q:"峡谷为什么发红？",need:1,when:()=>qDone("q5")||beat("nest")||W.discovered.ash,a:"要塞里有个领主在锁门。火往外喷。别站着看岩浆。"},
+  {id:"choir",q:"湖底真有人在唱？",need:2,a:"修道院的规矩是唱起来就不能停。钟被推下湖的时候，他们跟着走。现在只剩一声，还在走调。"},
+  {id:"gray",q:"谁把船凿沉的？",need:3,a:"一个叫格雷的。十一条。一条一条凿的。灯塔亮三盏才能看见船影。别涨潮的时候下去。"},
+  {id:"seven",q:"账房怎么会有七个人？",need:4,a:"七本账同时翻开。影子不会排队。点哪个打哪个。别想跟它们讲理。"},
+  {id:"nail",q:"井底下有个活人？",need:5,a:"钉了三百年还在挣。他想看看天。你要是手软，镇子跟着陷。"}
+ ],
+ bridge:[
+  {id:"why",q:"为什么要念名字？",need:1,a:"裂口爱偷这个。牌子上刻着。被偷了就念一遍。念完你还是你。"},
+  {id:"bridge",q:"这座桥通哪？",need:1,a:"通镇。镇底下通裂口。裂口通更底下。你只走上面这一截，就能活久一点。"},
+  {id:"first",q:"第一根钉子是谁钉的？",need:1,a:"没人记得。记得的人先被偷了名字。别当那个记得的人。"},
+  {id:"north",q:"北面的风从哪来？",need:2,a:"湖底一口钟。风先到，钟声后到。名字冻住了，还是回来念。"},
+  {id:"tide",q:"潮声在数什么？",need:3,a:"十一条船。别跟着数。数完会想下去看。"},
+  {id:"sunk",q:"有的镇怎么不在上面了？",need:4,a:"裂口呼吸一次，地面矮一截。桥还在。人先没了。"},
+  {id:"last",q:"下去之前为什么再念一遍？",need:5,a:"最底下那个会问你叫什么。你要答得上来。"}
+ ],
+ harun:[
+  {id:"pass",q:"白喉隘口守什么？",need:2,a:"守冻。钟一响，隘口这面的人先哑。哑了就忘自己进来干什么。"},
+  {id:"lake",q:"冰湖怎么走？",need:2,a:"岸上能走。湖心是冰，十字桥穿过去。薄冰会吃人。别站着看底下的字。"},
+  {id:"abbey",q:"修道院里还在唱？",need:2,a:"主祭奥赛尔。他唱歌，圈扩开。圈里掉血。等他吸气再冲。"},
+  {id:"bell",q:"钟砸了会怎样？",need:2,a:beat("belfry")?"静了。风还是冷，至少不再杀人。":"护盾一层层剥，声音一层层少。最后一声走调，钟碎。你会想喊：终于安静了。"}
+ ],
+ wick:[
+  {id:"light",q:"灯塔要亮几盏？",need:3,a:"三盏。亮了才能看清浅滩上的船影。一盏是雾，两盏是谎。"},
+  {id:"eleven",q:"十一条船在哪？",need:3,a:"退潮并排躺在浅滩里。涨潮封路。别跟着引水人的旗，那旗往潮沟里指。"},
+  {id:"gray",q:"格雷还在凿？",need:3,a:beat("hull")?"凿子插在板上。他说十一条。一条一条凿的。然后没了。":"最大那条船肚子里。靠近就挨凿。躲、打、再躲。把他的手打断。"},
+  {id:"tide",q:"潮下墓场是什么？",need:3,a:"退潮才看得见的沟。引水人领路。打断旗语，再打他。"}
+ ],
+ quill:[
+  {id:"ruin",q:"这座镇为什么往下沉？",need:4,a:"裂口在呼吸。石桥镇建在上面，我们建在更下面。账还没写完，地先陷了。"},
+  {id:"ledger",q:"账房里有谁？",need:4,a:beat("ledger")?"七个影子清了。账翻完了。往下走。":"七个影子各打各的。别指望它们排队。点哪个打哪个。"},
+  {id:"vote",q:"众议厅在表决什么？",need:4,a:beat("chorus")?"赞成停了。大厅静了。再往下是钉底。":"没有身体，只有一声声赞成。打掉一团，合唱少一人。齐声时全场会砸你。"},
+  {id:"down",q:"再往下是什么？",need:4,a:"钉底。最早被钉住的那个要挣出来。塞琳说这一次打完，这件事结束。"}
+ ],
+ nock:[
+  {id:"well",q:"这口井通哪？",need:5,a:"通桥墩。七根钉子一闪而过。别停下来听他们说话。听完会想替他们拔。"},
+  {id:"seven",q:"七根钉子钉的是谁？",need:5,a:"七个还没死透的人。每人一句狠的。不停。你的活在最底下那一个。"},
+  {id:"kor",q:"柯尔要出来？",need:5,a:"三百年了。他想看看天。血条是倒的——涨满镇子塌。打他就是往下压。"},
+  {id:"end",q:"按回去就算完了吗？",need:5,a:"按回去，三年。楔子能全拔，镇子迁走。玛拉还有苦药，难喝。选了就打完。"}
+ ]
+};
+function talkTopics(id){
+  return(TALK[id]||[]).filter(t=>{
+    if(t.need&&!chOpen(t.need))return false;
+    if(t.when&&!t.when())return false;
+    return true;
+  });
+}
+function talkAnswer(t){
+  const raw=typeof t.a==="function"?t.a():t.a;
+  return String(raw).replace(/^"|"$/g,"");
+}
+function greetNPC(id){
+  const ch=chNow();
+  if(P.nameForgotten&&(id==="selin"||id==="bridge"))
+    return id==="selin"?"你叫……裂口又偷了。去桥头念一遍，我就想得起。":"裂口把名字偷了。牌子上刻着呢。念一遍。";
+  if(id==="selin"&&!(P.flags&&P.flags.metSelin)){
+    P.flags=P.flags||{};P.flags.metSelin=true;
+    return"裂口在镇底下。东西已经爬上来了。东边荒原，狼群在咬牲口。去砍。砍完回来。";
+  }
+  const G={
+    selin:{1:"活还在板上。去干。",2:"北面冻死了。钟从湖底往上爬。去砸。砸完回来。",
+      3:"海岸在死人。船是被凿沉的。下去把那个人的手打断。",
+      4:"从裂口下去。底下有个厅在开会。把会开停。",
+      5:"最底下那个要挣出来了。跟我走。这一次打完，这件事结束。"},
+    kaden:{1:"黑铁放下。下面的东西会咬人，武器换了再下去。",2:"霜结符文嵌上。北境的冰会咬铁。",
+      3:"盐会锈刀。回来我给你去一层油。",4:"这地方的铁都在往下沉。锤还听我的。",
+      5:"楔子对桥墩，不是对人。"},
+    mara:{1:"地下带上来的会糊。给我看，我帮你认。红的止血，蓝的醒神。别省。",
+      2:"薄冰吃体温。药随身，别站着看湖。",3:"盐进伤口会醒。退潮再打。",
+      4:"下面的空气是苦的。多带蓝的。",5:"苦药我备着。你先活着走到井底。"},
+    vaun:{1:"一到三为小，四到六为大。猜对了桌上随便抓。裂口不赌，裂口直接拿。",
+      2:"北边冷。金币冻在口袋里也是金币。",3:"船沉了货还在赌。你要不要。",
+      4:"这镇往下沉。我的桌还平。",5:"最后一注：你能不能按住他。"},
+    bridge:{1:"名字刻上。裂口爱偷这个。被偷了就回这儿念一遍。执政官在广场北面。她有活。",
+      2:"北面的风把名字也冻住。回来还是念。",3:"潮声像有人在数船。十一条。别数。",
+      4:"桥还在。镇有的已经不在上面了。",5:"念一遍。下去之前再念一遍。"},
+    harun:{2:"钟一响，隘口这面先哑。你还听得见自己的名字，就算运气好。"},
+    wick:{3:"三盏灯。亮了再看浅滩。涨潮就回来。"},
+    quill:{4:"账还没写完。地先陷了。你是来把会开停的？"},
+    nock:{5:"七根还在。最底下那个在挣。别让他出来。"}
+  };
+  const t=G[id];if(!t)return"……";
+  return t[ch]||t[1]||t[2]||t[3]||t[4]||t[5]||"……";
+}
+function talkHTML(id,talkId){
+  const topics=talkTopics(id);if(!topics.length)return"";
+  let h=`<div class="subttl">打听</div><div class="talklist">`;
+  topics.forEach(t=>{
+    h+=`<span class="act${t.id===talkId?" pick":""}" data-talk="${t.id}">${t.q}</span>`;
+  });
+  return h+`</div>`;
+}
+let npcTalk={who:null,tid:null};
+function openNPC(id,talkId){
   $("npc").classList.remove("bank","smith");
   if(id==="stash"){openStash();return;}
   if(id==="board"){openBoard();return;}
   if(id==="waystone"){openWaystone();return;}
+  if(npcTalk.who!==id)npcTalk={who:id,tid:null};
+  if(arguments.length>=2)npcTalk.tid=talkId||null;
+  talkId=npcTalk.tid;
   const n=NPCDEF.find(x=>x.id===id);
   let body=`<div class="npchead"><div class="av">${n.g}</div><div><div class="nn">${n.n}</div><div class="nt">${n.t}</div></div></div>`;
+  const topics=talkTopics(id);
+  const picked=talkId&&topics.find(t=>t.id===talkId);
+  if(picked)body+=`<div class="dlg"><span class="ask">你：${picked.q}</span>"${talkAnswer(picked)}"</div>`;
+  else body+=`<div class="dlg">"${greetNPC(id)}"</div>`;
+  body+=talkHTML(id,talkId);
   if(id==="bridge"){
-    const dlg=P.nameForgotten
-      ?`"你回来了。……脸我记得，名字它掉了。"<br>"没事。牌子上刻着呢。你自己念一遍，我替你把它按回去。"`
-      :`"进城的？木牌上有你的名字。<br>这镇子留不住东西——等你哪天想不起来了，回来这儿念一遍。"`;
-    body+=`<div class="dlg">${dlg}</div>
-      <div class="board-recite">木牌上刻着：<b style="color:#ecd39a">${P.name}</b></div>
+    body+=`<div class="board-recite">木牌上刻着：<b style="color:#ecd39a">${P.name}</b></div>
       <div class="subttl">念一遍名字</div>
       <div class="act big" data-recite="1">念出「${P.name}」（写入卷宗）</div>`;
     UI.npcbody.innerHTML=body;
     togglePanel("npc",true);
+    UI.npcbody.querySelectorAll("[data-talk]").forEach(b=>b.addEventListener("click",()=>{SFX.ui();openNPC(id,b.dataset.talk);}));
     UI.npcbody.querySelectorAll("[data-recite]").forEach(b=>b.addEventListener("click",reciteName));
     return;
   }
   if(id==="kaden"){
     $("npc").classList.add("smith");
-    body+=`<div class="dlg">"要打铁，把黑铁放下。别的我不收，也别跟我说它从哪来。<br>……你那把武器该换了。下面的东西，一天比一天记得清怎么咬人。"</div>
-      <div class="subttl">制式装备（金币 ${P.gold}）</div><div class="shopgrid" id="stock"></div>
+    body+=`<div class="subttl">制式装备（金币 ${P.gold}）</div><div class="shopgrid" id="stock"></div>
       <div class="subttl">重铸词缀</div><div id="reforgebox"></div>
       <div class="subttl">打孔与符文</div><div id="socketbox"></div>
       <div class="subttl">出售你的物品</div><div class="shopgrid" id="mysell"></div>`;
   }else if(id==="mara"){
     const unk=countUnknown();
-    body+=`<div class="dlg">"从下面带上来的？给我看看。……你自己是想不起它是什么的，对吧。<br>正常。地下的东西上来都这样。我替你想——免费，但你得跑这一趟。"</div>
-      <div class="subttl">回想（想不起来的东西 ${unk} 件 · 纸条 ${P.recallNotes} 张）</div>
+    body+=`<div class="subttl">回想（想不起来的东西 ${unk} 件 · 纸条 ${P.recallNotes} 张）</div>
       <div class="shopgrid">
       <div class="sitem${unk?"":" off"}" data-recall="all"><span class="g">🕯</span><span class="n">替我想起来<br><span style="color:#8a7f70;font-size:11px">${unk?`回想全部 ${unk} 件`:"行囊里没有想不起来的东西"}</span></span><span class="p">免费</span></div>
       <div class="sitem" data-buy="note"><span class="g">📜</span><span class="n">回想的纸条 ×1<br><span style="color:#8a7f70;font-size:11px">急的话拿去地下自己用</span></span><span class="p">60 金</span></div></div>
@@ -1933,24 +2993,16 @@ function openNPC(id){
   }else if(id==="vaun"){
     const die=lastGamble?lastGamble.die:"?";
     const dcls=lastGamble?(lastGamble.win?" win":" lose"):"";
-    body+=`<div class="dlg">"一到三为小，四到六为大。猜对了，桌上随便抓一件。猜错了，金币就是我的。"</div>
-      <div class="subttl">猜大小 · 金币 ${P.gold}</div>
+    body+=`<div class="subttl">猜大小 · 金币 ${P.gold}</div>
       <div class="diebox"><div class="die${dcls}" id="dieface">${die}</div>
       <div class="dieres" id="dieres">${lastGamble?lastGamble.text:"1–3 小 · 4–6 大。先选注码，再押大小。"}</div></div>
       <div>${[["1","小注"],["2","中注"],["4","豪注"]].map(([m,n])=>
         `<span class="act${+m===gambleStake?" pick":""}" data-stake="${m}">${n} ${gambleCost(+m)} 金</span>`).join("")}</div>
       <div style="margin-top:8px"><span class="act" data-bet="small">押小</span><span class="act" data-bet="big">押大</span></div>
       <div class="subttl">今夜赌货（金币 ${P.gold}）</div><div class="shopgrid" id="stock"></div>`;
-  }else{
+  }else if(id==="selin"){
     const done=QUESTS.filter(q=>QS[q.id].state==="open"&&questDone(q));
     const open=QUESTS.filter(q=>QS[q.id].state==="open"&&!questDone(q));
-    const firstTalk=!(P.flags&&P.flags.metSelin);
-    let sdlg;
-    if(P.nameForgotten)sdlg=`"又一个往下走的……对不起，我记不起你叫什么了。桥头有块牌子，你去念一遍，我就想起来了。"`;
-    else if(firstTalk){P.flags=P.flags||{};P.flags.metSelin=true;
-      sdlg=`"又一个往下走的。我不拦你，拦不住。<br>东边荒原上有伙强盗，最近不对劲——他们不抢东西了，只是站在那儿念叨。你去看看。顺手，把能带回来的名字带回来。"`;}
-    else sdlg=`"每一层都比上一层更饿。你要是还打算往下走，先把该做的做完。"`;
-    body+=`<div class="dlg">${sdlg}</div>`;
     if(done.length){body+=`<div class="subttl">可复命</div>`;
       done.forEach(q=>body+=`<div class="qcard done"><div class="qn">${q.n}</div><div class="qd">${q.d}</div>
         <div class="qr">奖励：${q.gold} 金币 · ${q.xp} 经验${q.item?" · 稀有装备":""}</div>
@@ -1962,32 +3014,36 @@ function openNPC(id){
   }
   UI.npcbody.innerHTML=body;
   togglePanel("npc",true);
+  UI.npcbody.querySelectorAll("[data-talk]").forEach(b=>b.addEventListener("click",()=>{SFX.ui();openNPC(id,b.dataset.talk);}));
   if(id==="kaden"){fillSmith();fillReforge();fillSockets();}
   if(id==="vaun"){
     fillGambleShop();
     UI.npcbody.querySelectorAll("[data-stake]").forEach(b=>b.addEventListener("click",()=>{
-      gambleStake=+b.dataset.stake;openNPC("vaun");}));
+      gambleStake=+b.dataset.stake;openNPC("vaun",talkId);}));
     UI.npcbody.querySelectorAll("[data-bet]").forEach(b=>b.addEventListener("click",()=>playGamble(b.dataset.bet)));
   }
   UI.npcbody.querySelectorAll("[data-buy]").forEach(b=>b.addEventListener("click",()=>buyPotion(b.dataset.buy)));
   UI.npcbody.querySelectorAll("[data-recall]").forEach(b=>b.addEventListener("click",()=>{
     const n=identifyAll();
     if(!n){hint("没有想不起来的东西");return;}
+    ensureAch();P.stats.recalled=(P.stats.recalled||0)+n;
     SFX.loot();say(`<span style="color:#c8a24a">玛拉替你想起了 ${n} 件东西。</span>`);
-    renderBag();openNPC("mara");saveSoon();}));
+    renderBag();openNPC("mara",talkId);saveSoon();achCheck();}));
   UI.npcbody.querySelectorAll("[data-turn]").forEach(b=>b.addEventListener("click",()=>{
-    turnIn(QUESTS.find(x=>x.id===b.dataset.turn));openNPC("selin");}));
+    turnIn(QUESTS.find(x=>x.id===b.dataset.turn));openNPC("selin",talkId);}));
 }
 function reciteName(){
   const wasGone=P.nameForgotten;
   P.nameForgotten=false;refreshName();
+  ensureAch();P.stats.recited=(P.stats.recited||0)+1;
   SFX.quest();saveNow();
   if(wasGone){
-    say(`<span style="color:#ecd39a">你念出了自己的名字。塞琳会重新记起它——至少这几天。</span>`);
+    say(`<span style="color:#ecd39a">你念出了自己的名字。裂口这次没偷走。</span>`);
     if(QS.q3&&QS.q3.state==="done"&&P.flags&&P.flags.selinForgot)P.flags.selinRemember=true;
   }else{
     say(`<span style="color:#ecd39a">老人把「${P.name}」重新刻深了一遍。卷宗已写入。</span>`);
   }
+  achCheck();
   togglePanel("npc",false);
 }
 function buyPotion(k){
@@ -2071,8 +3127,9 @@ function doReforge(loc){
   const cost=reforgeCost(it);
   if(P.gold<cost){hint("金币不足");return;}
   P.gold-=cost;rollAffixes(it);it.reforged=(it.reforged||0)+1;
+  ensureAch();P.stats.reforged=(P.stats.reforged||0)+1;
   SFX.level();say(`重铸 <span style="color:${RARITY[it.rarity].c}">${it.name}</span>`);
-  afterSmith();
+  afterSmith();achCheck();
 }
 function fillSockets(){
   const box=$("socketbox");if(!box)return;
@@ -2130,8 +3187,9 @@ function doPunch(loc){
   const cost=punchCost(it);
   if(P.gold<cost){hint("金币不足");return;}
   P.gold-=cost;it.sockets=it.sockets||[];it.sockets.push(null);
+  ensureAch();P.stats.punched=(P.stats.punched||0)+1;
   SFX.ui();say(`给 <span style="color:${RARITY[it.rarity].c}">${it.name}</span> 开了一孔。`);
-  afterSmith();
+  afterSmith();achCheck();
 }
 function doSocketIn(loc,idx,bagI){
   const it=gearAt(loc),rune=P.bag[bagI];
@@ -2141,8 +3199,9 @@ function doSocketIn(loc,idx,bagI){
   if(it.sockets[idx]){hint("这个孔已经有符文了");return;}
   it.sockets[idx]={id:rune.runeId,n:rune.name,k:rune.k,v:rune.v};
   P.bag.splice(bagI,1);socketPick=null;
+  ensureAch();P.stats.socketed=(P.stats.socketed||0)+1;
   SFX.loot();say(`镶入 <span style="color:#e2c47f">${rune.name}</span>`);
-  afterSmith();
+  afterSmith();achCheck();
 }
 function doSocketOut(loc){
   const it=gearAt(loc);if(!it||!it.sockets)return;
@@ -2327,15 +3386,16 @@ function openBoard(){
   UI.npcbody.querySelectorAll("[data-bounty]").forEach(btn=>btn.addEventListener("click",()=>{
     const b=P.bountyList.find(x=>x.id===btn.dataset.bounty);
     if(!b||!bountyDone(b)||P.bountyClaimed[b.id])return;
-    P.bountyClaimed[b.id]=true;P.gold+=b.gold;gainXP(b.xp);
+    P.bountyClaimed[b.id]=true;P.gold+=b.gold;gainXP(b.xp);bumpGold(b.gold);
+    ensureAch();P.stats.bounties=(P.stats.bounties||0)+1;
     SFX.quest();say(`<span style="color:#e2c47f">悬赏完成：${b.n}</span>`);
-    saveSoon();openBoard();
+    saveSoon();openBoard();achCheck();
   }));
   const chest=UI.npcbody.querySelector("[data-chest]");
   if(chest)chest.addEventListener("click",()=>{
     P.bountyChest=true;
     const it=rollItem(Math.max(4,P.lvl+2),true);
-    P.gold+=220+P.lvl*18;
+    const g=220+P.lvl*18;P.gold+=g;bumpGold(g);noteLoot(it);
     if(addToBag(it))say(`日俸：<span style="color:${RARITY[it.rarity].c}">${it.name}</span> 与金币。`);
     else{
       const st=stashItems();
@@ -2343,31 +3403,33 @@ function openBoard(){
       else{P.gold+=sellPrice(it);say("箱子和行囊都满了，东西折成了金币。");}
     }
     SFX.level();
-    saveSoon();openBoard();renderBag();
+    saveSoon();openBoard();renderBag();achCheck();
   });
 }
 
 function openWaystone(){
   const n=NPCDEF.find(x=>x.id==="waystone");
-  const areas=Object.keys(AREA).filter(id=>id!=="town");
+  const cur=W.area&&W.area.id;
   let body=`<div class="npchead"><div class="av">${n.g}</div><div><div class="nn">${n.n}</div>
     <div class="nt">${n.t}</div></div></div>
-    <div class="dlg">"你走过的路，石头都记得。没走过的，它装瞎。"</div>
-    <div class="subttl">石桥镇 · 你在这里</div>`;
-  let any=false;
-  areas.forEach(id=>{
-    const a=AREA[id];
-    if(W.discovered[id]){
-      any=true;
-      body+=`<div class="dcard"><div class="dn">${a.n}</div>
-        <div class="dm">推荐等级 ${a.lvl} · 已探明</div>
-        <span class="act" data-warp="${id}">前往</span></div>`;
-    }else{
-      body+=`<div class="dcard" style="opacity:.45"><div class="dn">${a.n}</div>
-        <div class="dm">尚未探明 · 从大路走过去，石碑才会亮</div></div>`;
-    }
-  });
-  if(!any)body+=`<div class="subttl">还没有探明镇外的路。先出东边城门。</div>`;
+    <div class="dlg">"你走过的路，石头都记得。没走过的，它装瞎。"</div>`;
+  const block=(ids,title)=>{
+    body+=`<div class="subttl">${title}</div>`;
+    ids.forEach(id=>{
+      const a=AREA[id];
+      if(id===cur){body+=`<div class="dcard"><div class="dn">${a.n}</div><div class="dm">你在这里</div></div>`;return;}
+      if(W.discovered[id]){
+        body+=`<div class="dcard"><div class="dn">${a.n}</div>
+          <div class="dm">${a.kind==="town"?"第 "+(a.ch||1)+" 章据点":"推荐等级 "+a.lvl+" · 已探明"}</div>
+          <span class="act" data-warp="${id}">前往</span></div>`;
+      }else{
+        body+=`<div class="dcard" style="opacity:.45"><div class="dn">${a.n}</div>
+          <div class="dm">尚未探明 · 从大路走过去，石碑才会亮</div></div>`;
+      }
+    });
+  };
+  block(Object.keys(AREA).filter(id=>AREA[id].kind==="town"),"五章据点");
+  block(Object.keys(AREA).filter(id=>AREA[id].kind==="field"),"野外");
   UI.npcbody.innerHTML=body;
   togglePanel("npc",true);
   UI.npcbody.querySelectorAll("[data-warp]").forEach(b=>b.addEventListener("click",()=>{
@@ -2402,7 +3464,10 @@ function addMark(m){
 function useMark(m){
   SFX.portal();
   if(m.kind==="travel")enterArea(m.to);
-  else if(m.kind==="exit")confirmMark("离开","确定要离开这里、返回石桥镇吗？",()=>enterArea("town"));
+  else if(m.kind==="exit"){
+    const to=W.dun&&W.dun.from?W.dun.from:hubId(),nm=AREA[to]?AREA[to].n:hubName();
+    confirmMark("离开","确定要离开这里、前往"+nm+"吗？",()=>enterArea(to));
+  }
   else if(m.kind==="rift")openRiftPanel();
   else if(m.kind==="dungeon")openDungeonPanel(m.to);
   else if(m.kind==="next"){
@@ -2476,18 +3541,24 @@ function placePlayer(x,z){
 function setZoneLabel(n,l){UI.zoneN.textContent=n;UI.zoneL.textContent=l;}
 function enterArea(id){
   const a=AREA[id];
+  if(!a){hint("没有这条路");return;}
   clearTransient();clearEnemies();
   W.area=a;W.dun=null;W.discovered[id]=true;
   if(a.kind==="town"){
-    genTown();buildScene("town",a.pal,a);
+    P.hub=a.id;
+    genTown(a);buildScene("town",a.pal,a);
     spawnNPCs();refreshStock();
     const c=CFG.MAP>>1;
-    addMark({kind:"travel",to:"waste",label:"城门 · 落石荒原",x:wX(c+17),z:wX(c+3)});
-    addMark({kind:"rift",label:"裂隙入口",x:wX(c-4),z:wX(c+11)});
+    const slots=[[wX(c+17),wX(c+3)],[0,16],[-22,4],[18,-8]];
+    let si=0;
+    (a.exits||[]).forEach(ex=>{
+      if(ex.kind==="rift")addMark({kind:"rift",label:ex.label,x:wX(c-4),z:wX(c+11)});
+      else{const s=slots[si++]||slots[0];addMark({kind:"travel",to:ex.to,label:ex.label,x:s[0],z:s[1]});}
+    });
     applyPal(a.pal);
     placePlayer(wX(c),wX(c+5));
-    setZoneLabel("石桥镇","安全区");
-    say("你回到了石桥镇。");
+    setZoneLabel(a.n,"安全区 · 第 "+(a.ch||1)+" 章据点");
+    say("你到了"+a.n+"。");
   }else{
     genField(a);buildScene("field",a.pal,a);
     (a.marks||[]).forEach(m=>addMark(Object.assign({},m)));
@@ -2498,12 +3569,12 @@ function enterArea(id){
     setZoneLabel(a.n,"野外 · 推荐等级 "+a.lvl);
     say(`你进入了${a.n}。`);
   }
-  hint(a.n);renderTrack();saveSoon();
+  hint(a.n);renderTrack();achCheck();saveSoon();
 }
 function populateField(a){
   let made=0;
   // 散兵
-  for(let i=0;i<160&&made<30;i++){
+  for(let i=0;i<280&&made<32;i++){
     const x=rf(-52,52),z=rf(-52,52);
     if(!canStand(x,z,.7))continue;
     if(W.marks.some(m=>dist2(m.x,m.z,x,z)<81))continue;
@@ -2528,7 +3599,7 @@ function populateField(a){
       // §04 落石荒原 · 第一个精英必带「喊名字的」，头目掉半张纸
       if(i===0&&a.id==="waste"&&!leaderSet){
         leaderSet=true;en.shout=true;en.callName="谁来着";en.shoutCd=2.5;
-        en.name="精英 "+ETYPES[en.type].n+" · 喊名字的";
+        en.name="精英 "+ETYPES[en.type].n+" · 厉啸";
         if(!(P.flags&&P.flags.halfPaper)){en.campLeader=true;en.leaderRelic="halfpaper";}
       }
     }
@@ -2537,6 +3608,7 @@ function populateField(a){
 function enterRift(depth){
   clearTransient();clearEnemies();
   W.usedPot=false;
+  P.flags=P.flags||{};P.flags.enteredRift=true;
   W.area={kind:"rift",n:"裂隙 第 "+roman(depth)+" 层"};
   W.riftDepth=depth;W.riftDeepest=Math.max(W.riftDeepest,depth);W.dun=null;
   genRooms(0x5f3a^(depth*2654435761));
@@ -2557,20 +3629,21 @@ function enterRift(depth){
   const last=W.rooms[W.rooms.length-1];
   addMark({kind:"next",label:"通往第 "+(depth+1)+" 层",x:wX(last.cx),z:wX(last.cy)});
   const first=W.rooms[0];
-  addMark({kind:"exit",label:"返回石桥镇",x:wX(first.cx)+3,z:wX(first.cy)+3});
+  addMark({kind:"exit",label:"返回"+hubName(),x:wX(first.cx)+3,z:wX(first.cy)+3});
   placePlayer(wX(first.cx),wX(first.cy));
   setZoneLabel("裂隙 "+roman(depth),"无限地下层 · 怪物等级 "+lvl);
   hint("裂隙 第 "+roman(depth)+" 层");
   say(depth%3===0?`<span style="color:#c0392b">这一层有东西在等你。</span>`:`你下到裂隙第 ${depth} 层。`);
-  renderTrack();saveSoon();
+  renderTrack();achCheck();saveSoon();
 }
 function enterDungeon(id,floor){
   const d=dunById(id);
   clearTransient();clearEnemies();
   W.area={kind:"dungeon",n:d.n};W.dun=d;W.dunFloor=floor;
   genRooms(0xa11ce^(id.length*7919)^(floor*2654435761));
-  buildScene("dungeon",RIFT_PAL);buildDarkProps(W.group);
-  applyPal(RIFT_PAL);
+  const pal=DUN_PAL[d.pal]||RIFT_PAL;
+  buildScene("dungeon",pal);buildDarkProps(W.group);
+  applyPal(pal);
   const lvl=d.lvl+floor-1;
   const isLast=floor>=d.floors;
   W.rooms.forEach((r,idx)=>{
@@ -2586,7 +3659,7 @@ function enterDungeon(id,floor){
     // §05 哭嚎墓窖 · 塞克拉：两阶段 + 常驻「喊名字的」
     if(id==="crypt"){
       b.sekhra=true;b.phase=1;b.shout=true;b.callName="孩子";b.childName="莉赛尔";
-      b.shoutCd=3;b.name="白骨之王 · 塞克拉 · 还在找孩子的人";
+      b.shoutCd=3;b.name="白骨女王 · 塞克拉";
       b.skill="slam";b.ranged=false;b.range=3;b.speed=2.3; // 阶段一：掀地、近身、游走缓慢
     }
   }
@@ -2600,10 +3673,10 @@ function enterDungeon(id,floor){
   renderTrack();saveSoon();
 }
 function townPortal(){
-  if(W.area.kind==="town"){hint("你已经在石桥镇了");return;}
+  if(W.area.kind==="town"){hint("你已经在"+hubName()+"了");return;}
   if(P.casting)return;
   P.casting="town";P.castT=0;UI.cast.style.display="block";
-  say("正在开启回城传送门……");
+  say("正在开启通往"+hubName()+"的传送门……");
 }
 
 /* ═════════ 20. 输入 ═════════ */
@@ -2669,6 +3742,7 @@ window.addEventListener("keydown",e=>{
   else if(k==="i"){togglePanel("inv");renderTabs();}
   else if(k==="s"){togglePanel("sk");renderTabs();}
   else if(k==="j"){togglePanel("qs");renderTabs();}
+  else if(k==="y"){togglePanel("ach");renderTabs();}
   else if(k==="t")townPortal();
   else if(k==="escape"){
     const any=PANELS.some(id=>$(id).classList.contains("on"));
@@ -2695,7 +3769,7 @@ $("pause").addEventListener("click",e=>{if(e.target.id==="pause")setPause(false)
 $("xfer").addEventListener("click",e=>{if(e.target.id==="xfer")closeXfer();});
 $("respawn").addEventListener("click",()=>{
   $("dead").classList.remove("on");
-  P.alive=true;refreshMax(true);P.invuln=2;enterArea("town");saveNow();
+  P.alive=true;refreshMax(true);P.invuln=2;enterArea(hubId());saveNow();
 });
 function pickupNearby(){
   for(let i=W.items.length-1;i>=0;i--)
@@ -2703,7 +3777,7 @@ function pickupNearby(){
 }
 function takeItem(i){
   const it=W.items[i];
-  if(it.kind==="gold"){P.gold+=it.amt;SFX.gold();floatText(it.x,1.2,it.z,"+"+it.amt+" 金币","#f5c451",15);}
+  if(it.kind==="gold"){P.gold+=it.amt;bumpGold(it.amt);SFX.gold();floatText(it.x,1.2,it.z,"+"+it.amt+" 金币","#f5c451",15);}
   else if(it.kind==="potion"){if(it.pot==="hp")P.potHp++;else P.potMp++;SFX.loot();
     floatText(it.x,1.2,it.z,it.pot==="hp"?"治疗药水":"法力药水","#d0c0a0",14);}
   else if(it.kind==="relic"){collectRelic(it.relic);}
@@ -2711,7 +3785,7 @@ function takeItem(i){
     if(P.bag.length>=CFG.BAG){hint("行囊已满");return;}
     const g=it.item;
     if(isUnderground()&&g.type!=="rune")g.unknown=true;
-    P.bag.push(g);SFX.loot();
+    P.bag.push(g);noteLoot(g);SFX.loot();
     if(g.unknown){floatText(it.x,1.4,it.z,"想不起来的东西","#8a7f70",15);
       say(`拾取 <span style="color:#8a7f70">想不起来的东西</span>（回镇找玛拉回想，或用回想的纸条）`);}
     else{const r=RARITY[g.rarity]||RARITY[0];
@@ -2722,13 +3796,25 @@ function takeItem(i){
   W.group.remove(it.mesh);
   it.mesh.traverse(o=>{if(o.geometry&&o.geometry!==goldGeo&&o.geometry!==potGeo)o.geometry.dispose();});
   W.items.splice(i,1);
+  achCheck();
   saveSoon();
 }
 
 /* ═════════ 21. 更新 ═════════ */
 let camShake=0,repathBudget=0;
 function lerpAngle(a,b,t){const d=((b-a+Math.PI)%TAU+TAU)%TAU-Math.PI;return a+d*t;}
-function animateBody(m,walkPhase,atk){
+function animateBody(m,walkPhase,atk,dt){
+  if(m.rigged){
+    const moving=Math.abs(walkPhase-(m._lw==null?walkPhase:m._lw))>.05;m._lw=walkPhase;
+    let want=atk>0?"attack":(moving?"run":"idle");
+    if(!m.actions[want])want=m.actions.idle?"idle":m.cur; // 缺哪段回落到 idle
+    if(want&&want!==m.cur&&m.actions[want]){
+      if(m.cur&&m.actions[m.cur])m.actions[m.cur].fadeOut(.16);
+      m.actions[want].reset().fadeIn(.16).play();m.cur=want;
+    }
+    if(m.mixer)m.mixer.update(dt||.016);
+    return;
+  }
   const sw=Math.sin(walkPhase)*.55;
   if(m.beast){
     m.armL.rotation.x=sw;m.armR.rotation.x=-sw;m.legL.rotation.x=-sw;m.legR.rotation.x=sw;
@@ -2759,12 +3845,17 @@ function updatePlayer(dt){
   for(const k in P.buffs){P.buffs[k].t-=dt;if(P.buffs[k].t<=0)delete P.buffs[k];}
   if(P.shield>0){P.shieldT-=dt;if(P.shieldT<=0){P.shield=0;delete P.buffs.shield;}}
   const s=pStats(),cls=CLASSES[P.cls],inTown=W.area.kind==="town";
+  const gx=tX(P.x),gz=tZ(P.z),tp=(W.paint&&gx>=0&&gz>=0&&gx<CFG.MAP&&gz<CFG.MAP)?W.paint[gi(gx,gz)]:0;
+  if(W.area&&W.area.hz==="ice"&&tp===5){
+    W.hzAcc=(W.hzAcc||0)+dt;
+    if(W.hzAcc>.45){W.hzAcc=0;P.hp=Math.max(1,P.hp-5);floatText(P.x,2.2,P.z,"薄冰","#9fd4ff",12);}
+  }else W.hzAcc=0;
   P.hp=clamp(P.hp+dt*(.6+P.lvl*.14)*(inTown?8:1),0,P.hpMax);
   P.mp=clamp(P.mp+dt*(1.4+s.ene*.09)*(inTown?8:1),0,P.mpMax);
 
   if(P.casting==="town"){
     P.castT+=dt;UI.castf.style.width=clamp(P.castT/2.5*100,0,100)+"%";
-    if(P.castT>=2.5){P.casting=null;UI.cast.style.display="none";enterArea("town");return;}
+    if(P.castT>=2.5){P.casting=null;UI.cast.style.display="none";enterArea(hubId());return;}
   }
   // 旋风斩引导
   if(P.channel){
@@ -2808,7 +3899,7 @@ function updatePlayer(dt){
   if(P.path.length&&!P.channel){
     const n=P.path[0],dx=n.x-P.x,dz=n.z-P.z,d=Math.hypot(dx,dz);
     if(d<.28)P.path.shift();
-    else{const sp=s.speed*dt;moveEntity(P,P.x+dx/d*sp,P.z+dz/d*sp);P.dir=Math.atan2(dx,dz);P.anim.walk+=dt*10;}
+    else{const sp=s.speed*dt*(tp===5?.64:1);moveEntity(P,P.x+dx/d*sp,P.z+dz/d*sp);P.dir=Math.atan2(dx,dz);P.anim.walk+=dt*10;}
   }else P.anim.walk=lerp(P.anim.walk,0,dt*8);
 
   if(P.npcTarget&&dist2(P.npcTarget.x,P.npcTarget.z,P.x,P.z)<3.4*3.4){
@@ -2830,8 +3921,10 @@ function updatePlayer(dt){
   const m=pModel;
   m.group.position.set(P.x,0,P.z);
   if(!P.channel)m.group.rotation.y=lerpAngle(m.group.rotation.y,P.dir,.25);
-  animateBody(m,P.anim.walk,P.anim.atk);
-  m.torso.material.color.setHex(P.hitFlash>0?0xff8080:(P.invuln>0?0xa0d8ff:playerLook().body));
+  animateBody(m,P.anim.walk,P.anim.atk,dt);
+  // 受击/无敌染色：几何体用本体色，GLB 骨架平时用纯白不污染贴图
+  const tint=P.hitFlash>0?0xff8080:(P.invuln>0?0xa0d8ff:(m.rigged?0xffffff:playerLook().body));
+  if(m.torso&&m.torso.material&&m.torso.material.color)m.torso.material.color.setHex(tint);
 }
 function updateEnemies(dt){
   repathBudget=5;
@@ -2872,8 +3965,7 @@ function updateEnemies(dt){
       e.phase=2;e.speed*=1.4;e.shoutCd=0;
       floatText(e.x,5,e.z,"“"+e.childName+"”","#ffe6a0",30);
       ringFX(e.x,e.z,10,0xfff0a0,3);camShake=.8;SFX.boom();
-      say(`<span style="color:#ecd39a">塞克拉停下了。她说出了那个名字——「${e.childName}」。全屏震荡。</span>`);
-      say(`<span style="color:#8a7f70">她想起来了。此后她不再游走，只朝你来。</span>`);
+      say(`<span style="color:#ecd39a">塞克拉喊出「${e.childName}」。她不再找了，朝你冲过来。</span>`);
     }
 
     // 「喊名字的」词缀：周期性大喊，唤醒周围沉睡的死者
@@ -2960,7 +4052,7 @@ function updateEnemies(dt){
 
     m.group.position.set(e.x,0,e.z);
     m.group.rotation.y=lerpAngle(m.group.rotation.y,e.dir,.2);
-    animateBody(m,e.anim.walk,e.anim.atk);
+    animateBody(m,e.anim.walk,e.anim.atk,dt);
     m.torso.material.color.setHex(e.hitFlash>0?0xffffff:ETYPES[e.type].body);
     if(e.bar.group.visible){
       e.bar.fill.scale.x=clamp(e.hp/e.hpMax,0,1);
@@ -3170,8 +4262,11 @@ function drawMinimap(){
   for(let y=-R;y<R;y++)for(let x=-R;x<R;x++){
     const gx=px+x,gy=pz+y;
     if(gx<0||gy<0||gx>=CFG.MAP||gy>=CFG.MAP)continue;
-    if(!W.explored[gi(gx,gy)]||W.grid[gi(gx,gy)]!==1)continue;
-    c.fillStyle=floorCol;c.fillRect((x+R)*cell,(y+R)*cell,cell+.6,cell+.6);
+    if(!W.explored[gi(gx,gy)])continue;
+    const cellG=W.grid[gi(gx,gy)],p=W.paint?W.paint[gi(gx,gy)]:1;
+    if(cellG!==1&&p!==9&&p!==10&&p!==11)continue;
+    c.fillStyle=p===9?"#1a4058":p===10?"#c04018":p===11?"#8eb4c8":p===2?"#5a5344":p===3?"#6a6458":p===4?"#2a3a24":p===5?"#9bb8c8":p===6?"#4a2a22":p===7?"#8a7a52":floorCol;
+    c.fillRect((x+R)*cell,(y+R)*cell,cell+.6,cell+.6);
   }
   const dot=(wx,wz,col,sz)=>{
     const dx=(tX(wx)-px+R)*cell,dy=(tZ(wz)-pz+R)*cell;
@@ -3218,13 +4313,15 @@ function serializePlayer(){
     kills:P.kills,eliteKills:P.eliteKills,bossKills:P.bossKills,
     killByType:Object.assign({},P.killByType),cleared:Object.assign({},P.cleared),
     quests:JSON.parse(JSON.stringify(QS)),riftDeepest:W.riftDeepest,
-    discovered:Object.assign({},W.discovered),itemSeq:itemSeq,lastArea:"town",
+    discovered:Object.assign({},W.discovered),itemSeq:itemSeq,lastArea:hubId(),hub:hubId(),
     bountyDay:P.bountyDay||"",bountyList:P.bountyList||[],bountyClaimed:Object.assign({},P.bountyClaimed||{}),
     bountyChest:!!P.bountyChest,bountyPotless:P.bountyPotless||0,bountyDun:Object.assign({},P.bountyDun||{}),
     trackId:P.trackId||"",
     nameForgotten:!!P.nameForgotten,recallNotes:P.recallNotes||0,
     codex:JSON.parse(JSON.stringify(P.codex||[])),relics:JSON.parse(JSON.stringify(P.relics||[])),
-    flags:Object.assign({},P.flags||{})
+    flags:Object.assign({},P.flags||{}),
+    ach:Object.assign({},P.ach||{}),
+    stats:Object.assign({},P.stats||{})
   };
 }
 function applySave(d){
@@ -3256,6 +4353,7 @@ function applySave(d){
   }
   W.riftDeepest=Math.max(1,n(d.riftDeepest)||1);
   W.discovered=d.discovered&&typeof d.discovered==="object"?d.discovered:{town:true};
+  P.hub=d.hub&&AREA[d.hub]&&AREA[d.hub].kind==="town"?d.hub:"town";
   P.bountyDay=d.bountyDay||"";P.bountyList=Array.isArray(d.bountyList)?d.bountyList:[];
   P.bountyClaimed=d.bountyClaimed&&typeof d.bountyClaimed==="object"?d.bountyClaimed:{};
   P.bountyChest=!!d.bountyChest;P.bountyPotless=n(d.bountyPotless);
@@ -3265,6 +4363,9 @@ function applySave(d){
   P.codex=Array.isArray(d.codex)?d.codex.filter(c=>c&&typeof c==="object"):[];
   P.relics=Array.isArray(d.relics)?d.relics.filter(c=>c&&typeof c==="object"):[];
   P.flags=d.flags&&typeof d.flags==="object"?d.flags:{};
+  P.ach=d.ach&&typeof d.ach==="object"?Object.assign({},d.ach):{};
+  P.stats=d.stats&&typeof d.stats==="object"?Object.assign({},d.stats):{};
+  ensureAch();
   P.bag.forEach(it=>{if(it&&it.unknown!==undefined)it.unknown=!!it.unknown;});
   itemSeq=Math.max(itemSeq,n(d.itemSeq));
   P.bag.forEach(it=>{ensureGear(it);if(it.id>itemSeq)itemSeq=it.id;});
@@ -3275,6 +4376,7 @@ function applySave(d){
   refreshMax(false);
   P.hp=clamp(d.hp==null?P.hpMax:n(d.hp),1,P.hpMax);
   P.mp=clamp(d.mp==null?P.mpMax:n(d.mp),0,P.mpMax);
+  achCheck(true);
   return true;
 }
 function markSaved(){
@@ -3295,7 +4397,7 @@ function setPause(on){
   $("pause").classList.toggle("on",!!on);
   if(on){
     PANELS.forEach(p=>togglePanel(p,false));pickSkill=null;renderBarUI();renderTabs();
-    $("pause-meta").textContent=P.name+" · "+CLASSES[P.cls].n+" · 等级 "+P.lvl+" · 槽 "+(saveSlot+1);
+    $("pause-meta").textContent=P.name+" · "+CLASSES[P.cls].n+" · 等级 "+P.lvl+" · 功绩 "+achDoneN()+"/"+ACH.length+" · 槽 "+(saveSlot+1);
   }
 }
 function closeXfer(){$("xfer").classList.remove("on");}
@@ -3325,15 +4427,16 @@ function startNew(name,cls){
   const first=SKILLS.find(s=>s.cls===cls&&s.req===1);
   P.ranks[first.id]=1;P.barSkills[0]=first.id;P.skPts=0;
   P.bountyDun={};P.bountyPotless=0;P.bountyDay="";P.bountyList=[];P.bountyClaimed={};P.bountyChest=false;
-  P.trackId="q1";qSel="q1";
+  P.ach={};P.stats={deaths:0,goldLooted:0,maxRarity:0,reforged:0,punched:0,socketed:0,recalled:0,recited:0,bounties:0};
+  P.trackId="q1";qSel="q1";P.hub="town";
   stashItems().forEach(it=>{if(it&&it.id>itemSeq)itemSeq=it.id;});
   refreshMax(true);rebuildPlayer();
   renderBarUI();renderTabs();renderQuests();renderTrack();renderChar();renderBag();renderSkills();
   enterArea("town");
   ensureBounties();
   P.hp=P.hpMax;P.mp=P.mpMax;
-  say(`雨刚停，你走过石桥进了镇子。桥头老人把「<b style="color:#ecd39a">${P.name}</b>」刻上了木牌——"这镇子留不住东西，回来这儿念一遍就想得起。"`);
-  setTimeout(()=>say(`你以<b style="color:#e2c47f">${c.n}</b>的身份醒来。往北去找执政官塞琳领第一份委托。`),1200);
+  say(`镇子建在一道裂口上。桥头把「<b style="color:#ecd39a">${P.name}</b>」刻上了木牌——裂口爱偷这个。`);
+  setTimeout(()=>say(`你以<b style="color:#e2c47f">${c.n}</b>的身份进了镇。去广场北面找塞琳领活。`),1200);
 }
 function bootFromMenu(){
   const boot=GloamSave.getBoot();
@@ -3349,7 +4452,7 @@ function bootFromMenu(){
     refreshName();
     rebuildPlayer();
     renderBarUI();renderTabs();renderQuests();renderTrack();renderChar();renderBag();renderSkills();
-    enterArea("town");
+    enterArea(hubId());
     ensureBounties();
     if((data.hp||0)<=0){P.hp=P.hpMax;P.mp=P.mpMax;}
     else{
@@ -3366,11 +4469,17 @@ if(!bootFromMenu())return;
 booting=false;saveNow(true);
 $("veil").classList.add("off");
 SFX.portal();
+// 资产清单后台载入：拿到后把当前方块玩家换成 GLB 骨架（失败则维持方块，游戏照跑）
+AssetRegistry.boot().then(()=>{
+  const kind="char_"+P.cls;
+  if(AssetRegistry.ready&&AssetRegistry.manifest&&AssetRegistry.manifest[kind])
+    AssetRegistry.load(kind).then(rec=>{if(rec&&rec.scene)rebuildPlayer();});
+});
 loop();
 setInterval(()=>saveNow(true),60000);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)saveNow(true);});
 window.addEventListener("beforeunload",()=>saveNow(true));
-window.__GLOAMTEST={openNPC,P,pStats,rollItem,rollRune,rollAffixes,reforgeCost,punchCost,maxSockets,ensureGear,doReforge,doPunch,doSocketIn,doSocketOut,gearAt};
+window.__GLOAMTEST={openNPC,P,pStats,rollItem,rollRune,rollAffixes,reforgeCost,punchCost,maxSockets,ensureGear,doReforge,doPunch,doSocketIn,doSocketOut,gearAt,ACH,achCheck,unlockAch,ensureAch,togglePanel,achDoneN};
 })();
 </script>
 </body>

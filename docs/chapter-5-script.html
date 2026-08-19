@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>幽影深渊 · 第五章剧本</title>
+<style>
+:root{
+  --ink:#0e1116; --slate:#161a21; --slate-2:#1b2028; --line:#2b3240;
+  --iron:#7d8794; --iron-hi:#b4bfcc;
+  --brass:#c39a4e; --brass-hi:#ecd39a; --bone:#cfc7b4; --ash:#8b8477;
+  --blood:#a83a2b; --ember:#d1622f; --verdigris:#579587; --violet:#8a6ad0;
+  --ok:#5f9e86; --part:#c39a4e; --gap:#a83a2b;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,"Songti SC",serif;
+  --sans:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Courier New",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--bone);font-family:var(--sans);font-size:15px;line-height:1.78;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 66% 38% at 50% -8%,rgba(180,72,58,.14),transparent 66%)}
+.wrap{position:relative;z-index:1;max-width:1150px;margin:0 auto;padding:0 28px 130px}
+header{padding:78px 0 46px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.34em;color:var(--iron);text-transform:uppercase}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(38px,6.4vw,70px);line-height:1.02;color:#f2e8d2;margin:18px 0 0}
+h1 em{font-style:italic;color:var(--brass-hi)}
+.sub{margin-top:20px;max-width:700px;color:var(--ash);font-size:15.5px}
+.meta{display:flex;flex-wrap:wrap;gap:26px;margin-top:30px;font-family:var(--mono);font-size:11.5px;color:var(--ash)}
+.meta b{color:var(--bone);font-weight:400}
+nav.docs{display:flex;gap:2px;margin-top:34px;flex-wrap:wrap}
+nav.docs a{font-family:var(--mono);font-size:11px;letter-spacing:.14em;padding:9px 16px;color:var(--ash);
+  border:1px solid var(--line);text-decoration:none;transition:.16s}
+nav.docs a:hover{color:var(--brass-hi);border-color:var(--brass)}
+nav.docs a[aria-current]{color:#0e1116;background:var(--iron-hi);border-color:var(--iron-hi)}
+section{padding-top:74px}
+.shead{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--line);padding-bottom:12px}
+.snum{font-family:var(--mono);font-size:11px;color:var(--iron);letter-spacing:.2em}
+h2{font-family:var(--serif);font-weight:400;font-size:29px;color:#f2e8d2}
+.lede{margin-top:20px;max-width:810px;color:#b7b0a0}
+h3{font-family:var(--serif);font-weight:400;font-size:21px;color:var(--brass-hi);margin:40px 0 12px}
+h4.sub-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;color:var(--iron);margin:26px 0 10px;font-weight:400}
+p+p{margin-top:13px}
+code{font-family:var(--mono);font-size:.88em;color:var(--brass-hi);background:#11151c;padding:1px 5px;border:1px solid var(--line)}
+
+.plate{margin-top:26px;background:#0b0e13;border:1px solid var(--line);padding:22px 20px 16px}
+.plate svg{display:block;width:100%;height:auto}
+.plate-cap{margin-top:14px;font-family:var(--mono);font-size:11px;color:#5f6a78;line-height:1.9}
+
+table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13.5px}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--iron);
+  text-align:left;padding:9px 12px;border-bottom:1px solid var(--iron);font-weight:400;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:#b7b0a0}
+td:first-child{color:var(--bone)}
+tbody tr:hover td{background:#141821}
+.num{font-family:var(--mono);font-size:12.5px;color:var(--brass-hi);white-space:nowrap}
+.st{font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:2px 8px;border:1px solid currentColor;white-space:nowrap}
+.s-ok{color:var(--ok)}.s-part{color:var(--part)}.s-gap{color:var(--gap)}.s-no{color:#5f6a78}
+
+.beat{border-top:1px solid var(--line);padding:28px 0}
+.beat:last-of-type{border-bottom:1px solid var(--line)}
+.beat-hd{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.beat-hd .rank{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--verdigris)}
+.beat-hd h4{font-family:var(--serif);font-weight:400;font-size:23px;color:#f2e8d2}
+.beat-hd .loc{font-family:var(--mono);font-size:10.5px;color:#6f7a88;border:1px solid var(--line);padding:2px 8px}
+.beat-hd .est{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ash)}
+.beat p{margin-top:11px;max-width:850px;color:#a9a291;font-size:14.2px}
+.beat .lore{margin-top:14px;border-left:2px solid var(--verdigris);padding:3px 0 3px 16px;
+  font-size:13.8px;color:#9db5ab}
+.beat .lore b{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--verdigris);
+  display:block;margin-bottom:4px;font-weight:400}
+
+.script{margin-top:18px;border-left:2px solid var(--line);padding-left:18px}
+.script .who{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--brass);margin-top:14px}
+.script .line{color:#c8c1af;font-size:14.4px;margin-top:2px}
+.script .stage{color:#6f7a88;font-size:13px;font-style:italic;margin-top:10px}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:16px}
+.grid2 h5{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--brass);margin-bottom:8px}
+.grid2 ul{margin-left:16px;font-size:13.4px;color:#a9a291}
+.grid2 li{margin-top:5px}
+.note{margin-top:24px;border-left:2px solid var(--iron);padding:4px 0 4px 18px;color:#a9a291;font-size:14px}
+.warnbox{margin-top:24px;border-left:2px solid var(--blood);padding:4px 0 4px 18px;color:#a9a291;font-size:14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:1px;margin-top:26px;
+  background:var(--line);border:1px solid var(--line)}
+.card{background:var(--slate);padding:20px}
+.card h4{font-family:var(--serif);font-weight:400;font-size:18px;color:#f2e8d2}
+.card .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--brass);margin-bottom:9px}
+.card p{font-size:13.5px;color:#a9a291;margin-top:8px}
+footer{margin-top:100px;padding-top:26px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;color:#5f5a50;letter-spacing:.1em}
+@media (max-width:760px){.wrap{padding:0 18px 90px}.grid2{grid-template-columns:1fr}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">卷宗 八 · 第五章</div>
+  <h1>最底下那个要出来<br><em>按回去，拔掉，或换办法</em></h1>
+  <p class="sub">垂直井道，七根钉子一闪而过。最底下柯尔在挣脱。血条是倒的——涨满镇子塌。三种打法，选一种打完。</p>
+  <div class="meta">
+    <span>去哪 <b>桥墩井道 · 钉底</b></span>
+    <span>杀谁 <b>柯尔</b></span>
+    <span>等级 <b>65 → 80</b></span>
+    <span>结局 <b>续 / 拔 / 众议重开</b></span>
+  </div>
+  <nav class="docs">
+    <a href="world-map-design.html">一 · 世界测绘</a>
+    <a href="art-asset-plan.html">二 · 美术资源</a>
+    <a href="content-roadmap.html">三 · 内容扩展</a>
+    <a href="chapter-1-script.html">四 · 第一章</a>
+    <a href="chapter-2-script.html">五 · 第二章</a>
+    <a href="chapter-3-script.html">六 · 第三章</a>
+    <a href="chapter-4-script.html">七 · 第四章</a>
+    <a href="#" aria-current="page">八 · 第五章</a>
+    <a href="difficulty-worldboss.html">九 · 难度与世界首领</a>
+    <a href="boss-loot-design.html">十 · 首领与掉落</a>
+    <a href="diablo-gap-analysis.html">十一 · 对标暗黑</a>
+  </nav>
+</header>
+
+<section>
+  <div class="shead"><span class="snum">§ 01</span><h2>这一幕干什么</h2></div>
+  <p class="lede">一直往下。路过七个被钉住的人，每人一句狠的，不停。到最底层：一个很小的人形在石浆里扭。他要出来。你要在他出来之前做完选择。</p>
+  <div class="cards">
+    <div class="card"><div class="k">结局 A · 续</div><h4>按回去，再钉一根</h4><p>默认能打。把他的挣脱条打空。塞琳下去顶上。三年平安，以后还会裂。暗黑式「你赢了，但没根治」。</p></div>
+    <div class="card"><div class="k">结局 B · 拔</div><h4>楔子，全拔掉</h4><p>需要卡登那把楔子。对桥墩用。裂口合上，地不再长东西，镇子迁走。爽、绝、世界变空。</p></div>
+    <div class="card"><div class="k">结局 C · 换</div><h4>全镇一起顶住</h4><p>需要玛拉的药 + 把唱法带回镇上 + 前三章的三件证物。战斗中<b>不攻击</b>撑满三分钟。不再钉人，晚上会做梦。难解锁，给重玩。</p></div>
+  </div>
+</section>
+<section>
+  <div class="shead"><span class="snum">§ 02</span><h2>打法要狠的地方</h2></div>
+  <div class="beat">
+    <div class="beat-hd"><span class="rank">终局</span><h4>柯尔 · 挣脱</h4><span class="loc">钉底</span><span class="est">倒计血条</span></div>
+    <p>他不主动砍你，他在挣。条会自己涨。打他 = 往下压（结局 A）。对柱子用楔子（结局 B）。站桩不打、让全镇唱（结局 C）。过 70% 全场晃，他说想看看天。涨满 = 团灭、镇子陷。</p>
+  </div>
+  <div class="script">
+    <div class="who">柯尔</div>
+    <div class="line">"你叫什么？记着。下面最先没的就是这个。"</div>
+    <div class="line">"别拦我。三百年了。我想出去。"</div>
+  </div>
+  <div class="note">三种结局不要嘲讽玩家。选了就播完，允许读档到门口重选。任务名就叫「钉底」，不要叫「记得自己的名字」。</div>
+  <p style="margin-top:40px"><a href="chapter-4-script.html">← 第四章</a>　<a href="chapter-1-script.html">回到第一章</a></p>
+</section>
+
+<footer>幽影深渊 · 卷宗八 / 第五章　—　钉底 · 三种打法结束裂口</footer>
+</div>
+</body>
+</html>

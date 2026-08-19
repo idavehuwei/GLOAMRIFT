@@ -108,9 +108,9 @@ footer{margin-top:100px;padding-top:26px;border-top:1px solid var(--line);
 <div class="wrap">
 
 <header>
-  <div class="eyebrow">卷宗 六 · 系统与剧本</div>
+  <div class="eyebrow">卷宗 九 · 难度与世界首领</div>
   <h1>三　周　目<br><em>同一张地图，不同的时候</em></h1>
-  <p class="sub">难度不做成"怪血更厚"。按设定一——往下走就是往回走——三个难度是三个<b>时间位置</b>：第一遍是现在，第二遍是你造成的后果，第三遍是你已经在里面了。</p>
+  <p class="sub">难度不做成「怪血更厚」。三个难度是三遍同一条裂口：第一遍把它打回去，第二遍看它怎么反扑，第三遍你已经站在最底下。</p>
   <div class="meta">
     <span>普通 <b>1 – 60</b></span>
     <span>地狱 <b>60 – 80</b></span>
@@ -123,8 +123,13 @@ footer{margin-top:100px;padding-top:26px;border-top:1px solid var(--line);
     <a href="art-asset-plan.html">二 · 美术资源</a>
     <a href="content-roadmap.html">三 · 内容扩展</a>
     <a href="chapter-1-script.html">四 · 第一章</a>
-    <a href="chapter-2-5-script.html">五 · 第二至五章</a>
-    <a href="#" aria-current="page">六 · 难度与世界首领</a>
+    <a href="chapter-2-script.html">五 · 第二章</a>
+    <a href="chapter-3-script.html">六 · 第三章</a>
+    <a href="chapter-4-script.html">七 · 第四章</a>
+    <a href="chapter-5-script.html">八 · 第五章</a>
+    <a href="#" aria-current="page">九 · 难度与世界首领</a>
+    <a href="boss-loot-design.html">十 · 首领与掉落</a>
+    <a href="diablo-gap-analysis.html">十一 · 对标暗黑</a>
   </nav>
 </header>
 
@@ -231,11 +236,11 @@ footer{margin-top:100px;padding-top:26px;border-top:1px solid var(--line);
   <table>
     <thead><tr><th>章</th><th>标题</th><th>原等级带</th><th>新等级带（普通）</th><th>地狱回响</th><th>噩梦回响</th></tr></thead>
     <tbody>
-      <tr><td class="num">一</td><td>钉子</td><td class="num">1 – 20</td><td class="num">1 – 12</td><td class="num">60 – 64</td><td class="num">80 – 84</td></tr>
-      <tr><td class="num">二</td><td>第八根</td><td class="num">20 – 35</td><td class="num">12 – 24</td><td class="num">64 – 68</td><td class="num">84 – 88</td></tr>
-      <tr><td class="num">三</td><td>海不认账</td><td class="num">35 – 50</td><td class="num">24 – 36</td><td class="num">68 – 72</td><td class="num">88 – 92</td></tr>
-      <tr><td class="num">四</td><td>众议既定</td><td class="num">50 – 65</td><td class="num">36 – 48</td><td class="num">72 – 76</td><td class="num">92 – 96</td></tr>
-      <tr><td class="num">五</td><td>记得自己的名字</td><td class="num">65 – 80</td><td class="num">48 – 60</td><td class="num">76 – 80</td><td class="num">96 – 100</td></tr>
+      <tr><td class="num">一</td><td>墓窖 · 砍塞克拉</td><td class="num">1 – 20</td><td class="num">1 – 12</td><td class="num">60 – 64</td><td class="num">80 – 84</td></tr>
+      <tr><td class="num">二</td><td>北境 · 砸钟</td><td class="num">20 – 35</td><td class="num">12 – 24</td><td class="num">64 – 68</td><td class="num">84 – 88</td></tr>
+      <tr><td class="num">三</td><td>海岸 · 杀格雷</td><td class="num">35 – 50</td><td class="num">24 – 36</td><td class="num">68 – 72</td><td class="num">88 – 92</td></tr>
+      <tr><td class="num">四</td><td>裂口 · 打哑众议</td><td class="num">50 – 65</td><td class="num">36 – 48</td><td class="num">72 – 76</td><td class="num">92 – 96</td></tr>
+      <tr><td class="num">五</td><td>钉底 · 柯尔</td><td class="num">65 – 80</td><td class="num">48 – 60</td><td class="num">76 – 80</td><td class="num">96 – 100</td></tr>
     </tbody>
   </table>
 
@@ -251,7 +256,7 @@ footer{margin-top:100px;padding-top:26px;border-top:1px solid var(--line);
     <thead><tr><th>普通难度结局</th><th>地狱开场的石桥镇</th><th>关键差异</th></tr></thead>
     <tbody>
       <tr><td><span class="tag t-n">A · 续</span></td>
-        <td>三年后。塞琳不在了（第八根是她）。镇上有新的记账人——那个人是你。</td>
+        <td>三年后。塞琳下去把裂口按回去了。镇上有新的派活人——那个人是你。</td>
         <td>你成了执政官。NPC 对你的称呼全部改变；账本面板归你管，你要决定第九根写谁</td></tr>
       <tr><td><span class="tag t-n">B · 拔</span></td>
         <td>迁镇途中。石桥镇空了，帐篷扎在西边二十里。井是干的，田不长东西。</td>
@@ -578,7 +583,7 @@ e.xp    = Math.round(t.xp * mult * D.xp);
   <div class="note">优先级判断：<b>世界首领可以提前做</b>（v3.4，不依赖剧情），因为它给普通难度的中后期提供了明确的追求目标；而地狱与噩梦必须等五章主线全部完成——它们的全部叙事重量都建立在"你上次做了什么"之上，主线没走完，这个前提不存在。</div>
 </section>
 
-<footer>幽影深渊 · 卷宗六 / 难度分层与世界首领　—　三周目共约 60 小时主线，世界首领常驻</footer>
+<footer>幽影深渊 · 卷宗九 / 难度分层与世界首领　—　三周目共约 60 小时主线，世界首领常驻</footer>
 </div>
 </body>
 </html>
