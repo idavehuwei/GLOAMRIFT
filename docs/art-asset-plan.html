@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>幽影深渊 · 美术资源整合计划</title>
+<style>
+:root{
+  --ink:#0e1116; --slate:#161a21; --slate-2:#1d222b; --line:#2b3240;
+  --parch:#e9e0c9; --parch-2:#ddd2b6; --parch-line:#b3a785;
+  --brass:#c39a4e; --brass-hi:#ecd39a; --bone:#cfc7b4; --ash:#8b8477;
+  --blood:#a83a2b; --verdigris:#579587; --violet:#8a6ad0;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,"Songti SC",serif;
+  --sans:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Courier New",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--bone);font-family:var(--sans);font-size:15px;line-height:1.75;
+  -webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(87,149,135,.10),transparent 70%)}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 28px 120px}
+header{padding:74px 0 46px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.34em;color:var(--verdigris);text-transform:uppercase}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(38px,6vw,68px);line-height:1.04;color:#f2e8d2;
+  margin:16px 0 0}
+h1 em{font-style:italic;color:var(--brass-hi)}
+.sub{margin-top:18px;max-width:660px;color:var(--ash);font-size:15.5px}
+.meta{display:flex;flex-wrap:wrap;gap:26px;margin-top:30px;font-family:var(--mono);font-size:11.5px;color:var(--ash)}
+.meta b{color:var(--bone);font-weight:400}
+nav.docs{display:flex;gap:2px;margin-top:34px;flex-wrap:wrap}
+nav.docs a{font-family:var(--mono);font-size:11px;letter-spacing:.14em;padding:9px 16px;color:var(--ash);
+  border:1px solid var(--line);text-decoration:none;transition:.16s}
+nav.docs a:hover{color:var(--brass-hi);border-color:var(--brass)}
+nav.docs a[aria-current]{color:#0e1116;background:var(--verdigris);border-color:var(--verdigris)}
+section{padding-top:72px}
+.shead{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--line);padding-bottom:12px}
+.snum{font-family:var(--mono);font-size:11px;color:var(--verdigris);letter-spacing:.2em}
+h2{font-family:var(--serif);font-weight:400;font-size:29px;color:#f2e8d2}
+.lede{margin-top:20px;max-width:780px;color:#b7b0a0}
+h3{font-family:var(--serif);font-weight:400;font-size:20px;color:var(--brass-hi);margin:38px 0 12px}
+p+p{margin-top:12px}
+code{font-family:var(--mono);font-size:.88em;color:var(--brass-hi);background:#11151c;padding:1px 5px;border:1px solid var(--line)}
+.plate{margin-top:26px;background:linear-gradient(160deg,var(--parch),var(--parch-2));
+  border:1px solid #6d6349;box-shadow:0 22px 60px rgba(0,0,0,.55)}
+.plate-hd{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;
+  padding:16px 20px 12px;border-bottom:1px solid var(--parch-line)}
+.plate-ttl{font-family:var(--serif);font-size:19px;color:#2c2820}
+.plate-ttl small{font-family:var(--mono);font-size:11px;color:#6f6853;letter-spacing:.1em;margin-left:10px}
+.plate-note{font-family:var(--mono);font-size:11.5px;color:#5c5442}
+.plate svg{display:block;width:100%;height:auto}
+table{width:100%;border-collapse:collapse;margin-top:22px;font-size:13.5px}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--verdigris);
+  text-align:left;padding:9px 12px;border-bottom:1px solid var(--verdigris);font-weight:400;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:#b7b0a0}
+td:first-child{color:var(--bone)}
+tbody tr:hover td{background:#141821}
+.num{font-family:var(--mono);font-size:12.5px;color:var(--brass-hi);white-space:nowrap}
+.tag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:2px 7px;border:1px solid currentColor;white-space:nowrap}
+.p0{color:var(--blood)}.p1{color:var(--brass)}.p2{color:var(--ash)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:1px;margin-top:26px;
+  background:var(--line);border:1px solid var(--line)}
+.card{background:var(--slate);padding:20px}
+.card h4{font-family:var(--serif);font-weight:400;font-size:17px;color:#f2e8d2}
+.card .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--verdigris);margin-bottom:9px}
+.card p{font-size:13.5px;color:#a9a291;margin-top:8px}
+.card ul{margin:10px 0 0 16px;font-size:13px;color:#a9a291}
+.card li{margin-top:5px}
+pre{margin-top:18px;background:#11151c;border:1px solid var(--line);padding:18px;overflow-x:auto;
+  font-family:var(--mono);font-size:12.4px;line-height:1.85;color:#b7b0a0}
+pre .c{color:#5f6b57}pre .k{color:var(--brass)}pre .s{color:var(--verdigris)}
+.note{margin-top:24px;border-left:2px solid var(--verdigris);padding:4px 0 4px 18px;color:#a9a291;font-size:14px}
+.phase{display:grid;grid-template-columns:120px 1fr;gap:0;border-top:1px solid var(--line)}
+.phase:last-of-type{border-bottom:1px solid var(--line)}
+.phase-k{padding:22px 18px 22px 0;border-right:1px solid var(--line)}
+.phase-k .pn{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--verdigris)}
+.phase-k .pw{font-family:var(--serif);font-size:26px;color:#f2e8d2;margin-top:4px}
+.phase-b{padding:22px 0 22px 22px}
+.phase-b h4{font-family:var(--serif);font-weight:400;font-size:19px;color:var(--brass-hi)}
+.phase-b p{font-size:14px;color:#a9a291;margin-top:8px;max-width:720px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip{font-family:var(--mono);font-size:10.5px;padding:3px 9px;border:1px solid var(--line);color:#8b8477}
+footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;color:#5f5a50;letter-spacing:.1em}
+@media (max-width:720px){.wrap{padding:0 18px 80px}.phase{grid-template-columns:1fr}
+  .phase-k{border-right:none;border-bottom:1px solid var(--line);padding-bottom:12px}
+  .phase-b{padding-left:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">卷宗 二 / 共 三</div>
+  <h1>从几何体<em>到资产</em><br>美术整合计划</h1>
+  <p class="sub">当前所有模型都是 <code>BoxGeometry</code> 拼的，全部材质是纯色 Lambert。这份计划把它替换成一套可加载、可复用、可增量替换的资产管线——关键约束是：<b>不能推倒重来</b>，每一步都要保证游戏仍能跑。</p>
+  <div class="meta">
+    <span>现状 <b>0 张贴图 · 0 个 GLB</b></span>
+    <span>目标 <b>P0 共 34 项资产</b></span>
+    <span>预算 <b>首屏 ≤ 8 MB</b></span>
+    <span>管线 <b>Blender / ComfyUI → glTF</b></span>
+  </div>
+  <nav class="docs">
+    <a href="world-map-design.html">一 · 世界测绘</a>
+    <a href="#" aria-current="page">二 · 美术资源整合</a>
+    <a href="content-roadmap.html">三 · 内容与功能扩展</a>
+  </nav>
+</header>
+
+<section id="now">
+  <div class="shead"><span class="snum">§ 01</span><h2>现状盘点</h2></div>
+  <p class="lede">先说清楚要替换的是什么。当前的视觉全部由代码生成，好处是零加载、零依赖；坏处是所有角色共用一套比例，怪物之间只靠配色区分，玩家很难在余光里认出"这是屠夫还是腐尸"。</p>
+
+  <table>
+    <thead><tr><th>类别</th><th>当前实现</th><th>数量</th><th>问题</th><th>替换优先级</th></tr></thead>
+    <tbody>
+      <tr><td>人形角色</td><td><code>humanoid()</code> — 12 个 Box + 可选武器组</td><td class="num">3 职业 + 12 怪</td>
+        <td>比例雷同，动作只有腿摆和挥臂</td><td><span class="tag p0">P0</span></td></tr>
+      <tr><td>兽形角色</td><td><code>beast()</code> — 躯干 + 4 腿 + 头</td><td class="num">6 种</td>
+        <td>狼、猪、蜘蛛外形几乎一样</td><td><span class="tag p0">P0</span></td></tr>
+      <tr><td>武器</td><td>Box 刀刃 / Cylinder 杖 / Torus 弓</td><td class="num">3 类 × 5 品质色</td>
+        <td>换装只改颜色，看不出形制差异</td><td><span class="tag p0">P0</span></td></tr>
+      <tr><td>地面</td><td>InstancedMesh + 逐格随机顶点色</td><td class="num">4 套配色</td>
+        <td>纯色块，近看没有质感</td><td><span class="tag p1">P1</span></td></tr>
+      <tr><td>阻挡物</td><td>Cone 树 / Dodecahedron 岩 / Cone 尖柱</td><td class="num">3 样式</td>
+        <td>剪影单调，密集时糊成一片</td><td><span class="tag p1">P1</span></td></tr>
+      <tr><td>建筑</td><td>Box 墙 + Cone 屋顶 + 发光窗</td><td class="num">6 栋</td>
+        <td>六栋房子完全同构</td><td><span class="tag p1">P1</span></td></tr>
+      <tr><td>特效</td><td>Box 粒子 / Ring 冲击环 / Cylinder 光束</td><td class="num">8 种</td>
+        <td>没有软边和渐隐，偏"硬"</td><td><span class="tag p1">P1</span></td></tr>
+      <tr><td>UI 图标</td><td>Emoji 字形</td><td class="num">约 60 个</td>
+        <td>跨平台字形不一致，风格与场景割裂</td><td><span class="tag p0">P0</span></td></tr>
+      <tr><td>音频</td><td>WebAudio 实时合成</td><td class="num">15 个音效</td>
+        <td>可用，但缺环境音与音乐</td><td><span class="tag p2">P2</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">一个容易忽略的点：现在换装能立刻反映在角色和纸娃娃上，是因为模型是即时重建的（<code>rebuildPlayer()</code>）。接入 GLB 之后必须保持这个能力——所以骨架和装备件必须<b>分离</b>，不能烘成一整个网格。</div>
+</section>
+
+<section id="pipeline">
+  <div class="shead"><span class="snum">§ 02</span><h2>管线</h2></div>
+  <p class="lede">两条并行的生产路径：角色和道具走建模路径（Blender → glTF），贴图和图标走生成路径（ComfyUI → 后处理 → 图集）。中间由一个资产清单文件把两边对齐，运行时只认清单不认来源。</p>
+
+  <div class="plate">
+    <div class="plate-hd">
+      <div class="plate-ttl">生产与接入路径 <small>ASSET PIPELINE</small></div>
+      <div class="plate-note">左：生产　中：加工　右：运行时</div>
+    </div>
+    <svg viewBox="0 0 1000 400" role="img" aria-label="资产管线图">
+      <g font-family="ui-monospace,monospace" font-size="11" fill="#6f6853">
+        <text x="120" y="28" text-anchor="middle" letter-spacing="2">生产</text>
+        <text x="500" y="28" text-anchor="middle" letter-spacing="2">加工</text>
+        <text x="870" y="28" text-anchor="middle" letter-spacing="2">运行时</text>
+      </g>
+      <g stroke="#b3a785" stroke-width="1.4" stroke-dasharray="4 4">
+        <line x1="250" y1="45" x2="250" y2="370"/><line x1="740" y1="45" x2="740" y2="370"/>
+      </g>
+      <!-- 生产 -->
+      <g>
+        <rect x="30" y="60" width="190" height="66" fill="#f2ead6" stroke="#7d8f6a" stroke-width="2"/>
+        <text x="125" y="88" text-anchor="middle" font-family="var(--serif)" font-size="15" fill="#2c2820">Blender</text>
+        <text x="125" y="108" text-anchor="middle" font-size="10.5" fill="#6f6853" font-family="ui-monospace,monospace">角色 · 武器 · 建筑</text>
+        <rect x="30" y="150" width="190" height="66" fill="#f2ead6" stroke="#579587" stroke-width="2"/>
+        <text x="125" y="178" text-anchor="middle" font-family="var(--serif)" font-size="15" fill="#2c2820">ComfyUI</text>
+        <text x="125" y="198" text-anchor="middle" font-size="10.5" fill="#6f6853" font-family="ui-monospace,monospace">贴图 · 图标 · 天空</text>
+        <rect x="30" y="240" width="190" height="66" fill="#f2ead6" stroke="#8a6ad0" stroke-width="2"/>
+        <text x="125" y="268" text-anchor="middle" font-family="var(--serif)" font-size="15" fill="#2c2820">Python / PIL</text>
+        <text x="125" y="288" text-anchor="middle" font-size="10.5" fill="#6f6853" font-family="ui-monospace,monospace">批量后处理 · 图集拼合</text>
+      </g>
+      <!-- 加工 -->
+      <g>
+        <rect x="300" y="60" width="200" height="56" fill="#e2d9c2" stroke="#8a8578"/>
+        <text x="400" y="84" text-anchor="middle" font-size="12.5" fill="#2c2820">GLB 导出（Y-up，米制）</text>
+        <text x="400" y="102" text-anchor="middle" font-size="10" fill="#6f6853" font-family="ui-monospace,monospace">gltfpack -cc 压缩</text>
+        <rect x="300" y="132" width="200" height="56" fill="#e2d9c2" stroke="#8a8578"/>
+        <text x="400" y="156" text-anchor="middle" font-size="12.5" fill="#2c2820">KTX2 / WebP 压缩</text>
+        <text x="400" y="174" text-anchor="middle" font-size="10" fill="#6f6853" font-family="ui-monospace,monospace">basisu -uastc</text>
+        <rect x="300" y="204" width="200" height="56" fill="#e2d9c2" stroke="#8a8578"/>
+        <text x="400" y="228" text-anchor="middle" font-size="12.5" fill="#2c2820">图标图集 512²</text>
+        <text x="400" y="246" text-anchor="middle" font-size="10" fill="#6f6853" font-family="ui-monospace,monospace">CSS sprite + JSON</text>
+        <rect x="540" y="132" width="170" height="120" fill="#f2ead6" stroke="#c39a4e" stroke-width="2.4"/>
+        <text x="625" y="180" text-anchor="middle" font-family="var(--serif)" font-size="16" fill="#2c2820">assets.json</text>
+        <text x="625" y="200" text-anchor="middle" font-size="10.5" fill="#6f6853" font-family="ui-monospace,monospace">唯一契约</text>
+        <text x="625" y="216" text-anchor="middle" font-size="10.5" fill="#6f6853" font-family="ui-monospace,monospace">id → 路径 / 挂点 / 缩放</text>
+      </g>
+      <!-- 运行时 -->
+      <g>
+        <rect x="790" y="70" width="180" height="56" fill="#f2ead6" stroke="#7d8f6a" stroke-width="2"/>
+        <text x="880" y="94" text-anchor="middle" font-size="12.5" fill="#2c2820">AssetRegistry</text>
+        <text x="880" y="112" text-anchor="middle" font-size="10" fill="#6f6853" font-family="ui-monospace,monospace">缓存 / 克隆 / 兜底</text>
+        <rect x="790" y="150" width="180" height="56" fill="#f2ead6" stroke="#7d8f6a" stroke-width="2"/>
+        <text x="880" y="174" text-anchor="middle" font-size="12.5" fill="#2c2820">makeActor()</text>
+        <text x="880" y="192" text-anchor="middle" font-size="10" fill="#6f6853" font-family="ui-monospace,monospace">替换 humanoid / beast</text>
+        <rect x="790" y="230" width="180" height="56" fill="#f2ead6" stroke="#7d8f6a" stroke-width="2"/>
+        <text x="880" y="254" text-anchor="middle" font-size="12.5" fill="#2c2820">AnimatorMixer</text>
+        <text x="880" y="272" text-anchor="middle" font-size="10" fill="#6f6853" font-family="ui-monospace,monospace">idle / run / attack / die</text>
+      </g>
+      <g stroke="#8a8578" stroke-width="1.6" fill="none" marker-end="url(#ar)">
+        <path d="M220 93 L296 88"/><path d="M220 183 L296 160"/><path d="M220 273 L296 232"/>
+        <path d="M500 88 L536 165"/><path d="M500 160 L536 178"/><path d="M500 232 L536 200"/>
+        <path d="M710 192 L786 98"/><path d="M710 192 L786 178"/><path d="M710 192 L786 258"/>
+      </g>
+      <defs><marker id="ar" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <path d="M0 0 L7 3.5 L0 7 z" fill="#8a8578"/></marker></defs>
+      <g font-family="ui-monospace,monospace" font-size="10.5" fill="#5c5442">
+        <text x="500" y="330">规则：运行时只读 assets.json；任何资产缺失都必须回落到现有的程序化几何体，游戏不得因此中断。</text>
+        <text x="500" y="352">加载策略：城镇与当前区域的资产必须在进图前 await；其余按需异步补齐。</text>
+      </g>
+    </svg>
+  </div>
+
+  <h3>命名与目录约定</h3>
+  <pre><span class="c">public/assets/</span>
+  <span class="k">models/</span>
+    char_warrior.glb        <span class="c">// 职业骨架，含 4 段动画</span>
+    char_mage.glb  char_archer.glb
+    mob_wolf.glb  mob_ghoul.glb  mob_skeleton.glb  ...
+    boss_valak.glb  boss_sekra.glb  boss_arraka.glb  boss_grom.glb
+    <span class="k">eq/</span> wp_sword_a.glb  wp_axe_a.glb  wp_staff_a.glb  wp_bow_a.glb
+        ar_plate_a.glb  hl_horned_a.glb  sh_tower_a.glb
+    <span class="k">prop/</span> tree_pine_a.glb  rock_a.glb  spire_a.glb  house_a.glb  barrel_a.glb
+  <span class="k">tex/</span>
+    ground_waste_d.ktx2   ground_wood_d.ktx2   ground_ash_d.ktx2   ground_town_d.ktx2
+    ground_*_n.ktx2       <span class="c">// 法线，P1 阶段再加</span>
+  <span class="k">ui/</span>
+    icons_512.webp + icons.json   <span class="c">// 技能 / 物品 / 状态图标图集</span>
+  assets.json                      <span class="c">// 清单，运行时唯一入口</span>
+
+<span class="c">// 命名规则：类别_主体_变体.扩展名，全小写下划线，变体用 a/b/c
+// 变体是同一物件的外形差异（tree_pine_a / _b），不是品质差异——品质只改材质参数</span></pre>
+
+  <h3>技术规格</h3>
+  <table>
+    <thead><tr><th>项</th><th>规格</th><th>理由</th></tr></thead>
+    <tbody>
+      <tr><td>模型格式</td><td class="num">glTF 2.0 (.glb)</td><td>Three.js 原生支持，单文件含材质与动画</td></tr>
+      <tr><td>几何压缩</td><td class="num">meshopt（gltfpack -cc）</td><td>比 Draco 解码快，且无需额外 wasm 体积预算</td></tr>
+      <tr><td>贴图格式</td><td class="num">KTX2 / UASTC，回落 WebP</td><td>GPU 端压缩，显存占用降至 1/4</td></tr>
+      <tr><td>角色面数</td><td class="num">≤ 3.5k 三角（首领 ≤ 9k）</td><td>屏幕上同屏可达 60 个角色</td></tr>
+      <tr><td>角色贴图</td><td class="num">512²（首领 1024²）</td><td>俯视 3/4、角色占屏高度不足 12%</td></tr>
+      <tr><td>骨骼</td><td class="num">≤ 24 根，统一命名</td><td>共用动画剪辑，怪物之间可复用</td></tr>
+      <tr><td>动画剪辑</td><td class="num">idle / run / attack / die（+ boss_skill）</td><td>与现有状态机 <code>e.state</code> 一一对应</td></tr>
+      <tr><td>装备挂点</td><td class="num">hand_r / hand_l / head / back</td><td>空 Object3D，与现有 armR 挂载逻辑等价</td></tr>
+      <tr><td>地面贴图</td><td class="num">512² 可平铺，4 套</td><td>InstancedMesh 共用一张，UV 按格随机偏移</td></tr>
+      <tr><td>首屏预算</td><td class="num">≤ 8 MB（gzip 后）</td><td>浏览器直开，无安装步骤，超过就劝退</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="code">
+  <div class="shead"><span class="snum">§ 03</span><h2>代码接入点</h2></div>
+  <p class="lede">整个替换只需要动三处：一个新的注册表、一个新的角色工厂、一层动画适配。其余业务代码（AI、战斗、寻路）完全不感知模型来源。</p>
+
+  <h3>1 · 资产注册表</h3>
+  <pre><span class="k">const</span> AssetRegistry = {
+  manifest: <span class="k">null</span>, cache: <span class="k">new</span> Map(), loader: <span class="k">new</span> THREE.GLTFLoader(),
+
+  <span class="k">async</span> boot() {
+    <span class="k">this</span>.manifest = <span class="k">await</span> fetch(<span class="s">'assets/assets.json'</span>).then(r => r.json());
+  },
+
+  <span class="c">// 关键：拿不到就返回 null，让调用方回落到程序化几何体</span>
+  <span class="k">async</span> load(id) {
+    <span class="k">if</span> (<span class="k">this</span>.cache.has(id)) <span class="k">return</span> <span class="k">this</span>.cache.get(id);
+    <span class="k">const</span> entry = <span class="k">this</span>.manifest?.[id];
+    <span class="k">if</span> (!entry) <span class="k">return</span> <span class="k">null</span>;
+    <span class="k">try</span> {
+      <span class="k">const</span> gltf = <span class="k">await</span> <span class="k">this</span>.loader.loadAsync(<span class="s">'assets/'</span> + entry.path);
+      <span class="k">const</span> rec = { scene: gltf.scene, clips: gltf.animations, meta: entry };
+      <span class="k">this</span>.cache.set(id, rec);
+      <span class="k">return</span> rec;
+    } <span class="k">catch</span> (e) { console.warn(<span class="s">'[asset] 缺失'</span>, id, e); <span class="k">return</span> <span class="k">null</span>; }
+  },
+
+  instance(id) {
+    <span class="k">const</span> rec = <span class="k">this</span>.cache.get(id);
+    <span class="k">if</span> (!rec) <span class="k">return</span> <span class="k">null</span>;
+    <span class="k">const</span> g = THREE.SkeletonUtils.clone(rec.scene);   <span class="c">// 带骨骼的必须用这个</span>
+    g.scale.setScalar(rec.meta.scale ?? 1);
+    <span class="k">return</span> { group: g, clips: rec.clips, meta: rec.meta };
+  }
+};</pre>
+
+  <h3>2 · 角色工厂（替换 humanoid / beast 的调用点）</h3>
+  <pre><span class="c">// 现在：const m = (t.form==="beast") ? beast(opt) : humanoid(opt);
+// 之后：同一个入口，内部决定用资产还是几何体</span>
+
+<span class="k">function</span> makeActor(kind, opt) {
+  <span class="k">const</span> inst = AssetRegistry.instance(kind);          <span class="c">// kind: "mob_wolf" / "char_mage" ...</span>
+  <span class="k">if</span> (!inst) <span class="k">return</span> opt.form === <span class="s">"beast"</span> ? beast(opt) : humanoid(opt);
+
+  <span class="k">const</span> mixer = <span class="k">new</span> THREE.AnimationMixer(inst.group);
+  <span class="k">const</span> clip = n => inst.clips.find(c => c.name === n);
+  <span class="k">const</span> actions = {};
+  [<span class="s">'idle'</span>,<span class="s">'run'</span>,<span class="s">'attack'</span>,<span class="s">'die'</span>].forEach(n => {
+    <span class="k">const</span> c = clip(n); <span class="k">if</span> (c) actions[n] = mixer.clipAction(c);
+  });
+
+  <span class="c">// 对外暴露与现有结构相同的字段，业务代码零改动</span>
+  <span class="k">return</span> {
+    group: inst.group, mixer, actions, rigged: <span class="k">true</span>,
+    torso: inst.group.getObjectByName(<span class="s">'torso'</span>) || inst.group,
+    attach: { hand_r: inst.group.getObjectByName(<span class="s">'hand_r'</span>),
+              head:   inst.group.getObjectByName(<span class="s">'head'</span>) }
+  };
+}</pre>
+
+  <h3>3 · 动画适配（改 animateBody 一处）</h3>
+  <pre><span class="k">function</span> animateBody(m, walkPhase, atk, dt) {
+  <span class="k">if</span> (m.rigged) {
+    <span class="k">const</span> want = atk > 0 ? <span class="s">'attack'</span> : (Math.abs(walkPhase % 6.28) > .01 ? <span class="s">'run'</span> : <span class="s">'idle'</span>);
+    <span class="k">if</span> (m.cur !== want && m.actions[want]) {
+      m.actions[m.cur]?.fadeOut(.15);
+      m.actions[want].reset().fadeIn(.15).play();
+      m.cur = want;
+    }
+    m.mixer.update(dt);
+    <span class="k">return</span>;
+  }
+  <span class="c">/* …… 现有的 Box 关节摆动逻辑原样保留 …… */</span>
+}</pre>
+
+  <div class="note">这样切换的好处：任意时刻只要 <code>assets.json</code> 里少了哪一项，那一项自动退回方块模型，其余照常显示。可以一个怪一个怪地替换，不需要"美术全部就位再合并"。</div>
+
+  <h3>加载与预算控制</h3>
+  <table>
+    <thead><tr><th>时机</th><th>加载内容</th><th>阻塞</th><th>预算</th></tr></thead>
+    <tbody>
+      <tr><td>首次进入</td><td>三职业骨架 + UI 图集 + 城镇道具</td><td>是（带进度条）</td><td class="num">≤ 3.5 MB</td></tr>
+      <tr><td>进入区域前</td><td>该区域怪物 + 地面贴图 + 阻挡物</td><td>是（短暂黑场）</td><td class="num">≤ 2 MB / 区</td></tr>
+      <tr><td>副本首领</td><td>Boss 模型与专属动画</td><td>否（进图后异步）</td><td class="num">≤ 1.5 MB</td></tr>
+      <tr><td>装备外观</td><td>按品质分档的武器模型</td><td>否（拾取时补）</td><td class="num">≤ 60 KB / 件</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="phases">
+  <div class="shead"><span class="snum">§ 04</span><h2>分期</h2></div>
+  <p class="lede">四期，每期结束游戏都处于可玩状态。前两期是"看得见收益最大"的部分：玩家自己的角色和最常见的怪。</p>
+
+  <div class="phase">
+    <div class="phase-k"><div class="pn">第一期</div><div class="pw">骨架</div></div>
+    <div class="phase-b">
+      <h4>管线打通 + 三个职业</h4>
+      <p>先只做玩家能看到自己的那部分：三套职业骨架、四段基础动画、四把起手武器。这一期真正的产出是<b>管线本身</b>——把 GLTFLoader、SkeletonUtils、AnimationMixer、回落逻辑、进度条全部接完，之后每加一个怪只是往清单里加一行。</p>
+      <div class="chips"><span class="chip">3 骨架</span><span class="chip">12 动画剪辑</span><span class="chip">4 武器</span>
+        <span class="chip">assets.json v1</span><span class="chip">加载屏</span><span class="chip">纸娃娃改用同一实例</span></div>
+    </div>
+  </div>
+  <div class="phase">
+    <div class="phase-k"><div class="pn">第二期</div><div class="pw">怪物</div></div>
+    <div class="phase-b">
+      <h4>12 种普通怪 + 4 首领</h4>
+      <p>按出现频率排序替换：狼、劫掠者、骷髅、腐尸最先（占总遭遇量的六成以上）。四足与人形各复用一套骨骼命名，动画剪辑跨怪共享，只换网格与贴图。首领各自加一段专属技能动画（跃击 / 骨刺新星 / 召唤）。</p>
+      <div class="chips"><span class="chip">12 普通怪</span><span class="chip">4 首领</span><span class="chip">2 套共享骨骼</span>
+        <span class="chip">受击闪白改为材质 emissive</span><span class="chip">死亡改用 die 剪辑</span></div>
+    </div>
+  </div>
+  <div class="phase">
+    <div class="phase-k"><div class="pn">第三期</div><div class="pw">场景</div></div>
+    <div class="phase-b">
+      <h4>地面贴图 · 阻挡物 · 建筑</h4>
+      <p>地面从纯色改为可平铺贴图 + 逐格 UV 偏移与色调抖动（保留现有 InstancedMesh，不增加 draw call）。树/岩/尖柱各出 3 个变体打散剪影。石桥镇六栋房子换成 3 种户型 × 2 种旧化程度，并给窗口加一张自发光贴图。</p>
+      <div class="chips"><span class="chip">4 套地面</span><span class="chip">9 个阻挡变体</span><span class="chip">6 栋建筑</span>
+        <span class="chip">天空盒 4 张</span><span class="chip">UV 抖动着色器</span></div>
+    </div>
+  </div>
+  <div class="phase">
+    <div class="phase-k"><div class="pn">第四期</div><div class="pw">质感</div></div>
+    <div class="phase-b">
+      <h4>UI 图集 · 特效 · 音景</h4>
+      <p>Emoji 全部换成手绘图标图集（技能 18 + 物品 40 + 状态 12），风格统一为铜刻线稿。粒子换成软边贴图 Sprite，冲击环换成带渐变遮罩的着色器。音频加入四段环境床声与两段战斗音乐，用 WebAudio 现有节点做交叉淡入。</p>
+      <div class="chips"><span class="chip">70 图标</span><span class="chip">8 特效贴图</span><span class="chip">6 段音频</span>
+        <span class="chip">首领登场演出</span><span class="chip">物品品质光柱重做</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="inventory">
+  <div class="shead"><span class="snum">§ 05</span><h2>P0 资产清单</h2></div>
+  <p class="lede">第一、二期需要的全部资产。"来源"一列标明走建模还是生成路径——如果决定继续用程序化方式产出（像之前那条 Python/PIL 管线），生成路径的部分可以完全脚本化。</p>
+
+  <table>
+    <thead><tr><th>ID</th><th>类别</th><th>规格</th><th>动画</th><th>来源</th><th>期</th></tr></thead>
+    <tbody>
+      <tr><td>char_warrior</td><td>玩家骨架</td><td class="num">3.5k 三角 / 512²</td><td>idle run attack die</td><td>建模</td><td class="num">一</td></tr>
+      <tr><td>char_mage</td><td>玩家骨架</td><td class="num">3.2k / 512²</td><td>同上 + cast</td><td>建模</td><td class="num">一</td></tr>
+      <tr><td>char_archer</td><td>玩家骨架</td><td class="num">3.2k / 512²</td><td>同上 + shoot</td><td>建模</td><td class="num">一</td></tr>
+      <tr><td>wp_sword_a / axe_a</td><td>武器</td><td class="num">400 / 256²</td><td>—</td><td>建模</td><td class="num">一</td></tr>
+      <tr><td>wp_staff_a / bow_a</td><td>武器</td><td class="num">500 / 256²</td><td>—</td><td>建模</td><td class="num">一</td></tr>
+      <tr><td>icons_512</td><td>UI 图集</td><td class="num">512² WebP + JSON</td><td>—</td><td>生成</td><td class="num">一</td></tr>
+      <tr><td>mob_wolf / boar</td><td>兽形</td><td class="num">1.8k / 512²</td><td>共享兽骨 4 段</td><td>建模</td><td class="num">二</td></tr>
+      <tr><td>mob_spider</td><td>兽形</td><td class="num">2.2k / 512²</td><td>共享兽骨 4 段</td><td>建模</td><td class="num">二</td></tr>
+      <tr><td>mob_bandit / banditbow</td><td>人形</td><td class="num">2.4k / 512²</td><td>共享人骨 4 段</td><td>建模</td><td class="num">二</td></tr>
+      <tr><td>mob_skeleton / ghoul</td><td>人形</td><td class="num">2.2k / 512²</td><td>共享人骨 4 段</td><td>建模</td><td class="num">二</td></tr>
+      <tr><td>mob_imp / wraith</td><td>人形</td><td class="num">2.0k / 512²</td><td>共享人骨 + float</td><td>建模</td><td class="num">二</td></tr>
+      <tr><td>mob_brute / treant / golem</td><td>人形大体型</td><td class="num">3.0k / 512²</td><td>共享人骨（放慢）</td><td>建模</td><td class="num">二</td></tr>
+      <tr><td>mob_lavabeast / ashmage</td><td>兽形 / 人形</td><td class="num">2.6k / 512²</td><td>共享 + 自发光</td><td>建模</td><td class="num">二</td></tr>
+      <tr><td>boss_sekra / valak</td><td>首领</td><td class="num">9k / 1024²</td><td>4 段 + 专属技能</td><td>建模</td><td class="num">二</td></tr>
+      <tr><td>boss_arraka / grom</td><td>首领</td><td class="num">9k / 1024²</td><td>4 段 + 专属技能</td><td>建模</td><td class="num">二</td></tr>
+      <tr><td>ground_×4</td><td>地面贴图</td><td class="num">512² 可平铺</td><td>—</td><td>生成</td><td class="num">三</td></tr>
+      <tr><td>fx_soft / fx_ring / fx_beam</td><td>特效贴图</td><td class="num">256² 带 alpha</td><td>—</td><td>生成</td><td class="num">四</td></tr>
+    </tbody>
+  </table>
+
+  <div class="cards">
+    <div class="card"><div class="k">风格基准</div><h4>低多边形 + 手绘贴图</h4>
+      <p>不做 PBR 全套。俯视 3/4 且角色小，法线和粗糙度收益很低，成本却翻倍。用 diffuse + 少量 emissive 就够，材质仍是 Lambert/Standard 的低配组合。</p></div>
+    <div class="card"><div class="k">配色纪律</div><h4>沿用现有区域色板</h4>
+      <p>四张地面图的 fog / floor / sun 色值已经调过一轮，贴图要向这套色板靠，不要各画各的。品质色（白蓝黄橙紫）只作用于材质参数，不进贴图。</p></div>
+    <div class="card"><div class="k">验收标准</div><h4>剪影可辨</h4>
+      <p>每个怪替换后做一次"纯黑剪影测试"：截图去色填黑，三米外能否分辨是哪一种。分不出就重做体型，不靠贴图补救。</p></div>
+  </div>
+</section>
+
+<section id="risk">
+  <div class="shead"><span class="snum">§ 06</span><h2>风险与对策</h2></div>
+  <table>
+    <thead><tr><th>风险</th><th>影响</th><th>对策</th></tr></thead>
+    <tbody>
+      <tr><td>首屏体积膨胀，浏览器直开优势消失</td><td>高</td><td>硬性预算 8 MB；超预算时优先砍首领贴图分辨率，其次砍变体数量</td></tr>
+      <tr><td>换装系统与烘焙模型冲突</td><td>高</td><td>骨架与装备件分离，挂点命名先定死；导出前用一个校验脚本检查挂点是否齐全</td></tr>
+      <tr><td>SkinnedMesh 同屏数量导致掉帧</td><td>中</td><td>16 米外的怪切换到低模/停用 mixer；同类怪共享 mixer 时间轴做批量更新</td></tr>
+      <tr><td>资产与代码不同步（改名、漏导）</td><td>中</td><td>assets.json 作唯一契约 + 启动时校验清单完整性，缺失只警告不报错</td></tr>
+      <tr><td>美术产能不足，管线空转</td><td>中</td><td>生成路径先行：地面、图标、特效贴图可脚本批量产出，先把"面"铺满再补"点"</td></tr>
+      <tr><td>风格漂移（不同批次不一致）</td><td>低</td><td>先定 3 张参考图（角色 / 怪物 / 场景）作为唯一风格锚点，每批新资产与之并排比对</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>幽影深渊 · 卷宗二 / 美术资源整合　—　与卷宗一的坐标基准、卷宗三的功能排期配套使用</footer>
+</div>
+</body>
+</html>

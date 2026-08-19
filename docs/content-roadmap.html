@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>幽影深渊 · 内容与功能扩展计划</title>
+<style>
+:root{
+  --ink:#0e1116; --slate:#161a21; --slate-2:#1d222b; --line:#2b3240;
+  --parch:#e9e0c9; --parch-2:#ddd2b6; --parch-line:#b3a785;
+  --brass:#c39a4e; --brass-hi:#ecd39a; --bone:#cfc7b4; --ash:#8b8477;
+  --blood:#a83a2b; --verdigris:#579587; --violet:#8a6ad0;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,"Songti SC",serif;
+  --sans:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Courier New",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--bone);font-family:var(--sans);font-size:15px;line-height:1.75;
+  -webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(138,106,208,.10),transparent 70%)}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 28px 120px}
+header{padding:74px 0 46px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.34em;color:var(--violet);text-transform:uppercase}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(38px,6vw,68px);line-height:1.04;color:#f2e8d2;margin:16px 0 0}
+h1 em{font-style:italic;color:var(--brass-hi)}
+.sub{margin-top:18px;max-width:660px;color:var(--ash);font-size:15.5px}
+.meta{display:flex;flex-wrap:wrap;gap:26px;margin-top:30px;font-family:var(--mono);font-size:11.5px;color:var(--ash)}
+.meta b{color:var(--bone);font-weight:400}
+nav.docs{display:flex;gap:2px;margin-top:34px;flex-wrap:wrap}
+nav.docs a{font-family:var(--mono);font-size:11px;letter-spacing:.14em;padding:9px 16px;color:var(--ash);
+  border:1px solid var(--line);text-decoration:none;transition:.16s}
+nav.docs a:hover{color:var(--brass-hi);border-color:var(--brass)}
+nav.docs a[aria-current]{color:#0e1116;background:var(--violet);border-color:var(--violet)}
+section{padding-top:72px}
+.shead{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--line);padding-bottom:12px}
+.snum{font-family:var(--mono);font-size:11px;color:var(--violet);letter-spacing:.2em}
+h2{font-family:var(--serif);font-weight:400;font-size:29px;color:#f2e8d2}
+.lede{margin-top:20px;max-width:790px;color:#b7b0a0}
+h3{font-family:var(--serif);font-weight:400;font-size:20px;color:var(--brass-hi);margin:38px 0 12px}
+p+p{margin-top:12px}
+code{font-family:var(--mono);font-size:.88em;color:var(--brass-hi);background:#11151c;padding:1px 5px;border:1px solid var(--line)}
+.plate{margin-top:26px;background:linear-gradient(160deg,var(--parch),var(--parch-2));
+  border:1px solid #6d6349;box-shadow:0 22px 60px rgba(0,0,0,.55)}
+.plate-hd{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;
+  padding:16px 20px 12px;border-bottom:1px solid var(--parch-line)}
+.plate-ttl{font-family:var(--serif);font-size:19px;color:#2c2820}
+.plate-ttl small{font-family:var(--mono);font-size:11px;color:#6f6853;letter-spacing:.1em;margin-left:10px}
+.plate-note{font-family:var(--mono);font-size:11.5px;color:#5c5442}
+.plate svg{display:block;width:100%;height:auto}
+table{width:100%;border-collapse:collapse;margin-top:22px;font-size:13.5px}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--violet);
+  text-align:left;padding:9px 12px;border-bottom:1px solid var(--violet);font-weight:400;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:#b7b0a0}
+td:first-child{color:var(--bone)}
+tbody tr:hover td{background:#141821}
+.num{font-family:var(--mono);font-size:12.5px;color:var(--brass-hi);white-space:nowrap}
+.tag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:2px 7px;border:1px solid currentColor;white-space:nowrap}
+.s{color:var(--blood)}.m{color:var(--brass)}.l{color:var(--verdigris)}
+pre{margin-top:18px;background:#11151c;border:1px solid var(--line);padding:18px;overflow-x:auto;
+  font-family:var(--mono);font-size:12.4px;line-height:1.85;color:#b7b0a0}
+pre .c{color:#5f6b57}pre .k{color:var(--brass)}pre .q{color:var(--verdigris)}
+.note{margin-top:24px;border-left:2px solid var(--violet);padding:4px 0 4px 18px;color:#a9a291;font-size:14px}
+.feat{border-top:1px solid var(--line);padding:26px 0}
+.feat:last-child{border-bottom:1px solid var(--line)}
+.feat-hd{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.feat-hd h4{font-family:var(--serif);font-weight:400;font-size:22px;color:#f2e8d2}
+.feat-hd .id{font-family:var(--mono);font-size:11px;color:var(--violet);letter-spacing:.14em}
+.feat-hd .est{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ash)}
+.feat p{margin-top:10px;max-width:800px;color:#a9a291;font-size:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:16px}
+.grid2 h5{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--brass);margin-bottom:8px}
+.grid2 ul{margin-left:16px;font-size:13.5px;color:#a9a291}
+.grid2 li{margin-top:5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.chip{font-family:var(--mono);font-size:10.5px;padding:3px 9px;border:1px solid var(--line);color:#8b8477}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:1px;margin-top:26px;
+  background:var(--line);border:1px solid var(--line)}
+.card{background:var(--slate);padding:20px}
+.card h4{font-family:var(--serif);font-weight:400;font-size:17px;color:#f2e8d2}
+.card .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--violet);margin-bottom:9px}
+.card p{font-size:13.5px;color:#a9a291;margin-top:8px}
+footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;color:#5f5a50;letter-spacing:.1em}
+@media (max-width:720px){.wrap{padding:0 18px 80px}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">卷宗 三 / 共 三</div>
+  <h1>让人愿意<em>再下一层</em><br>内容与功能扩展</h1>
+  <p class="sub">v3 已经把世界铺开了：三职业、四张地面图、三个副本、一条无限裂隙。缺的不是内容量，而是<b>留下来的理由</b>——现在关掉页面，一切归零；打到 20 级，可做的事和 10 级时一样。这份计划按"先补漏、再加深、后拓宽"的顺序排。</p>
+  <div class="meta">
+    <span>当前版本 <b>v3.0</b></span>
+    <span>规划 <b>v3.1 → v4.0</b></span>
+    <span>特性 <b>14 项</b></span>
+    <span>预估 <b>约 21 个工作日</b></span>
+  </div>
+  <nav class="docs">
+    <a href="world-map-design.html">一 · 世界测绘</a>
+    <a href="art-asset-plan.html">二 · 美术资源整合</a>
+    <a href="#" aria-current="page">三 · 内容与功能扩展</a>
+  </nav>
+</header>
+
+<section id="gaps">
+  <div class="shead"><span class="snum">§ 01</span><h2>现在缺什么</h2></div>
+  <p class="lede">先把问题说准，再决定做什么。这四条是按"玩家会在第几分钟撞上"排序的。</p>
+
+  <table>
+    <thead><tr><th>问题</th><th>玩家什么时候撞上</th><th>后果</th><th>对应特性</th></tr></thead>
+    <tbody>
+      <tr><td>刷新即清零</td><td>第一次关页面</td><td>所有投入归零，不存在"明天继续"</td><td class="num">F1 存档</td></tr>
+      <tr><td>装备只有数值大小</td><td>约 30 分钟</td><td>拾取变成比大小，掉落失去期待感</td><td class="num">F3 F4 套装与词缀</td></tr>
+      <tr><td>技能六个格子早早填满</td><td>15 级</td><td>技能点无处可花，构筑没有分叉</td><td class="num">F5 天赋</td></tr>
+      <tr><td>每层地牢长得一样</td><td>第三层</td><td>重复刷缺少变量，无限层变成无限重复</td><td class="num">F6 F7 房间与词缀</td></tr>
+      <tr><td>没有终局目标</td><td>通关三副本后</td><td>不知道该往哪打</td><td class="num">F9 悬赏 F12 试炼</td></tr>
+    </tbody>
+  </table>
+
+  <div class="plate">
+    <div class="plate-hd">
+      <div class="plate-ttl">优先级 <small>IMPACT × EFFORT</small></div>
+      <div class="plate-note">纵轴：对留存的影响　横轴：实现成本（人日）</div>
+    </div>
+    <svg viewBox="0 0 1000 460" role="img" aria-label="优先级矩阵">
+      <g stroke="#b3a785" stroke-width="1">
+        <line x1="90" y1="400" x2="950" y2="400"/><line x1="90" y1="40" x2="90" y2="400"/>
+      </g>
+      <g stroke="#c9bd9d" stroke-width=".7" stroke-dasharray="3 4">
+        <line x1="90" y1="220" x2="950" y2="220"/><line x1="470" y1="40" x2="470" y2="400"/>
+      </g>
+      <g font-family="ui-monospace,monospace" font-size="11" fill="#6f6853">
+        <text x="96" y="56">影响 高</text><text x="96" y="392">影响 低</text>
+        <text x="944" y="422" text-anchor="end">成本 高 →</text>
+        <text x="100" y="422">成本 低</text>
+        <text x="270" y="76" text-anchor="middle" fill="#8a8578" letter-spacing="2">先做</text>
+        <text x="710" y="76" text-anchor="middle" fill="#8a8578" letter-spacing="2">排期做</text>
+        <text x="270" y="384" text-anchor="middle" fill="#8a8578" letter-spacing="2">顺手做</text>
+        <text x="710" y="384" text-anchor="middle" fill="#8a8578" letter-spacing="2">先别做</text>
+      </g>
+      <g id="dots"></g>
+    </svg>
+    <div class="plate-note" style="padding:12px 20px 16px;border-top:1px solid var(--parch-line)">
+      位置基于"对留存的影响"与"实现成本"的估计值，不是精确测量——用来定顺序，不用来定工时。
+    </div>
+  </div>
+</section>
+
+<section id="v31">
+  <div class="shead"><span class="snum">§ 02</span><h2>v3.1 · 把玩家留住</h2></div>
+  <p class="lede">目标：让一局游戏能跨越关闭页面。这一版不加任何新玩法，只补基础设施——但它决定了后面所有内容有没有意义。</p>
+
+  <div class="feat">
+    <div class="feat-hd"><span class="id">F1</span><h4>存档与继续</h4><span class="est">2 人日 · 必做</span></div>
+    <p>localStorage 单槽自动存档。存的是玩家状态而非世界状态——世界是种子生成的，回来时重新生成同一份即可，这样存档体积能压在 20 KB 以内。</p>
+    <pre><span class="k">const</span> SAVE_KEY = <span class="q">'shadow-depths-save-v1'</span>;
+
+<span class="k">function</span> serialize() {
+  <span class="k">return</span> {
+    v: 1, t: Date.now(),
+    cls: P.cls, lvl: P.lvl, xp: P.xp, xpNext: P.xpNext, gold: P.gold,
+    pts: P.pts, skPts: P.skPts, base: P.base, ranks: P.ranks, barSkills: P.barSkills,
+    potHp: P.potHp, potMp: P.potMp,
+    equip: P.equip, bag: P.bag,                 <span class="c">// 物品是纯数据对象，可直接 JSON 化</span>
+    kills: P.kills, eliteKills: P.eliteKills, killByType: P.killByType,
+    cleared: P.cleared, quests: QS,
+    riftDeepest: W.riftDeepest, discovered: W.discovered,
+    lastArea: W.area.kind === <span class="q">'town'</span> ? <span class="q">'town'</span> : <span class="q">'town'</span>  <span class="c">// 一律回城，避免存半个副本</span>
+  };
+}
+<span class="c">// 触发点：升级 / 装备变更 / 交任务 / 切区域 / 每 60 秒 —— 全部走同一个 saveSoon() 节流</span></pre>
+    <div class="grid2">
+      <div><h5>要处理的边界</h5><ul>
+        <li>版本号不匹配时丢弃存档而不是崩溃</li>
+        <li>死亡时先扣金币再存，避免"读档复活"绕开惩罚</li>
+        <li>提供"重新开始"按钮，清档并回到职业选择</li>
+      </ul></div>
+      <div><h5>顺带解决</h5><ul>
+        <li>多角色槽位（3 个），职业选择界面变成角色列表</li>
+        <li>存档导出/导入为一段文本，方便换设备</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="feat">
+    <div class="feat-hd"><span class="id">F2</span><h4>城镇服务位补齐</h4><span class="est">1.5 人日</span></div>
+    <p>卷宗一里预留的南侧带状区域（z ∈ [8, 24]）落三个功能点：<b>仓库</b>（40 格共享，跨角色）、<b>悬赏板</b>（每日随机任务，见 F9）、<b>传送石碑</b>（已探明区域快速往返，省掉走回头路）。三者都是纯 UI + 数据，无新美术依赖。</p>
+    <div class="chips"><span class="chip">仓库 (−20, 14)</span><span class="chip">悬赏板 (10, 16)</span><span class="chip">传送碑 (0, 20)</span><span class="chip">复用 openNPC 面板</span></div>
+  </div>
+
+  <div class="feat">
+    <div class="feat-hd"><span class="id">F3</span><h4>装备词缀重铸与镶嵌</h4><span class="est">2 人日</span></div>
+    <p>让金币在中后期有出路，也让"差一条词缀"的装备有救。铁匠处新增两项服务：<b>重铸</b>（重掷全部词缀，费用随物品等级与品质上涨）与<b>打孔 + 符文</b>（稀有以上可开 1–2 孔，符文提供固定加成，可取出）。符文本身作为一种新掉落，从精英与首领处产出。</p>
+    <pre><span class="c">// 物品结构扩展（向后兼容：老存档没有这两个字段时按空处理）</span>
+item.sockets = [ <span class="k">null</span>, {id:<span class="q">'rune_ember'</span>, n:<span class="q">'余烬符文'</span>, k:<span class="q">'dmg'</span>, v:6} ];
+item.reforged = 2;                        <span class="c">// 重铸次数，影响下次费用</span>
+
+<span class="k">const</span> RUNES = [
+  {id:<span class="q">'rune_ember'</span>,  n:<span class="q">'余烬'</span>, k:<span class="q">'dmg'</span>,   v:[4,9],  tier:1},
+  {id:<span class="q">'rune_frost'</span>,  n:<span class="q">'霜结'</span>, k:<span class="q">'armor'</span>, v:[8,18], tier:1},
+  {id:<span class="q">'rune_hawk'</span>,   n:<span class="q">'鹰羽'</span>, k:<span class="q">'crit'</span>,  v:[2,5],  tier:2},
+  {id:<span class="q">'rune_leech'</span>,  n:<span class="q">'饥渴'</span>, k:<span class="q">'leech'</span>, v:[1,3],  tier:3}
+];
+<span class="c">// pStats() 里在遍历 affixes 之后追加一次 sockets 遍历即可，计算逻辑完全复用</span></pre>
+  </div>
+
+  <div class="feat">
+    <div class="feat-hd"><span class="id">F4</span><h4>套装</h4><span class="est">1.5 人日</span></div>
+    <p>每职业两套，2/4/6 件递进效果。套装件只从副本首领和裂隙首领掉落，给"打副本"一个独立于数值的理由。效果要改变打法而不只是加数值——比如战士的"裂地斩命中 3 个以上目标时刷新猛冲冷却"。</p>
+    <div class="grid2">
+      <div><h5>示例 · 战士「石桥守望」</h5><ul>
+        <li>2 件：受击时 15% 概率获得 3 秒 20% 减伤</li>
+        <li>4 件：旋风斩期间移动速度不再降低</li>
+        <li>6 件：坚壁破碎时对周围造成已吸收伤害的 200%</li>
+      </ul></div>
+      <div><h5>示例 · 弓箭手「暮语猎手」</h5><ul>
+        <li>2 件：翻滚后 2 秒内攻速 +30%</li>
+        <li>4 件：穿透射击每多命中一个目标伤害 +12%</li>
+        <li>6 件：箭雨范围内的敌人受到的暴击伤害 +25%</li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="v32">
+  <div class="shead"><span class="snum">§ 03</span><h2>v3.2 · 让构筑有分叉</h2></div>
+  <p class="lede">目标：两个同职业、同等级的角色应该玩起来不一样。现在的技能系统只有"点满六个技能"一条路，天赋与技能符文把它拆成选择题。</p>
+
+  <div class="feat">
+    <div class="feat-hd"><span class="id">F5</span><h4>天赋树</h4><span class="est">3 人日</span></div>
+    <p>每职业三条线（战士：狂怒 / 壁垒 / 大地；法师：烈焰 / 冰霜 / 奥术；弓手：精准 / 陷阱 / 疾风），每线 6 个节点，10 级开放，每 2 级 1 点。节点分三类：<b>数值</b>（+X% 暴击伤害）、<b>行为</b>（火球改为穿透但伤害 −20%）、<b>关键</b>（每线终点，改变一个技能的机制）。关键节点互斥——一次只能激活一个，逼出取舍。</p>
+    <pre><span class="k">const</span> TALENTS = {
+  warrior: {
+    fury: [
+      {id:<span class="q">'f1'</span>, n:<span class="q">'嗜血'</span>,   d:<span class="q">'击杀恢复 3% 最大生命'</span>,        max:3},
+      {id:<span class="q">'f2'</span>, n:<span class="q">'狂暴'</span>,   d:<span class="q">'生命低于 40% 时伤害 +15%'</span>,     max:2},
+      {id:<span class="q">'f6'</span>, n:<span class="q">'血怒'</span>,   d:<span class="q">'战吼改为立即回复 25% 生命，但不再增伤'</span>,
+       max:1, keystone:<span class="k">true</span>}
+    ], <span class="c">/* bulwark / earth 同构 */</span>
+  }
+};
+<span class="c">// 结算点：pStats() 末尾统一应用 —— 所有天赋最终都归结为对 s 的一次修改，
+// 行为类天赋写成 P.flags.fireballPierce 之类的布尔量，由 castSkill 读取</span></pre>
+    <div class="chips"><span class="chip">新面板 · 快捷键 K</span><span class="chip">洗点消耗金币</span><span class="chip">与套装效果叠加需做上限保护</span></div>
+  </div>
+
+  <div class="feat">
+    <div class="feat-hd"><span class="id">F6</span><h4>技能符文</h4><span class="est">2 人日</span></div>
+    <p>每个技能升到 3 级解锁一个符文槽，符文改变技能形态而非数值。这是"同职业不同玩法"最直接的杠杆，而且复用现有的技能等级与面板结构。</p>
+    <table>
+      <thead><tr><th>技能</th><th>符文</th><th>改变</th></tr></thead>
+      <tbody>
+        <tr><td>火球术</td><td>裂焰</td><td>命中后分裂为 3 枚小火球，总伤害不变</td></tr>
+        <tr><td>火球术</td><td>凝滞</td><td>飞行速度减半，但命中留下 3 秒燃烧地面</td></tr>
+        <tr><td>多重射击</td><td>收束</td><td>箭矢数量减半，扇形角度收窄，单箭伤害翻倍</td></tr>
+        <tr><td>裂地斩</td><td>震荡</td><td>不再击退，改为命中数每 +1 则冷却 −0.4 秒</td></tr>
+        <tr><td>寒冰新星</td><td>凛冬</td><td>范围 −30%，但对减速中的目标伤害 +80%</td></tr>
+        <tr><td>猛冲</td><td>破阵</td><td>穿过敌人后可再次冲刺一次（2 秒内）</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="v33">
+  <div class="shead"><span class="snum">§ 04</span><h2>v3.3 · 让重复刷有变量</h2></div>
+  <p class="lede">目标：第 20 层和第 3 层不只是数值不同。所有改动都作用在生成阶段，不改战斗核心。</p>
+
+  <div class="feat">
+    <div class="feat-hd"><span class="id">F7</span><h4>特殊房间</h4><span class="est">2 人日</span></div>
+    <p>按卷宗一 §04 的方案，在生成后给房间打标签，而不是改生成器。四种：<b>宝库</b>（4 宝箱 + 一队守卫）、<b>祭坛</b>（三选一增益，持续到离开本层）、<b>囚笼</b>（放出一个 NPC 随行战斗 60 秒）、<b>陷阱厅</b>（地刺 / 落石 / 毒雾，通过后必掉一件稀有）。每层随机 1–2 个，深度越大出现概率越高。</p>
+    <div class="grid2">
+      <div><h5>祭坛效果（三选一）</h5><ul>
+        <li>贪婪：本层金币掉落 +150%，但你受到的伤害 +25%</li>
+        <li>迅捷：移动与攻击速度 +20%，最大生命 −20%</li>
+        <li>丰饶：本层怪物数量 +50%，掉落品质提升一档</li>
+      </ul></div>
+      <div><h5>实现要点</h5><ul>
+        <li>新增 <code>W.roomTags[]</code>，在 enterRift/enterDungeon 刷怪循环前分配</li>
+        <li>宝箱复用木桶的破坏逻辑，换模型与掉落表</li>
+        <li>祭坛增益写进 <code>P.buffs</code>，切区域时清空</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="feat">
+    <div class="feat-hd"><span class="id">F8</span><h4>裂隙词缀</h4><span class="est">2 人日</span></div>
+    <p>从第 5 层起，每层随机附带 1–2 条词缀，进层前在传送门面板上明示，玩家可以选择"换一层"（消耗少量金币重掷）。词缀既加难度也加收益——这是无限层从"数值墙"变成"策略选择"的关键。</p>
+    <table>
+      <thead><tr><th>词缀</th><th>效果</th><th>掉落加成</th></tr></thead>
+      <tbody>
+        <tr><td>狂暴</td><td>怪物攻击速度 +40%</td><td class="num">+15%</td></tr>
+        <tr><td>硬化</td><td>怪物护甲 +60%</td><td class="num">+15%</td></tr>
+        <tr><td>虚弱</td><td>玩家治疗效果 −50%</td><td class="num">+20%</td></tr>
+        <tr><td>群集</td><td>怪物数量 +60%，血量 −25%</td><td class="num">+25%</td></tr>
+        <tr><td>回响</td><td>精英死亡时分裂为两只半血小怪</td><td class="num">+30%</td></tr>
+        <tr><td>寂静</td><td>技能冷却 +35%</td><td class="num">+25%</td></tr>
+        <tr><td>宝藏</td><td>本层存在一只逃跑的宝箱怪</td><td class="num">+40%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="feat">
+    <div class="feat-hd"><span class="id">F9</span><h4>每日悬赏</h4><span class="est">1.5 人日</span></div>
+    <p>悬赏板每天刷 5 条随机任务（在某区杀 N 只某类怪 / 通关某副本 / 到达裂隙第 N 层 / 不使用药水通关一层）。完成 3 条给一个奖励箱，含随机套装件或高阶符文。这是把已有内容重新组织成日常目标，不需要新玩法。</p>
+    <div class="chips"><span class="chip">复用 QUESTS 结构</span><span class="chip">按本地日期生成种子</span><span class="chip">与存档同步</span></div>
+  </div>
+
+  <div class="feat">
+    <div class="feat-hd"><span class="id">F10</span><h4>野外随机事件</h4><span class="est">2 人日</span></div>
+    <p>进入野外时 40% 概率触发一个事件，位置随机落在地图上并在小地图标记：<b>商队遇袭</b>（限时护送，成功获得商人折扣）、<b>宝箱守卫</b>（一只高等级精英守着大箱）、<b>裂隙涌流</b>（一处不断涌出怪物的裂口，关闭后掉符文）、<b>迷路的学徒</b>（跟随他找到隐藏宝藏）。</p>
+  </div>
+</section>
+
+<section id="v40">
+  <div class="shead"><span class="snum">§ 05</span><h2>v4.0 · 拓宽</h2></div>
+  <p class="lede">前面三版都在加深现有内容，这一版才往外扩。放在最后是因为：在存档、构筑、变量都补齐之前，加更多区域只会让空洞被拉得更长。</p>
+
+  <div class="cards">
+    <div class="card"><div class="k">F11 · 4 人日</div><h4>三张新地图</h4>
+      <p>北境冰湖 (Lv24)、沉船海岸 (Lv30)、断桥修道院副本 (Lv27)。配置模板与接入坐标见卷宗一 §05；新增两种阻挡样式与两套地面色板。</p></div>
+    <div class="card"><div class="k">F12 · 3 人日</div><h4>试炼场（终局）</h4>
+      <p>限时波次挑战，20 波递进，每 5 波一个首领。排行榜记录本地最佳。给满级玩家一个可量化的目标，也是构筑的检验场。</p></div>
+    <div class="card"><div class="k">F13 · 2.5 人日</div><h4>第四职业 · 德鲁伊</h4>
+      <p>召唤流：狼灵与藤蔓协同作战。会暴露现有 AI 只服务于"敌对单位"的假设，需要先把友方单位抽象出来——这也是未来做同伴 NPC 的地基。</p></div>
+    <div class="card"><div class="k">F14 · 2 人日</div><h4>手感与呈现打磨</h4>
+      <p>受击顿帧、击杀慢镜、首领登场运镜、技能预输入队列、连击计数。工作量不大但对手感的提升往往超过一个新系统。</p></div>
+  </div>
+</section>
+
+<section id="plan">
+  <div class="shead"><span class="snum">§ 06</span><h2>排期与验收</h2></div>
+
+  <table>
+    <thead><tr><th>版本</th><th>特性</th><th>人日</th><th>验收标准</th></tr></thead>
+    <tbody>
+      <tr><td>v3.1</td><td>F1 存档 · F2 城镇服务 · F3 重铸镶嵌 · F4 套装</td><td class="num">7</td>
+        <td>关闭浏览器再打开，角色、装备、任务、副本通关记录全部还原；金币在 30 级仍有明确出路</td></tr>
+      <tr><td>v3.2</td><td>F5 天赋 · F6 技能符文</td><td class="num">5</td>
+        <td>同职业两套构筑在同一层裂隙的通关方式明显不同（一套靠爆发、一套靠持续）</td></tr>
+      <tr><td>v3.3</td><td>F7 特殊房间 · F8 裂隙词缀 · F9 悬赏 · F10 野外事件</td><td class="num">7.5</td>
+        <td>连续刷 10 层裂隙，至少遇到 6 种不同的层内变量；每日登录有明确的 3 件事可做</td></tr>
+      <tr><td>v4.0</td><td>F11 新地图 · F12 试炼 · F13 德鲁伊 · F14 打磨</td><td class="num">11.5</td>
+        <td>满级后仍有至少 5 小时可玩内容；新职业与现有三职业的强度差在 ±15% 内</td></tr>
+    </tbody>
+  </table>
+
+  <h3>与美术计划的耦合</h3>
+  <p>两条线基本独立，只有三处需要对齐：<b>F4 套装</b>需要武器与护甲的品质外观分档（美术第一期产出后才有视觉体现，功能可先上）；<b>F7 特殊房间</b>需要宝箱与祭坛模型（第三期）；<b>F13 德鲁伊</b>需要新职业骨架与两个召唤物（第二期结束后插入）。其余功能均可在方块模型下先做完并验证手感。</p>
+
+  <div class="note">建议的推进节奏：功能线先行一到两个版本，美术线跟在后面替换。原因是替换模型不改变任何数值与判定，什么时候接都不会返工；而功能改动如果等美术就位再做，会一直拖着"关掉页面就没了"这个最伤留存的问题。</div>
+
+  <h3>不做什么</h3>
+  <table>
+    <thead><tr><th>被否决的方向</th><th>理由</th></tr></thead>
+    <tbody>
+      <tr><td>多人联机</td><td>需要服务端、同步与作弊防护，成本是当前所有计划之和的数倍；单机体验尚未打磨完</td></tr>
+      <tr><td>开放世界无缝地图</td><td>现有分区加载正好卡在浏览器内存与首屏预算的合理区间，无缝会同时压垮两者</td></tr>
+      <tr><td>更多职业（第五、第六个）</td><td>四个职业已能覆盖近战 / 法术 / 远程 / 召唤四种范式，再加只会稀释平衡精力</td></tr>
+      <tr><td>付费或内购结构</td><td>项目定位是可直开的浏览器单机，任何账号体系都会打断"点开就玩"</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>幽影深渊 · 卷宗三 / 内容与功能扩展　—　与卷宗一的坐标基准、卷宗二的资产分期配套使用</footer>
+</div>
+
+<script>
+/* 优先级矩阵散点 —— 数据即结论，改数即改图 */
+const FEAT = [
+  {id:"F1",  n:"存档",       cost:2,   impact:9.6},
+  {id:"F2",  n:"城镇服务",   cost:1.5, impact:6.2},
+  {id:"F3",  n:"重铸镶嵌",   cost:2,   impact:7.4},
+  {id:"F4",  n:"套装",       cost:1.5, impact:7.8},
+  {id:"F5",  n:"天赋树",     cost:3,   impact:8.6},
+  {id:"F6",  n:"技能符文",   cost:2,   impact:7.6},
+  {id:"F7",  n:"特殊房间",   cost:2,   impact:7.2},
+  {id:"F8",  n:"裂隙词缀",   cost:2,   impact:8.0},
+  {id:"F9",  n:"每日悬赏",   cost:1.5, impact:6.6},
+  {id:"F10", n:"野外事件",   cost:2,   impact:5.8},
+  {id:"F11", n:"新地图",     cost:4,   impact:6.0},
+  {id:"F12", n:"试炼场",     cost:3,   impact:6.8},
+  {id:"F13", n:"德鲁伊",     cost:2.5, impact:5.2},
+  {id:"F14", n:"手感打磨",   cost:2,   impact:6.4}
+];
+const NS = "http://www.w3.org/2000/svg";
+const el = (n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+const g = document.getElementById("dots");
+const X = c => 90 + (c / 5) * 860;
+const Y = i => 400 - (i / 10) * 360;
+FEAT.forEach(f => {
+  const x = X(f.cost), y = Y(f.impact);
+  const hot = f.impact >= 7.5 && f.cost <= 2.5;
+  g.appendChild(el("circle",{cx:x,cy:y,r:hot?9:7,
+    fill:hot?"#8a6ad0":"#c9bd9d",stroke:"#2c2820","stroke-width":hot?1.2:.8}));
+  const t = el("text",{x:x,y:y-15,"text-anchor":"middle","font-size":12,fill:"#2c2820",
+    "font-family":"var(--serif)"});
+  t.textContent = f.n;
+  const s = el("text",{x:x,y:y+22,"text-anchor":"middle","font-size":9.5,fill:"#6f6853",
+    "font-family":"ui-monospace,monospace"});
+  s.textContent = f.id;
+  g.appendChild(t); g.appendChild(s);
+});
+</script>
+</body>
+</html>
