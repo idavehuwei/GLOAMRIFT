@@ -20,6 +20,15 @@
     <h1>THE ARCHIVE</h1>
     <p class="sub">读取卷宗  ·  世界会按同一粒种子再长出来</p>
     <div class="saves" id="saves"></div>
+    <div class="xferbox plate" id="import-box">
+      <h3>IMPORT  ·  携卷入境</h3>
+      <p>把另一台设备上导出的卷宗贴在这里。版本不符或损坏的文字会被丢弃，不会弄坏现有槽位。</p>
+      <textarea id="import-text" placeholder="粘贴 GLOAM1. …… 开头的卷宗"></textarea>
+      <div class="row">
+        <button type="button" class="btn" id="import-go">写入空槽</button>
+      </div>
+      <div class="msg" id="import-msg"></div>
+    </div>
   </div>
 </div>
 <div class="foot">THREE GRAVES  ·  三口棺，三份名字</div>
@@ -51,13 +60,29 @@
           '<div class="meta">'+GloamSave.classEn(s.cls)+'  ·  '+GloamSave.classLabel(s.cls)+
           '<br>等级 '+s.lvl+'  ·  金币 '+s.gold+'  ·  石桥镇</div></div>'+
           '<div class="when">'+GloamSave.formatTime(s.t)+
-          '<br><button type="button" class="del">焚毁</button></div>';
+          '<div class="ops"><button type="button" class="del exp">导出</button>'+
+          '<button type="button" class="del">焚毁</button></div></div>';
         d.addEventListener("mouseenter", GloamTone.hover);
         d.addEventListener("click", function(e){
           if(e.target.closest(".del")) return;
           load(i);
         });
-        d.querySelector(".del").addEventListener("click", function(e){
+        d.querySelector(".exp").addEventListener("click", function(e){
+          e.stopPropagation();
+          var text = GloamSave.exportSlot(i);
+          var ta = document.getElementById("import-text");
+          ta.value = text;
+          if(navigator.clipboard && navigator.clipboard.writeText){
+            navigator.clipboard.writeText(text).then(function(){
+              msg("已复制「"+s.name+"」的卷宗。", false);
+            }).catch(function(){ msg("已填入下方文本框，请手动复制。", false); });
+          } else {
+            ta.select();
+            msg("已填入下方文本框，请手动复制。", false);
+          }
+          GloamTone.click();
+        });
+        d.querySelector(".del:not(.exp)").addEventListener("click", function(e){
           e.stopPropagation();
           if(!confirm("焚毁「"+s.name+"」的卷宗？")){ GloamTone.deny(); return; }
           GloamSave.deleteSlot(i); GloamTone.click(); render();
@@ -71,6 +96,32 @@
       box.appendChild(d);
     });
   }
+  function msg(t, bad){
+    var el = document.getElementById("import-msg");
+    el.textContent = t;
+    el.className = "msg"+(bad?" bad":"");
+  }
+  document.getElementById("import-go").addEventListener("click", function(){
+    var parsed = GloamSave.parseImport(document.getElementById("import-text").value);
+    if(!parsed.ok){ GloamTone.deny(); msg(parsed.err, true); return; }
+    if(parsed.kind === "store"){
+      if(!confirm("这段文字含有整份档案，将覆盖全部三个槽位。继续？")){ GloamTone.deny(); return; }
+      parsed.data.slots.forEach(function(s, i){
+        if(s) GloamSave.importSlot(i, s);
+        else GloamSave.deleteSlot(i);
+      });
+      GloamTone.confirm(); msg("整份档案已写入。", false); render(); return;
+    }
+    var slot = GloamSave.firstEmptySlot();
+    if(slot < 0){
+      slot = 0;
+      if(!confirm("没有空槽。覆盖槽 1「"+(GloamSave.getSlot(0)||{}).name+"」？")){ GloamTone.deny(); return; }
+    }
+    if(!GloamSave.importSlot(slot, parsed.data)){ GloamTone.deny(); msg("写入失败。", true); return; }
+    GloamTone.confirm();
+    msg("已写入槽 "+(slot+1)+"  ·  "+parsed.data.name+"。", false);
+    render();
+  });
   render();
   document.getElementById("back").addEventListener("click", function(e){
     e.preventDefault();
