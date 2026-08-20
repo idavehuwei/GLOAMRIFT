@@ -1,0 +1,39 @@
+[gd_scene load_steps=7 format=3]
+
+[sub_resource type="BoxMesh" id="BoxM_1"]
+size = Vector3(0.45, 4.2, 0.45)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_2"]
+albedo_color = Color(0.78431, 0.84706, 0.90980, 1.00000)
+
+[sub_resource type="BoxMesh" id="BoxM_3"]
+size = Vector3(0.45, 4.6, 0.45)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_4"]
+albedo_color = Color(0.78431, 0.84706, 0.90980, 1.00000)
+
+[sub_resource type="BoxMesh" id="BoxM_5"]
+size = Vector3(0.45, 5.0, 0.45)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_6"]
+albedo_color = Color(0.78431, 0.84706, 0.90980, 1.00000)
+
+[node name="world_landmark_frost" type="Node3D"]
+
+[node name="P0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 2.20000, 0.00000)
+rotation = Vector3(0.0, 0, 0.3)
+mesh = SubResource("BoxM_1")
+material_override = SubResource("StandardMaterial_2")
+
+[node name="P1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 2.20000, 2.20000, -1.40000)
+rotation = Vector3(0.0, 0, 0.3)
+mesh = SubResource("BoxM_3")
+material_override = SubResource("StandardMaterial_4")
+
+[node name="P2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 4.40000, 2.20000, -2.80000)
+rotation = Vector3(0.0, 0, 0.3)
+mesh = SubResource("BoxM_5")
+material_override = SubResource("StandardMaterial_6")

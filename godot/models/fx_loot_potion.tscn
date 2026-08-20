@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="CylinderMesh" id="CylinderM_1"]
+top_radius = 0.13
+bottom_radius = 0.17
+height = 0.4
+radial_segments = 7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_2"]
+albedo_color = Color(0.84706, 0.20392, 0.16471, 1.00000)
+shading_mode = 0
+
+[node name="fx_loot_potion" type="Node3D"]
+
+[node name="Bottle" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 0.22000, 0.00000)
+mesh = SubResource("CylinderM_1")
+material_override = SubResource("StandardMaterial_2")

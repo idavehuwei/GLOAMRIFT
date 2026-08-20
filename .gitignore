@@ -4,3 +4,7 @@
 node_modules/
 public/assets/models/_raw*.glb
 scripts/tripo_build.log
+
+godot/.godot/
+godot/.import/
+godot/export/

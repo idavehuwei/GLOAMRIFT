@@ -1,0 +1,84 @@
+[gd_scene load_steps=15 format=3]
+
+[sub_resource type="BoxMesh" id="BoxM_1"]
+size = Vector3(0.72, 0.86, 0.44)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_2"]
+albedo_color = Color(0.41961, 0.19608, 0.18824, 1.00000)
+
+[sub_resource type="BoxMesh" id="BoxM_3"]
+size = Vector3(0.46, 0.44, 0.44)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_4"]
+albedo_color = Color(0.76471, 0.60392, 0.44706, 1.00000)
+
+[sub_resource type="BoxMesh" id="BoxM_5"]
+size = Vector3(0.22, 0.72, 0.24)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_6"]
+albedo_color = Color(0.76471, 0.60392, 0.44706, 1.00000)
+
+[sub_resource type="BoxMesh" id="BoxM_7"]
+size = Vector3(0.22, 0.72, 0.24)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_8"]
+albedo_color = Color(0.76471, 0.60392, 0.44706, 1.00000)
+
+[sub_resource type="BoxMesh" id="BoxM_9"]
+size = Vector3(0.26, 0.74, 0.28)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_10"]
+albedo_color = Color(0.20784, 0.18824, 0.17255, 1.00000)
+
+[sub_resource type="BoxMesh" id="BoxM_11"]
+size = Vector3(0.26, 0.74, 0.28)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_12"]
+albedo_color = Color(0.20784, 0.18824, 0.17255, 1.00000)
+
+[sub_resource type="SphereMesh" id="SphereM_13"]
+radius = 0.55
+height = 0.04
+radial_segments = 12
+rings = 4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_14"]
+albedo_color = Color(0.00000, 0.00000, 0.00000, 0.40000)
+transparency = 1
+
+[node name="fallback_human" type="Node3D"]
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 1.16000, 0.00000)
+mesh = SubResource("BoxM_1")
+material_override = SubResource("StandardMaterial_2")
+
+[node name="Head" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 1.79000, 0.00000)
+mesh = SubResource("BoxM_3")
+material_override = SubResource("StandardMaterial_4")
+
+[node name="ArmL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, -0.50000, 1.20000, 0.00000)
+mesh = SubResource("BoxM_5")
+material_override = SubResource("StandardMaterial_6")
+
+[node name="ArmR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.50000, 1.20000, 0.00000)
+mesh = SubResource("BoxM_7")
+material_override = SubResource("StandardMaterial_8")
+
+[node name="LegL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, -0.19000, 0.37000, 0.00000)
+mesh = SubResource("BoxM_9")
+material_override = SubResource("StandardMaterial_10")
+
+[node name="LegR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.19000, 0.37000, 0.00000)
+mesh = SubResource("BoxM_11")
+material_override = SubResource("StandardMaterial_12")
+
+[node name="Shadow" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 0.02000, 0.00000)
+mesh = SubResource("SphereM_13")
+material_override = SubResource("StandardMaterial_14")

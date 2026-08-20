@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="CylinderMesh" id="CylinderM_1"]
+top_radius = 0.0
+bottom_radius = 0.45
+height = 2.2
+radial_segments = 5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_2"]
+albedo_color = Color(0.40000, 0.18039, 0.14118, 1.00000)
+
+[node name="world_shard" type="Node3D"]
+
+[node name="Shard" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 1.10000, 0.00000)
+mesh = SubResource("CylinderM_1")
+material_override = SubResource("StandardMaterial_2")

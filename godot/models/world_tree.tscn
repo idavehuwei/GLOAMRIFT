@@ -1,0 +1,42 @@
+[gd_scene load_steps=6 format=3]
+
+[sub_resource type="CylinderMesh" id="CylinderM_1"]
+top_radius = 0.18
+bottom_radius = 0.32
+height = 3.1
+radial_segments = 7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_2"]
+albedo_color = Color(0.29020, 0.20784, 0.12549, 1.00000)
+
+[sub_resource type="CylinderMesh" id="CylinderM_3"]
+top_radius = 0.0
+bottom_radius = 1.45
+height = 2.6
+radial_segments = 8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_4"]
+albedo_color = Color(0.15686, 0.32157, 0.15686, 1.00000)
+
+[sub_resource type="CylinderMesh" id="CylinderM_5"]
+top_radius = 0.0
+bottom_radius = 1.05
+height = 2.1
+radial_segments = 8
+
+[node name="world_tree" type="Node3D"]
+
+[node name="Trunk" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 1.55000, 0.00000)
+mesh = SubResource("CylinderM_1")
+material_override = SubResource("StandardMaterial_2")
+
+[node name="Leaf1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 3.05000, 0.00000)
+mesh = SubResource("CylinderM_3")
+material_override = SubResource("StandardMaterial_4")
+
+[node name="Leaf2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 4.15000, 0.00000)
+mesh = SubResource("CylinderM_5")
+material_override = SubResource("StandardMaterial_4")

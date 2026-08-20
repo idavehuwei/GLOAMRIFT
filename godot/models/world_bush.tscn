@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="SphereMesh" id="SphereM_1"]
+radius = 0.55
+height = 1.1
+radial_segments = 6
+rings = 4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_2"]
+albedo_color = Color(0.11765, 0.27843, 0.12549, 1.00000)
+
+[node name="world_bush" type="Node3D"]
+
+[node name="Bush" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 0.42000, 0.00000)
+mesh = SubResource("SphereM_1")
+material_override = SubResource("StandardMaterial_2")

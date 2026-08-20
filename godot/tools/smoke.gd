@@ -1,0 +1,20 @@
+extends SceneTree
+
+func _init() -> void:
+	Game.start_new("测", "warrior")
+	var world := Node3D.new()
+	var actors := Node3D.new()
+	root.add_child(world)
+	root.add_child(actors)
+	WorldState.bind(world, actors)
+	WorldState.enter_area("town")
+	print("TOWN", " tiles=", WorldState.W.grid.count(1), " npcs=", WorldState.W.npcs.size(), " marks=", WorldState.W.marks.size())
+	WorldState.enter_area("waste")
+	print("WASTE enemies=", WorldState.W.enemies.size(), " walk=", WorldState.W.grid.count(1))
+	WorldState.enter_dungeon("crypt", 1)
+	print("CRYPT enemies=", WorldState.W.enemies.size(), " rooms=", WorldState.W.rooms.size())
+	var set_it := Game.roll_set_item(8)
+	var uni := Game.roll_unique("u_hammer", 8, 0)
+	Game.ensure_bounties()
+	print("LOOT sets=", LootData.SETS.size(), " uniques=", LootData.UNIQUES.size(), " bounty=", Game.P.bountyList.size(), " set=", set_it.get("name", ""), " unique=", uni.get("name", ""))
+	quit()

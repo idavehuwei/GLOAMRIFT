@@ -1,0 +1,69 @@
+[gd_scene load_steps=13 format=3]
+
+[sub_resource type="BoxMesh" id="BoxM_1"]
+size = Vector3(0.35, 1.1, 0.35)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_2"]
+albedo_color = Color(0.29020, 0.25098, 0.20392, 1.00000)
+
+[sub_resource type="BoxMesh" id="BoxM_3"]
+size = Vector3(0.35, 1.1, 0.35)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_4"]
+albedo_color = Color(0.29020, 0.25098, 0.20392, 1.00000)
+
+[sub_resource type="BoxMesh" id="BoxM_5"]
+size = Vector3(0.35, 1.1, 0.35)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_6"]
+albedo_color = Color(0.29020, 0.25098, 0.20392, 1.00000)
+
+[sub_resource type="BoxMesh" id="BoxM_7"]
+size = Vector3(0.35, 1.1, 0.35)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_8"]
+albedo_color = Color(0.29020, 0.25098, 0.20392, 1.00000)
+
+[sub_resource type="BoxMesh" id="BoxM_9"]
+size = Vector3(0.35, 1.1, 0.35)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_10"]
+albedo_color = Color(0.29020, 0.25098, 0.20392, 1.00000)
+
+[sub_resource type="BoxMesh" id="BoxM_11"]
+size = Vector3(0.35, 1.1, 0.35)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_12"]
+albedo_color = Color(0.29020, 0.25098, 0.20392, 1.00000)
+
+[node name="world_landmark_wood" type="Node3D"]
+
+[node name="P0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 3.20000, 0.55000, 0.00000)
+mesh = SubResource("BoxM_1")
+material_override = SubResource("StandardMaterial_2")
+
+[node name="P1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 1.60000, 0.55000, 2.77000)
+mesh = SubResource("BoxM_3")
+material_override = SubResource("StandardMaterial_4")
+
+[node name="P2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, -1.60000, 0.55000, 2.77000)
+mesh = SubResource("BoxM_5")
+material_override = SubResource("StandardMaterial_6")
+
+[node name="P3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, -3.20000, 0.55000, 0.00000)
+mesh = SubResource("BoxM_7")
+material_override = SubResource("StandardMaterial_8")
+
+[node name="P4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, -1.60000, 0.55000, -2.77000)
+mesh = SubResource("BoxM_9")
+material_override = SubResource("StandardMaterial_10")
+
+[node name="P5" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 1.60000, 0.55000, -2.77000)
+mesh = SubResource("BoxM_11")
+material_override = SubResource("StandardMaterial_12")

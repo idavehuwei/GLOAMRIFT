@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="BoxMesh" id="BoxM_1"]
+size = Vector3(0.55, 5.2, 0.55)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_2"]
+albedo_color = Color(0.16471, 0.14902, 0.13333, 1.00000)
+
+[node name="world_column" type="Node3D"]
+
+[node name="Col" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 2.60000, 0.00000)
+mesh = SubResource("BoxM_1")
+material_override = SubResource("StandardMaterial_2")

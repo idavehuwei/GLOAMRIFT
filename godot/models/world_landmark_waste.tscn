@@ -1,0 +1,37 @@
+[gd_scene load_steps=7 format=3]
+
+[sub_resource type="BoxMesh" id="BoxM_1"]
+size = Vector3(2.4, 0.5, 2.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_2"]
+albedo_color = Color(0.41569, 0.38431, 0.34510, 1.00000)
+
+[sub_resource type="BoxMesh" id="BoxM_3"]
+size = Vector3(1.8, 3.6, 1.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_4"]
+albedo_color = Color(0.35294, 0.32157, 0.28235, 1.00000)
+
+[sub_resource type="BoxMesh" id="BoxM_5"]
+size = Vector3(1.2, 1.4, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_6"]
+albedo_color = Color(0.29020, 0.26667, 0.23529, 1.00000)
+
+[node name="world_landmark_waste" type="Node3D"]
+
+[node name="P0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 0.25000, 0.00000)
+mesh = SubResource("BoxM_1")
+material_override = SubResource("StandardMaterial_2")
+
+[node name="P1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 2.10000, 0.00000)
+mesh = SubResource("BoxM_3")
+material_override = SubResource("StandardMaterial_4")
+
+[node name="P2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.90000, 3.90000, 0.00000)
+rotation = Vector3(0.0, 0, 0.4)
+mesh = SubResource("BoxM_5")
+material_override = SubResource("StandardMaterial_6")

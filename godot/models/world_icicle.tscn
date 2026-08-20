@@ -1,0 +1,39 @@
+[gd_scene load_steps=5 format=3]
+
+[sub_resource type="CylinderMesh" id="CylinderM_1"]
+top_radius = 0.22
+bottom_radius = 0.38
+height = 3.6
+radial_segments = 7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_2"]
+albedo_color = Color(0.78431, 0.84706, 0.90980, 1.00000)
+
+[sub_resource type="CylinderMesh" id="CylinderM_3"]
+top_radius = 0.0
+bottom_radius = 0.55
+height = 1.1
+radial_segments = 7
+
+[sub_resource type="SphereMesh" id="SphereM_4"]
+radius = 0.7
+height = 1.4
+radial_segments = 8
+rings = 4
+
+[node name="world_icicle" type="Node3D"]
+
+[node name="Shaft" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 1.80000, 0.00000)
+mesh = SubResource("CylinderM_1")
+material_override = SubResource("StandardMaterial_2")
+
+[node name="Cap" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 3.55000, 0.00000)
+mesh = SubResource("CylinderM_3")
+material_override = SubResource("StandardMaterial_2")
+
+[node name="Mound" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 0.28000, 0.00000)
+mesh = SubResource("SphereM_4")
+material_override = SubResource("StandardMaterial_2")

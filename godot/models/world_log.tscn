@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="CylinderMesh" id="CylinderM_1"]
+top_radius = 0.16
+bottom_radius = 0.2
+height = 2.8
+radial_segments = 7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_2"]
+albedo_color = Color(0.22745, 0.16471, 0.09412, 1.00000)
+
+[node name="world_log" type="Node3D"]
+
+[node name="Log" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 0.18000, 0.00000)
+mesh = SubResource("CylinderM_1")
+material_override = SubResource("StandardMaterial_2")
+rotation = Vector3(0, 0, 1.5708)

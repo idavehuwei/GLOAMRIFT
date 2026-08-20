@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="BoxMesh" id="BoxM_1"]
+size = Vector3(0.07, 0.07, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_2"]
+albedo_color = Color(1.00000, 0.90196, 0.62745, 1.00000)
+shading_mode = 0
+emission_enabled = true
+emission = Color(1.00000, 0.90196, 0.62745, 1.00000)
+emission_energy_multiplier = 1.0
+
+[node name="fx_proj_arrow" type="Node3D"]
+
+[node name="Shaft" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 0.00000, 0.00000)
+mesh = SubResource("BoxM_1")
+material_override = SubResource("StandardMaterial_2")

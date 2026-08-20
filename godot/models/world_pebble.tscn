@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="SphereMesh" id="SphereM_1"]
+radius = 0.38
+height = 0.76
+radial_segments = 8
+rings = 4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_2"]
+albedo_color = Color(0.36078, 0.32941, 0.28235, 1.00000)
+
+[node name="world_pebble" type="Node3D"]
+
+[node name="Pebble" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 0.16000, 0.00000)
+mesh = SubResource("SphereM_1")
+material_override = SubResource("StandardMaterial_2")

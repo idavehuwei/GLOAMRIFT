@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3]
+
+[sub_resource type="BoxMesh" id="BoxM_1"]
+size = Vector3(5.5, 1.1, 1.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_2"]
+albedo_color = Color(0.22745, 0.16471, 0.10980, 1.00000)
+
+[sub_resource type="BoxMesh" id="BoxM_3"]
+size = Vector3(0.16, 4.2, 0.16)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_4"]
+albedo_color = Color(0.29020, 0.22745, 0.15686, 1.00000)
+
+[node name="world_landmark_shore" type="Node3D"]
+
+[node name="P0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 0.70000, 0.00000)
+rotation = Vector3(0.0, 0, 0.18)
+mesh = SubResource("BoxM_1")
+material_override = SubResource("StandardMaterial_2")
+
+[node name="P1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 2.00000, 0.00000)
+rotation = Vector3(0.0, 0, 0.35)
+mesh = SubResource("BoxM_3")
+material_override = SubResource("StandardMaterial_4")
