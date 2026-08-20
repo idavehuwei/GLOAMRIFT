@@ -112,6 +112,7 @@ footer{margin-top:100px;padding-top:26px;border-top:1px solid var(--line);
   <h1>三　周　目<br><em>同一张地图，不同的时候</em></h1>
   <p class="sub">难度不做成「怪血更厚」。三个难度是三遍同一条裂口：第一遍把它打回去，第二遍看它怎么反扑，第三遍你已经站在最底下。</p>
   <div class="meta">
+    <span>状态 <b>规划中 · 五章主线已接入</b></span>
     <span>普通 <b>1 – 60</b></span>
     <span>地狱 <b>60 – 80</b></span>
     <span>噩梦 <b>80 – 100</b></span>
@@ -539,7 +540,7 @@ P.nameMask   = [<span class="k">true</span>, <span class="k">true</span>, <span 
   </table>
 
   <h3>抗性维度（配套 v3.2 引入）</h3>
-  <p>加四种伤害类型：物理 / 火 / 冰 / 暗影。怪物按类型分配伤害来源，装备提供对应抗性词缀。难度惩罚直接作用在玩家抗性基线上，这样"地狱难度要堆抗性"就成了真实的构筑目标，而不是纯粹的数值墙。</p>
+  <p>加四种伤害类型：物理 / 火 / 冰 / 暗影。怪物按类型分配伤害来源，装备提供对应抗性词缀。抗性上限 75%（「还亮着」85%），20 级以上精英/首领会免疫一种。地狱全抗 −40，噩梦 −90。五章打完开地狱，地狱五章开噩梦。传送石碑与上路选难度。</p>
 
   <pre><span class="c">// 难度状态挂在存档上，进图时统一取用</span>
 W.diff = <span class="q">"hell"</span>;   <span class="c">// "normal" | "hell" | "nightmare"</span>
@@ -569,18 +570,18 @@ e.xp    = Math.round(t.xp * mult * D.xp);
 
   <h3>排期建议</h3>
   <table>
-    <thead><tr><th>版本</th><th>内容</th><th>前置</th><th>估时</th></tr></thead>
+    <thead><tr><th>版本</th><th>内容</th><th>前置</th><th>估时</th><th>进度</th></tr></thead>
     <tbody>
-      <tr><td>v3.1</td><td>存档（多周目的前提）</td><td>—</td><td class="num">2 人日</td></tr>
-      <tr><td>v3.2</td><td>抗性四维 + 难度乘数 + 难度选择界面</td><td>存档</td><td class="num">2 人日</td></tr>
-      <tr><td>v3.4</td><td>世界首领调度器 + 前两只（阿姆 / 潮信）</td><td>难度系统</td><td class="num">3 人日</td></tr>
-      <tr><td>v4.1</td><td>地狱难度：世界状态三分支 + 回响八环 + 无名之群</td><td>五章主线完成</td><td class="num">6 人日</td></tr>
-      <tr><td>v4.2</td><td>噩梦难度：掉名机制 + 三代叠加渲染 + 名字六环</td><td>地狱</td><td class="num">7 人日</td></tr>
-      <tr><td>v4.3</td><td>第九根 / 空白 + 真结局</td><td>噩梦</td><td class="num">4 人日</td></tr>
+      <tr><td>v3.1</td><td>存档（多周目的前提）</td><td>—</td><td class="num">2 人日</td><td>已有</td></tr>
+      <tr><td>v3.2</td><td>抗性四维 + 难度乘数 + 难度选择界面</td><td>存档</td><td class="num">2 人日</td><td>已有</td></tr>
+      <tr><td>v3.4</td><td>世界首领调度器 + 前两只（阿姆 / 潮信）</td><td>难度系统</td><td class="num">3 人日</td><td>未做</td></tr>
+      <tr><td>v4.1</td><td>地狱难度：世界状态三分支 + 回响八环 + 无名之群</td><td>五章主线完成</td><td class="num">6 人日</td><td>未做</td></tr>
+      <tr><td>v4.2</td><td>噩梦难度：掉名机制 + 三代叠加渲染 + 名字六环</td><td>地狱</td><td class="num">7 人日</td><td>未做</td></tr>
+      <tr><td>v4.3</td><td>第九根 / 空白 + 真结局</td><td>噩梦</td><td class="num">4 人日</td><td>未做</td></tr>
     </tbody>
   </table>
 
-  <div class="note">优先级判断：<b>世界首领可以提前做</b>（v3.4，不依赖剧情），因为它给普通难度的中后期提供了明确的追求目标；而地狱与噩梦必须等五章主线全部完成——它们的全部叙事重量都建立在"你上次做了什么"之上，主线没走完，这个前提不存在。</div>
+  <div class="note">优先级判断：<b>五章主线已经走完</b>，地狱与噩梦的数值层已接入（传送碑选难度）。世界状态三分支、回响八环、掉名六环仍是叙事增量。世界首领仍可提前做。</div>
 </section>
 
 <footer>幽影深渊 · 卷宗九 / 难度分层与世界首领　—　三周目共约 60 小时主线，世界首领常驻</footer>

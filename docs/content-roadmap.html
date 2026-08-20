@@ -67,6 +67,8 @@ pre .c{color:#5f6b57}pre .k{color:var(--brass)}pre .q{color:var(--verdigris)}
 .feat-hd h4{font-family:var(--serif);font-weight:400;font-size:22px;color:#f2e8d2}
 .feat-hd .id{font-family:var(--mono);font-size:11px;color:var(--violet);letter-spacing:.14em}
 .feat-hd .est{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ash)}
+.st{font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:2px 8px;border:1px solid currentColor;white-space:nowrap}
+.st-ok{color:var(--verdigris)}.st-part{color:var(--brass)}.st-gap{color:var(--blood)}
 .feat p{margin-top:10px;max-width:800px;color:#a9a291;font-size:14px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:16px}
 .grid2 h5{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--brass);margin-bottom:8px}
@@ -91,12 +93,12 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
 <header>
   <div class="eyebrow">卷宗 三 · 内容扩展</div>
   <h1>让人愿意<em>再下一层</em><br>内容与功能扩展</h1>
-  <p class="sub">v3 已经把世界铺开了：三职业、四张地面图、三个副本、一条无限裂隙。缺的不是内容量，而是<b>留下来的理由</b>——现在关掉页面，一切归零；打到 20 级，可做的事和 10 级时一样。这份计划按"先补漏、再加深、后拓宽"的顺序排。</p>
+  <p class="sub">五章主线已经铺开：存档、城镇服务、重铸镶嵌、套装、遗物、鉴定、悬赏、野外事件、裂隙词缀、特殊房间、简化天赋、一句话、技能符文与协同、抗性免疫、地狱与噩梦都在游戏里。还缺的是试炼场、第四职业。</p>
   <div class="meta">
-    <span>当前版本 <b>v3.0</b></span>
-    <span>规划 <b>v3.1 → v4.0</b></span>
-    <span>特性 <b>14 项</b></span>
-    <span>预估 <b>约 21 个工作日</b></span>
+    <span>当前版本 <b>v3.5</b></span>
+    <span>已有 <b>F1–F11</b></span>
+    <span>部分 <b>F14</b></span>
+    <span>未做 <b>F12 · F13</b></span>
   </div>
   <nav class="docs">
     <a href="world-map-design.html">一 · 世界测绘</a>
@@ -115,16 +117,16 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
 
 <section id="gaps">
   <div class="shead"><span class="snum">§ 01</span><h2>现在缺什么</h2></div>
-  <p class="lede">先把问题说准，再决定做什么。这四条是按"玩家会在第几分钟撞上"排序的。</p>
+  <p class="lede">先把问题说准，再决定做什么。这五条按"玩家会在第几分钟撞上"排序。装备期待感已用「记得的」词缀、绿色套装、拾得/金币发现、卡登改一句补上。</p>
 
   <table>
-    <thead><tr><th>问题</th><th>玩家什么时候撞上</th><th>后果</th><th>对应特性</th></tr></thead>
+    <thead><tr><th>问题</th><th>玩家什么时候撞上</th><th>后果</th><th>对应特性</th><th>进度</th></tr></thead>
     <tbody>
-      <tr><td>刷新即清零</td><td>第一次关页面</td><td>所有投入归零，不存在"明天继续"</td><td class="num">F1 存档</td></tr>
-      <tr><td>装备只有数值大小</td><td>约 30 分钟</td><td>拾取变成比大小，掉落失去期待感</td><td class="num">F3 F4 套装与词缀</td></tr>
-      <tr><td>技能六个格子早早填满</td><td>15 级</td><td>技能点无处可花，构筑没有分叉</td><td class="num">F5 天赋</td></tr>
-      <tr><td>每层地牢长得一样</td><td>第三层</td><td>重复刷缺少变量，无限层变成无限重复</td><td class="num">F6 F7 房间与词缀</td></tr>
-      <tr><td>没有终局目标</td><td>通关三副本后</td><td>不知道该往哪打</td><td class="num">F9 悬赏 F12 试炼</td></tr>
+      <tr><td>刷新即清零</td><td>第一次关页面</td><td>所有投入归零，不存在"明天继续"</td><td class="num">F1 存档</td><td><span class="st st-ok">已补</span></td></tr>
+      <tr><td>装备只有数值大小</td><td>约 30 分钟</td><td>拾取变成比大小，掉落失去期待感</td><td class="num">F3 词缀</td><td><span class="st st-ok">已补</span></td></tr>
+      <tr><td>技能六个格子早早填满</td><td>15 级</td><td>技能点无处可花，构筑没有分叉</td><td class="num">F5 F6</td><td><span class="st st-ok">已补</span></td></tr>
+      <tr><td>每层地牢长得一样</td><td>第三层</td><td>重复刷缺少变量，无限层变成无限重复</td><td class="num">F7 F8 房间与词缀</td><td><span class="st st-ok">已补</span></td></tr>
+      <tr><td>没有终局目标</td><td>通关三副本后</td><td>不知道该往哪打</td><td class="num">地狱噩梦 · F12 试炼</td><td><span class="st st-part">部分</span></td></tr>
     </tbody>
   </table>
 
@@ -159,11 +161,11 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
 
 <section id="v31">
   <div class="shead"><span class="snum">§ 02</span><h2>v3.1 · 把玩家留住</h2></div>
-  <p class="lede">目标：让一局游戏能跨越关闭页面。这一版不加任何新玩法，只补基础设施——但它决定了后面所有内容有没有意义。</p>
+  <p class="lede">目标：让一局游戏能跨越关闭页面。这一版不加任何新玩法，只补基础设施——但它决定了后面所有内容有没有意义。<b>F1–F4 已落地。</b></p>
 
   <div class="feat">
-    <div class="feat-hd"><span class="id">F1</span><h4>存档与继续</h4><span class="est">2 人日 · 必做</span></div>
-    <p>localStorage 单槽自动存档。存的是玩家状态而非世界状态——世界是种子生成的，回来时重新生成同一份即可，这样存档体积能压在 20 KB 以内。</p>
+    <div class="feat-hd"><span class="id">F1</span><h4>存档与继续</h4><span class="st st-ok">已有</span><span class="est">2 人日 · 必做</span></div>
+    <p>localStorage 单槽自动存档。存的是玩家状态而非世界状态——世界是种子生成的，回来时重新生成同一份即可，这样存档体积能压在 20 KB 以内。<b>现已多槽 + 导入导出，关闭后回城继续。</b></p>
     <pre><span class="k">const</span> SAVE_KEY = <span class="q">'shadow-depths-save-v1'</span>;
 
 <span class="k">function</span> serialize() {
@@ -194,14 +196,14 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
   </div>
 
   <div class="feat">
-    <div class="feat-hd"><span class="id">F2</span><h4>城镇服务位补齐</h4><span class="est">1.5 人日</span></div>
+    <div class="feat-hd"><span class="id">F2</span><h4>城镇服务位补齐</h4><span class="st st-ok">已有</span><span class="est">1.5 人日</span></div>
     <p>卷宗一里预留的南侧带状区域（z ∈ [8, 24]）落三个功能点：<b>仓库</b>（40 格共享，跨角色）、<b>悬赏板</b>（每日随机任务，见 F9）、<b>传送石碑</b>（已探明区域快速往返，省掉走回头路）。三者都是纯 UI + 数据，无新美术依赖。</p>
     <div class="chips"><span class="chip">仓库 (−20, 14)</span><span class="chip">悬赏板 (10, 16)</span><span class="chip">传送碑 (0, 20)</span><span class="chip">复用 openNPC 面板</span></div>
   </div>
 
   <div class="feat">
-    <div class="feat-hd"><span class="id">F3</span><h4>装备词缀重铸与镶嵌</h4><span class="est">2 人日</span></div>
-    <p>让金币在中后期有出路，也让"差一条词缀"的装备有救。铁匠处新增两项服务：<b>重铸</b>（重掷全部词缀，费用随物品等级与品质上涨）与<b>打孔 + 符文</b>（稀有以上可开 1–2 孔，符文提供固定加成，可取出）。符文本身作为一种新掉落，从精英与首领处产出。</p>
+    <div class="feat-hd"><span class="id">F3</span><h4>装备词缀重铸与镶嵌</h4><span class="st st-ok">已有</span><span class="est">2 人日</span></div>
+    <p>让金币在中后期有出路，也让"差一条词缀"的装备有救。铁匠处三项服务：<b>重铸全部</b>（重掷词缀，费用随等级与品质上涨）、<b>改一句</b>（只重掷那一条，记得的仍从记得池出，比全砸便宜）、<b>打孔 + 符文</b>（稀有以上可开 1–2 孔）。稀有以上有机会多一条「记得的」行为词缀（击杀回血、冻结、爆裂、残血增伤等），不再只是比数字。普通池含拾得%与金币发现%。符文从精英与首领处产出。</p>
     <pre><span class="c">// 物品结构扩展（向后兼容：老存档没有这两个字段时按空处理）</span>
 item.sockets = [ <span class="k">null</span>, {id:<span class="q">'rune_ember'</span>, n:<span class="q">'余烬符文'</span>, k:<span class="q">'dmg'</span>, v:6} ];
 item.reforged = 2;                        <span class="c">// 重铸次数，影响下次费用</span>
@@ -216,29 +218,30 @@ item.reforged = 2;                        <span class="c">// 重铸次数，影�
   </div>
 
   <div class="feat">
-    <div class="feat-hd"><span class="id">F4</span><h4>套装</h4><span class="est">1.5 人日</span></div>
-    <p>每职业两套，2/4/6 件递进效果。套装件只从副本首领和裂隙首领掉落，给"打副本"一个独立于数值的理由。效果要改变打法而不只是加数值——比如战士的"裂地斩命中 3 个以上目标时刷新猛冲冷却"。</p>
-    <div class="grid2">
-      <div><h5>示例 · 战士「石桥守望」</h5><ul>
-        <li>2 件：受击时 15% 概率获得 3 秒 20% 减伤</li>
-        <li>4 件：旋风斩期间移动速度不再降低</li>
-        <li>6 件：坚壁破碎时对周围造成已吸收伤害的 200%</li>
-      </ul></div>
-      <div><h5>示例 · 弓箭手「暮语猎手」</h5><ul>
-        <li>2 件：翻滚后 2 秒内攻速 +30%</li>
-        <li>4 件：穿透射击每多命中一个目标伤害 +12%</li>
-        <li>6 件：箭雨范围内的敌人受到的暴击伤害 +25%</li>
-      </ul></div>
-    </div>
+    <div class="feat-hd"><span class="id">F4</span><h4>套装</h4><span class="st st-ok">已有</span><span class="est">1.5 人日</span></div>
+    <p>暗黑二式绿色套装，8 套铺在 1–100 级。每套 5–6 件，2/4/6（或 5）件递进，满件是传说级改打法。件上有描述，套也有一句。精英与首领掉，副本首通必掉一件，悬赏日俸也有机会。不能重铸、不能打孔。</p>
+    <table>
+      <thead><tr><th>套装</th><th>职业</th><th>等级</th><th>满件传说</th></tr></thead>
+      <tbody>
+        <tr><td>石桥守望</td><td>战士</td><td class="num">1–24</td><td>坚壁破碎时，打出已吸收量的 200%</td></tr>
+        <tr><td>暮语猎手</td><td>弓手</td><td class="num">1–24</td><td>箭雨范围内伤害 +25%</td></tr>
+        <tr><td>余烬课徒</td><td>法师</td><td class="num">1–24</td><td>陨石落地留下 3 秒火池</td></tr>
+        <tr><td>裂隙行者</td><td>全职</td><td class="num">22–50</td><td>进裂隙一层，8 秒减伤 25%</td></tr>
+        <tr><td>灰舱旧例</td><td>战士</td><td class="num">46–74</td><td>旋风叠满后，下一次裂地斩翻倍</td></tr>
+        <tr><td>织母丝线</td><td>法师</td><td class="num">46–74</td><td>生命汲取同时减速 3 秒</td></tr>
+        <tr><td>十一条船</td><td>弓手</td><td class="num">46–74</td><td>鹰眼期间，穿透刷新翻滚</td></tr>
+        <tr><td>第一次下潜</td><td>全职</td><td class="num">72–100</td><td>残血时伤害 +35%，减伤 +15%</td></tr>
+      </tbody>
+    </table>
   </div>
 </section>
 
 <section id="v32">
   <div class="shead"><span class="snum">§ 03</span><h2>v3.2 · 让构筑有分叉</h2></div>
-  <p class="lede">目标：两个同职业、同等级的角色应该玩起来不一样。现在的技能系统只有"点满六个技能"一条路，天赋与技能符文把它拆成选择题。</p>
+  <p class="lede">目标：两个同职业、同等级的角色应该玩起来不一样。现在的技能系统只有"点满六个技能"一条路，天赋与技能符文把它拆成选择题。<b>落地的是简化版：每职业两个关键天赋，不是三线各 6 节点。</b></p>
 
   <div class="feat">
-    <div class="feat-hd"><span class="id">F5</span><h4>天赋树</h4><span class="est">3 人日</span></div>
+    <div class="feat-hd"><span class="id">F5</span><h4>天赋树</h4><span class="st st-part">已有（简化）</span><span class="est">3 人日</span></div>
     <p>每职业三条线（战士：狂怒 / 壁垒 / 大地；法师：烈焰 / 冰霜 / 奥术；弓手：精准 / 陷阱 / 疾风），每线 6 个节点，10 级开放，每 2 级 1 点。节点分三类：<b>数值</b>（+X% 暴击伤害）、<b>行为</b>（火球改为穿透但伤害 −20%）、<b>关键</b>（每线终点，改变一个技能的机制）。关键节点互斥——一次只能激活一个，逼出取舍。</p>
     <pre><span class="k">const</span> TALENTS = {
   warrior: {
@@ -256,8 +259,8 @@ item.reforged = 2;                        <span class="c">// 重铸次数，影�
   </div>
 
   <div class="feat">
-    <div class="feat-hd"><span class="id">F6</span><h4>技能符文</h4><span class="est">2 人日</span></div>
-    <p>每个技能升到 3 级解锁一个符文槽，符文改变技能形态而非数值。这是"同职业不同玩法"最直接的杠杆，而且复用现有的技能等级与面板结构。</p>
+    <div class="feat-hd"><span class="id">F6</span><h4>技能符文</h4><span class="st st-ok">已有</span><span class="est">2 人日</span></div>
+    <p>每个技能升到 3 级解锁一个符文槽，符文改变技能形态而非数值。火球裂焰 / 凝滞、多重收束、裂地震荡、寒冰凛冬、猛冲破阵。协同写在技能定义里：火球抬陨石、裂地斩抬旋风、多重抬箭雨持续。</p>
     <table>
       <thead><tr><th>技能</th><th>符文</th><th>改变</th></tr></thead>
       <tbody>
@@ -274,11 +277,11 @@ item.reforged = 2;                        <span class="c">// 重铸次数，影�
 
 <section id="v33">
   <div class="shead"><span class="snum">§ 04</span><h2>v3.3 · 让重复刷有变量</h2></div>
-  <p class="lede">目标：第 20 层和第 3 层不只是数值不同。所有改动都作用在生成阶段，不改战斗核心。</p>
+  <p class="lede">目标：第 20 层和第 3 层不只是数值不同。所有改动都作用在生成阶段，不改战斗核心。<b>F7 特殊房间、F8 裂隙词缀、F9 悬赏、F10 野外事件已落地。</b></p>
 
   <div class="feat">
-    <div class="feat-hd"><span class="id">F7</span><h4>特殊房间</h4><span class="est">2 人日</span></div>
-    <p>按卷宗一 §04 的方案，在生成后给房间打标签，而不是改生成器。四种：<b>宝库</b>（4 宝箱 + 一队守卫）、<b>祭坛</b>（三选一增益，持续到离开本层）、<b>囚笼</b>（放出一个 NPC 随行战斗 60 秒）、<b>陷阱厅</b>（地刺 / 落石 / 毒雾，通过后必掉一件稀有）。每层随机 1–2 个，深度越大出现概率越高。</p>
+    <div class="feat-hd"><span class="id">F7</span><h4>特殊房间</h4><span class="st st-ok">已有</span><span class="est">2 人日</span></div>
+    <p>按卷宗一 §04 的方案，在生成后给房间打标签，而不是改生成器。四种：<b>宝库</b>（4 宝箱 + 一队守卫）、<b>祭坛</b>（三选一增益，持续到离开本层）、<b>囚笼</b>（放出一个 NPC 随行战斗 60 秒）、<b>陷阱厅</b>（地刺 / 落石 / 毒雾，通过后必掉一件稀有）。每层随机 1–2 个，深度越大出现概率越高。<b>已接入：<code>W.roomTags</code>，不改 <code>genRooms()</code>。</b></p>
     <div class="grid2">
       <div><h5>祭坛效果（三选一）</h5><ul>
         <li>贪婪：本层金币掉落 +150%，但你受到的伤害 +25%</li>
@@ -289,13 +292,14 @@ item.reforged = 2;                        <span class="c">// 重铸次数，影�
         <li>新增 <code>W.roomTags[]</code>，在 enterRift/enterDungeon 刷怪循环前分配</li>
         <li>宝箱复用木桶的破坏逻辑，换模型与掉落表</li>
         <li>祭坛增益写进 <code>P.buffs</code>，切区域时清空</li>
+        <li>已用现有宝箱 / 烛台 / 铁栏 / 石块，不改碰撞网格</li>
       </ul></div>
     </div>
   </div>
 
   <div class="feat">
-    <div class="feat-hd"><span class="id">F8</span><h4>裂隙词缀</h4><span class="est">2 人日</span></div>
-    <p>从第 5 层起，每层随机附带 1–2 条词缀，进层前在传送门面板上明示，玩家可以选择"换一层"（消耗少量金币重掷）。词缀既加难度也加收益——这是无限层从"数值墙"变成"策略选择"的关键。</p>
+    <div class="feat-hd"><span class="id">F8</span><h4>裂隙词缀</h4><span class="st st-ok">已有</span><span class="est">2 人日</span></div>
+    <p>从第 5 层起，每层随机附带 1–2 条词缀，进层前在传送门面板上明示，玩家可以选择"换一层"（消耗少量金币重掷）。词缀既加难度也加收益——这是无限层从"数值墙"变成"策略选择"的关键。<b>已接入：<code>RIFT_AFFIXES</code>，换一层随次数涨价。</b></p>
     <table>
       <thead><tr><th>词缀</th><th>效果</th><th>掉落加成</th></tr></thead>
       <tbody>
@@ -311,30 +315,30 @@ item.reforged = 2;                        <span class="c">// 重铸次数，影�
   </div>
 
   <div class="feat">
-    <div class="feat-hd"><span class="id">F9</span><h4>每日悬赏</h4><span class="est">1.5 人日</span></div>
+    <div class="feat-hd"><span class="id">F9</span><h4>每日悬赏</h4><span class="st st-ok">已有</span><span class="est">1.5 人日</span></div>
     <p>悬赏板每天刷 5 条随机任务（在某区杀 N 只某类怪 / 通关某副本 / 到达裂隙第 N 层 / 不使用药水通关一层）。完成 3 条给一个奖励箱，含随机套装件或高阶符文。这是把已有内容重新组织成日常目标，不需要新玩法。</p>
     <div class="chips"><span class="chip">复用 QUESTS 结构</span><span class="chip">按本地日期生成种子</span><span class="chip">与存档同步</span></div>
   </div>
 
   <div class="feat">
-    <div class="feat-hd"><span class="id">F10</span><h4>野外随机事件</h4><span class="est">2 人日</span></div>
+    <div class="feat-hd"><span class="id">F10</span><h4>野外随机事件</h4><span class="st st-ok">已有</span><span class="est">2 人日</span></div>
     <p>进入野外时 40% 概率触发一个事件，位置随机落在地图上并在小地图标记：<b>商队遇袭</b>（限时护送，成功获得商人折扣）、<b>宝箱守卫</b>（一只高等级精英守着大箱）、<b>裂隙涌流</b>（一处不断涌出怪物的裂口，关闭后掉符文）、<b>迷路的学徒</b>（跟随他找到隐藏宝藏）。</p>
   </div>
 </section>
 
 <section id="v40">
   <div class="shead"><span class="snum">§ 05</span><h2>v4.0 · 拓宽</h2></div>
-  <p class="lede">前面三版都在加深现有内容，这一版才往外扩。放在最后是因为：在存档、构筑、变量都补齐之前，加更多区域只会让空洞被拉得更长。</p>
+  <p class="lede">前面三版都在加深现有内容，这一版才往外扩。地图这一项已经远超原计划：五章城镇、野外、副本全在 <code>AREA</code> / <code>DUNGEONS</code> 里。还缺试炼场和第四职业。</p>
 
   <div class="cards">
-    <div class="card"><div class="k">F11 · 4 人日</div><h4>三张新地图</h4>
-      <p>北境冰湖 (Lv24)、沉船海岸 (Lv30)、断桥修道院副本 (Lv27)。配置模板与接入坐标见卷宗一 §05；新增两种阻挡样式与两套地面色板。</p></div>
-    <div class="card"><div class="k">F12 · 3 人日</div><h4>试炼场（终局）</h4>
+    <div class="card"><div class="k">F11 · 已有</div><h4>五章地图</h4>
+      <p>原计划三张新图。现已接入北境冰湖、沉船海岸、断桥修道院，以及白喉隘口、潮灯港、沉降残镇、桥墩井口和对应野外、副本。见卷宗一。</p></div>
+    <div class="card"><div class="k">F12 · 未做</div><h4>试炼场（终局）</h4>
       <p>限时波次挑战，20 波递进，每 5 波一个首领。排行榜记录本地最佳。给满级玩家一个可量化的目标，也是构筑的检验场。</p></div>
-    <div class="card"><div class="k">F13 · 2.5 人日</div><h4>第四职业 · 德鲁伊</h4>
+    <div class="card"><div class="k">F13 · 未做</div><h4>第四职业 · 德鲁伊</h4>
       <p>召唤流：狼灵与藤蔓协同作战。会暴露现有 AI 只服务于"敌对单位"的假设，需要先把友方单位抽象出来——这也是未来做同伴 NPC 的地基。</p></div>
-    <div class="card"><div class="k">F14 · 2 人日</div><h4>手感与呈现打磨</h4>
-      <p>受击顿帧、击杀慢镜、首领登场运镜、技能预输入队列、连击计数。工作量不大但对手感的提升往往超过一个新系统。</p></div>
+    <div class="card"><div class="k">F14 · 部分</div><h4>手感与呈现打磨</h4>
+      <p>连击计数、首领开场字幕已有。受击顿帧、击杀慢镜、技能预输入队列未做。</p></div>
   </div>
 </section>
 
@@ -342,21 +346,25 @@ item.reforged = 2;                        <span class="c">// 重铸次数，影�
   <div class="shead"><span class="snum">§ 06</span><h2>排期与验收</h2></div>
 
   <table>
-    <thead><tr><th>版本</th><th>特性</th><th>人日</th><th>验收标准</th></tr></thead>
+    <thead><tr><th>版本</th><th>特性</th><th>人日</th><th>进度</th><th>验收标准</th></tr></thead>
     <tbody>
       <tr><td>v3.1</td><td>F1 存档 · F2 城镇服务 · F3 重铸镶嵌 · F4 套装</td><td class="num">7</td>
+        <td><span class="st st-ok">F1–F4 已有</span></td>
         <td>关闭浏览器再打开，角色、装备、任务、副本通关记录全部还原；金币在 30 级仍有明确出路</td></tr>
       <tr><td>v3.2</td><td>F5 天赋 · F6 技能符文</td><td class="num">5</td>
+        <td><span class="st st-ok">天赋 · 符文 · 协同已有</span></td>
         <td>同职业两套构筑在同一层裂隙的通关方式明显不同（一套靠爆发、一套靠持续）</td></tr>
       <tr><td>v3.3</td><td>F7 特殊房间 · F8 裂隙词缀 · F9 悬赏 · F10 野外事件</td><td class="num">7.5</td>
+        <td><span class="st st-ok">F7–F10 已有</span></td>
         <td>连续刷 10 层裂隙，至少遇到 6 种不同的层内变量；每日登录有明确的 3 件事可做</td></tr>
       <tr><td>v4.0</td><td>F11 新地图 · F12 试炼 · F13 德鲁伊 · F14 打磨</td><td class="num">11.5</td>
+        <td><span class="st st-part">五章地图已有</span></td>
         <td>满级后仍有至少 5 小时可玩内容；新职业与现有三职业的强度差在 ±15% 内</td></tr>
     </tbody>
   </table>
 
   <h3>与美术计划的耦合</h3>
-  <p>两条线基本独立，只有三处需要对齐：<b>F4 套装</b>需要武器与护甲的品质外观分档（美术第一期产出后才有视觉体现，功能可先上）；<b>F7 特殊房间</b>需要宝箱与祭坛模型（第三期）；<b>F13 德鲁伊</b>需要新职业骨架与两个召唤物（第二期结束后插入）。其余功能均可在方块模型下先做完并验证手感。</p>
+  <p>两条线基本独立，只有三处需要对齐：<b>F4 套装</b>需要武器与护甲的品质外观分档（美术第一期产出后才有视觉体现，功能可先上）；<b>F7 特殊房间</b>已用现有宝箱与祭坛模型；<b>F13 德鲁伊</b>需要新职业骨架与两个召唤物（第二期结束后插入）。其余功能均可在方块模型下先做完并验证手感。</p>
 
   <div class="note">建议的推进节奏：功能线先行一到两个版本，美术线跟在后面替换。原因是替换模型不改变任何数值与判定，什么时候接都不会返工；而功能改动如果等美术就位再做，会一直拖着"关掉页面就没了"这个最伤留存的问题。</div>
 
@@ -372,7 +380,7 @@ item.reforged = 2;                        <span class="c">// 重铸次数，影�
   </table>
 </section>
 
-<footer>幽影深渊 · 卷宗三 / 内容与功能扩展　—　与卷宗一的坐标基准、卷宗二的资产分期配套使用</footer>
+<footer>幽影深渊 · 卷宗三 / 内容与功能扩展　—　v3.5 · F1–F11 已有 · 试炼 / 德鲁伊未做</footer>
 </div>
 
 <script>

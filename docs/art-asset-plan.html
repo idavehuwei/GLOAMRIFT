@@ -57,7 +57,7 @@ td:first-child{color:var(--bone)}
 tbody tr:hover td{background:#141821}
 .num{font-family:var(--mono);font-size:12.5px;color:var(--brass-hi);white-space:nowrap}
 .tag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:2px 7px;border:1px solid currentColor;white-space:nowrap}
-.p0{color:var(--blood)}.p1{color:var(--brass)}.p2{color:var(--ash)}
+.p0{color:var(--blood)}.p1{color:var(--brass)}.p2{color:var(--ash)}.ok{color:var(--verdigris)}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:1px;margin-top:26px;
   background:var(--line);border:1px solid var(--line)}
 .card{background:var(--slate);padding:20px}
@@ -93,12 +93,12 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
 <header>
   <div class="eyebrow">卷宗 二 · 美术资源</div>
   <h1>从几何体<em>到资产</em><br>美术整合计划</h1>
-  <p class="sub">当前所有模型都是 <code>BoxGeometry</code> 拼的，全部材质是纯色 Lambert。这份计划把它替换成一套可加载、可复用、可增量替换的资产管线——关键约束是：<b>不能推倒重来</b>，每一步都要保证游戏仍能跑。</p>
+  <p class="sub">管线已通：<code>assets.json</code> + GLTFLoader + 缺失回落方块。职业、NPC、大量怪物已换成 GLB。地面、建筑、武器、图标、音景仍是程序化几何体 / Emoji / 合成音。</p>
   <div class="meta">
-    <span>现状 <b>0 张贴图 · 0 个 GLB</b></span>
-    <span>目标 <b>P0 共 34 项资产</b></span>
+    <span>现状 <b>管线已通 · 36 个 GLB</b></span>
+    <span>第一、二期 <b>角色与怪物已接入</b></span>
+    <span>未做 <b>地面 · 建筑 · 图标 · 音景</b></span>
     <span>预算 <b>首屏 ≤ 8 MB</b></span>
-    <span>管线 <b>Blender / ComfyUI → glTF</b></span>
   </div>
   <nav class="docs">
     <a href="world-map-design.html">一 · 世界测绘</a>
@@ -117,29 +117,29 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
 
 <section id="now">
   <div class="shead"><span class="snum">§ 01</span><h2>现状盘点</h2></div>
-  <p class="lede">先说清楚要替换的是什么。当前的视觉全部由代码生成，好处是零加载、零依赖；坏处是所有角色共用一套比例，怪物之间只靠配色区分，玩家很难在余光里认出"这是屠夫还是腐尸"。</p>
+  <p class="lede">先说清楚已经换了什么、还剩什么。角色和多数怪物走 GLB，缺失项自动回落方块。地面、房子、武器、图标还没换。</p>
 
   <table>
-    <thead><tr><th>类别</th><th>当前实现</th><th>数量</th><th>问题</th><th>替换优先级</th></tr></thead>
+    <thead><tr><th>类别</th><th>当前实现</th><th>数量</th><th>问题</th><th>优先级</th></tr></thead>
     <tbody>
-      <tr><td>人形角色</td><td><code>humanoid()</code> — 12 个 Box + 可选武器组</td><td class="num">3 职业 + 12 怪</td>
-        <td>比例雷同，动作只有腿摆和挥臂</td><td><span class="tag p0">P0</span></td></tr>
-      <tr><td>兽形角色</td><td><code>beast()</code> — 躯干 + 4 腿 + 头</td><td class="num">6 种</td>
-        <td>狼、猪、蜘蛛外形几乎一样</td><td><span class="tag p0">P0</span></td></tr>
+      <tr><td>人形角色</td><td>职业 / NPC / 多数人形怪走 GLB，缺失回落 <code>humanoid()</code></td><td class="num">3 职业 + 9 NPC + 多怪</td>
+        <td>树妖、魔像、怨魂仍是方块；换装仍只改颜色</td><td><span class="tag ok">已接入</span></td></tr>
+      <tr><td>兽形角色</td><td>狼、猪、蛛、鼠、蛇、蛙、蜂及变体走 GLB，缺失回落 <code>beast()</code></td><td class="num">10+ 种</td>
+        <td>熔岩兽借用野猪模型</td><td><span class="tag ok">已接入</span></td></tr>
       <tr><td>武器</td><td>Box 刀刃 / Cylinder 杖 / Torus 弓</td><td class="num">3 类 × 5 品质色</td>
-        <td>换装只改颜色，看不出形制差异</td><td><span class="tag p0">P0</span></td></tr>
-      <tr><td>地面</td><td>InstancedMesh + 逐格随机顶点色</td><td class="num">4 套配色</td>
-        <td>纯色块，近看没有质感</td><td><span class="tag p1">P1</span></td></tr>
+        <td>换装只改颜色，看不出形制差异</td><td><span class="tag p0">P0 未做</span></td></tr>
+      <tr><td>地面</td><td>InstancedMesh + 逐格随机顶点色</td><td class="num">多套配色</td>
+        <td>纯色块，近看没有质感</td><td><span class="tag p1">P1 未做</span></td></tr>
       <tr><td>阻挡物</td><td>Cone 树 / Dodecahedron 岩 / Cone 尖柱</td><td class="num">3 样式</td>
-        <td>剪影单调，密集时糊成一片</td><td><span class="tag p1">P1</span></td></tr>
-      <tr><td>建筑</td><td>Box 墙 + Cone 屋顶 + 发光窗</td><td class="num">6 栋</td>
-        <td>六栋房子完全同构</td><td><span class="tag p1">P1</span></td></tr>
+        <td>剪影单调，密集时糊成一片</td><td><span class="tag p1">P1 未做</span></td></tr>
+      <tr><td>建筑</td><td>Box 墙 + Cone 屋顶 + 发光窗</td><td class="num">每镇数栋</td>
+        <td>房子完全同构</td><td><span class="tag p1">P1 未做</span></td></tr>
       <tr><td>特效</td><td>Box 粒子 / Ring 冲击环 / Cylinder 光束</td><td class="num">8 种</td>
-        <td>没有软边和渐隐，偏"硬"</td><td><span class="tag p1">P1</span></td></tr>
+        <td>没有软边和渐隐，偏"硬"</td><td><span class="tag p1">P1 未做</span></td></tr>
       <tr><td>UI 图标</td><td>Emoji 字形</td><td class="num">约 60 个</td>
-        <td>跨平台字形不一致，风格与场景割裂</td><td><span class="tag p0">P0</span></td></tr>
-      <tr><td>音频</td><td>WebAudio 实时合成</td><td class="num">15 个音效</td>
-        <td>可用，但缺环境音与音乐</td><td><span class="tag p2">P2</span></td></tr>
+        <td>跨平台字形不一致，风格与场景割裂</td><td><span class="tag p0">P0 未做</span></td></tr>
+      <tr><td>音频</td><td>WebAudio 实时合成</td><td class="num">合成音效</td>
+        <td>可用，但缺环境音与音乐</td><td><span class="tag p2">P2 未做</span></td></tr>
     </tbody>
   </table>
 
@@ -345,10 +345,10 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
 
 <section id="phases">
   <div class="shead"><span class="snum">§ 04</span><h2>分期</h2></div>
-  <p class="lede">四期，每期结束游戏都处于可玩状态。前两期是"看得见收益最大"的部分：玩家自己的角色和最常见的怪。</p>
+  <p class="lede">四期，每期结束游戏都处于可玩状态。第一、二期（骨架与怪物）已经进库。第三期场景、第四期图标音景未做。</p>
 
   <div class="phase">
-    <div class="phase-k"><div class="pn">第一期</div><div class="pw">骨架</div></div>
+    <div class="phase-k"><div class="pn">第一期 · 已接入</div><div class="pw">骨架</div></div>
     <div class="phase-b">
       <h4>管线打通 + 三个职业</h4>
       <p>先只做玩家能看到自己的那部分：三套职业骨架、四段基础动画、四把起手武器。这一期真正的产出是<b>管线本身</b>——把 GLTFLoader、SkeletonUtils、AnimationMixer、回落逻辑、进度条全部接完，之后每加一个怪只是往清单里加一行。</p>
@@ -357,7 +357,7 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
     </div>
   </div>
   <div class="phase">
-    <div class="phase-k"><div class="pn">第二期</div><div class="pw">怪物</div></div>
+    <div class="phase-k"><div class="pn">第二期 · 已接入</div><div class="pw">怪物</div></div>
     <div class="phase-b">
       <h4>12 种普通怪 + 4 首领</h4>
       <p>按出现频率排序替换：狼、劫掠者、骷髅、腐尸最先（占总遭遇量的六成以上）。四足与人形各复用一套骨骼命名，动画剪辑跨怪共享，只换网格与贴图。首领各自加一段专属技能动画（跃击 / 骨刺新星 / 召唤）。</p>
@@ -366,7 +366,7 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
     </div>
   </div>
   <div class="phase">
-    <div class="phase-k"><div class="pn">第三期</div><div class="pw">场景</div></div>
+    <div class="phase-k"><div class="pn">第三期 · 未做</div><div class="pw">场景</div></div>
     <div class="phase-b">
       <h4>地面贴图 · 阻挡物 · 建筑</h4>
       <p>地面从纯色改为可平铺贴图 + 逐格 UV 偏移与色调抖动（保留现有 InstancedMesh，不增加 draw call）。树/岩/尖柱各出 3 个变体打散剪影。石桥镇六栋房子换成 3 种户型 × 2 种旧化程度，并给窗口加一张自发光贴图。</p>
@@ -375,7 +375,7 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
     </div>
   </div>
   <div class="phase">
-    <div class="phase-k"><div class="pn">第四期</div><div class="pw">质感</div></div>
+    <div class="phase-k"><div class="pn">第四期 · 未做</div><div class="pw">质感</div></div>
     <div class="phase-b">
       <h4>UI 图集 · 特效 · 音景</h4>
       <p>Emoji 全部换成手绘图标图集（技能 18 + 物品 40 + 状态 12），风格统一为铜刻线稿。粒子换成软边贴图 Sprite，冲击环换成带渐变遮罩的着色器。音频加入四段环境床声与两段战斗音乐，用 WebAudio 现有节点做交叉淡入。</p>
@@ -390,25 +390,25 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
   <p class="lede">第一、二期需要的全部资产。"来源"一列标明走建模还是生成路径——如果决定继续用程序化方式产出（像之前那条 Python/PIL 管线），生成路径的部分可以完全脚本化。</p>
 
   <table>
-    <thead><tr><th>ID</th><th>类别</th><th>规格</th><th>动画</th><th>来源</th><th>期</th></tr></thead>
+    <thead><tr><th>ID</th><th>类别</th><th>规格</th><th>动画</th><th>来源</th><th>期</th><th>进度</th></tr></thead>
     <tbody>
-      <tr><td>char_warrior</td><td>玩家骨架</td><td class="num">3.5k 三角 / 512²</td><td>idle run attack die</td><td>建模</td><td class="num">一</td></tr>
-      <tr><td>char_mage</td><td>玩家骨架</td><td class="num">3.2k / 512²</td><td>同上 + cast</td><td>建模</td><td class="num">一</td></tr>
-      <tr><td>char_archer</td><td>玩家骨架</td><td class="num">3.2k / 512²</td><td>同上 + shoot</td><td>建模</td><td class="num">一</td></tr>
-      <tr><td>wp_sword_a / axe_a</td><td>武器</td><td class="num">400 / 256²</td><td>—</td><td>建模</td><td class="num">一</td></tr>
-      <tr><td>wp_staff_a / bow_a</td><td>武器</td><td class="num">500 / 256²</td><td>—</td><td>建模</td><td class="num">一</td></tr>
-      <tr><td>icons_512</td><td>UI 图集</td><td class="num">512² WebP + JSON</td><td>—</td><td>生成</td><td class="num">一</td></tr>
-      <tr><td>mob_wolf / boar</td><td>兽形</td><td class="num">1.8k / 512²</td><td>共享兽骨 4 段</td><td>建模</td><td class="num">二</td></tr>
-      <tr><td>mob_spider</td><td>兽形</td><td class="num">2.2k / 512²</td><td>共享兽骨 4 段</td><td>建模</td><td class="num">二</td></tr>
-      <tr><td>mob_bandit / banditbow</td><td>人形</td><td class="num">2.4k / 512²</td><td>共享人骨 4 段</td><td>建模</td><td class="num">二</td></tr>
-      <tr><td>mob_skeleton / ghoul</td><td>人形</td><td class="num">2.2k / 512²</td><td>共享人骨 4 段</td><td>建模</td><td class="num">二</td></tr>
-      <tr><td>mob_imp / wraith</td><td>人形</td><td class="num">2.0k / 512²</td><td>共享人骨 + float</td><td>建模</td><td class="num">二</td></tr>
-      <tr><td>mob_brute / treant / golem</td><td>人形大体型</td><td class="num">3.0k / 512²</td><td>共享人骨（放慢）</td><td>建模</td><td class="num">二</td></tr>
-      <tr><td>mob_lavabeast / ashmage</td><td>兽形 / 人形</td><td class="num">2.6k / 512²</td><td>共享 + 自发光</td><td>建模</td><td class="num">二</td></tr>
-      <tr><td>boss_sekra / valak</td><td>首领</td><td class="num">9k / 1024²</td><td>4 段 + 专属技能</td><td>建模</td><td class="num">二</td></tr>
-      <tr><td>boss_arraka / grom</td><td>首领</td><td class="num">9k / 1024²</td><td>4 段 + 专属技能</td><td>建模</td><td class="num">二</td></tr>
-      <tr><td>ground_×4</td><td>地面贴图</td><td class="num">512² 可平铺</td><td>—</td><td>生成</td><td class="num">三</td></tr>
-      <tr><td>fx_soft / fx_ring / fx_beam</td><td>特效贴图</td><td class="num">256² 带 alpha</td><td>—</td><td>生成</td><td class="num">四</td></tr>
+      <tr><td>char_warrior</td><td>玩家骨架</td><td class="num">3.5k 三角 / 512²</td><td>idle run attack die</td><td>建模</td><td class="num">一</td><td><span class="tag ok">已接入</span></td></tr>
+      <tr><td>char_mage</td><td>玩家骨架</td><td class="num">3.2k / 512²</td><td>同上 + cast</td><td>建模</td><td class="num">一</td><td><span class="tag ok">已接入</span></td></tr>
+      <tr><td>char_archer</td><td>玩家骨架</td><td class="num">3.2k / 512²</td><td>同上 + shoot</td><td>建模</td><td class="num">一</td><td><span class="tag ok">已接入</span></td></tr>
+      <tr><td>wp_sword_a / axe_a</td><td>武器</td><td class="num">400 / 256²</td><td>—</td><td>建模</td><td class="num">一</td><td><span class="tag p0">未做</span></td></tr>
+      <tr><td>wp_staff_a / bow_a</td><td>武器</td><td class="num">500 / 256²</td><td>—</td><td>建模</td><td class="num">一</td><td><span class="tag p0">未做</span></td></tr>
+      <tr><td>icons_512</td><td>UI 图集</td><td class="num">512² WebP + JSON</td><td>—</td><td>生成</td><td class="num">一</td><td><span class="tag p0">未做</span></td></tr>
+      <tr><td>mob_wolf / boar</td><td>兽形</td><td class="num">1.8k / 512²</td><td>共享兽骨 4 段</td><td>建模</td><td class="num">二</td><td><span class="tag ok">已接入</span></td></tr>
+      <tr><td>mob_spider</td><td>兽形</td><td class="num">2.2k / 512²</td><td>共享兽骨 4 段</td><td>建模</td><td class="num">二</td><td><span class="tag ok">已接入</span></td></tr>
+      <tr><td>mob_bandit / banditbow</td><td>人形</td><td class="num">2.4k / 512²</td><td>共享人骨 4 段</td><td>建模</td><td class="num">二</td><td><span class="tag ok">已接入</span></td></tr>
+      <tr><td>mob_skeleton / ghoul</td><td>人形</td><td class="num">2.2k / 512²</td><td>共享人骨 4 段</td><td>建模</td><td class="num">二</td><td><span class="tag ok">已接入</span></td></tr>
+      <tr><td>mob_imp / wraith</td><td>人形</td><td class="num">2.0k / 512²</td><td>共享人骨 + float</td><td>建模</td><td class="num">二</td><td><span class="tag p1">部分</span></td></tr>
+      <tr><td>mob_brute / treant / golem</td><td>人形大体型</td><td class="num">3.0k / 512²</td><td>共享人骨（放慢）</td><td>建模</td><td class="num">二</td><td><span class="tag p0">未做</span></td></tr>
+      <tr><td>mob_lavabeast / ashmage</td><td>兽形 / 人形</td><td class="num">2.6k / 512²</td><td>共享 + 自发光</td><td>建模</td><td class="num">二</td><td><span class="tag p1">借用</span></td></tr>
+      <tr><td>boss_sekra / valak</td><td>首领</td><td class="num">9k / 1024²</td><td>4 段 + 专属技能</td><td>建模</td><td class="num">二</td><td><span class="tag p1">仅塞克拉</span></td></tr>
+      <tr><td>boss_arraka / grom</td><td>首领</td><td class="num">9k / 1024²</td><td>4 段 + 专属技能</td><td>建模</td><td class="num">二</td><td><span class="tag p1">借用</span></td></tr>
+      <tr><td>ground_×4</td><td>地面贴图</td><td class="num">512² 可平铺</td><td>—</td><td>生成</td><td class="num">三</td><td><span class="tag p1">未做</span></td></tr>
+      <tr><td>fx_soft / fx_ring / fx_beam</td><td>特效贴图</td><td class="num">256² 带 alpha</td><td>—</td><td>生成</td><td class="num">四</td><td><span class="tag p2">未做</span></td></tr>
     </tbody>
   </table>
 
@@ -437,7 +437,7 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
   </table>
 </section>
 
-<footer>幽影深渊 · 卷宗二 / 美术资源整合　—　与卷宗一的坐标基准、卷宗三的功能排期配套使用</footer>
+<footer>幽影深渊 · 卷宗二 / 美术资源整合　—　第一、二期已接入 · 地面建筑图标音景未做</footer>
 </div>
 </body>
 </html>

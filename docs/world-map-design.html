@@ -99,10 +99,10 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
 <header>
   <div class="eyebrow">卷宗 一 · 世界测绘</div>
   <h1>石桥镇及其<em>以下</em>诸地<br>测绘卷宗</h1>
-  <p class="sub">《幽影深渊 III》世界结构、区域布局与坐标基准。图版中的每一个坐标都取自 <code>shadow-depths-v3.html</code> 的实际运行数据，可直接用于新增内容的定位。</p>
+  <p class="sub">《幽影深渊》世界结构、区域布局与坐标基准。图版中的坐标取自 <code>shadow-depths.html</code> 的实际运行数据。五章城镇、野外、副本均已接入。</p>
   <div class="meta">
-    <span>版本 <b>v3.0</b></span>
-    <span>区域 <b>4 地面 · 3 副本 · 1 无限层</b></span>
+    <span>版本 <b>v3.5</b></span>
+    <span>区域 <b>5 镇 · 7 野外 · 10 副本 · 1 无限层</b></span>
     <span>网格 <b>68 × 68 格</b></span>
     <span>格距 <b>2 世界单位</b></span>
     <span>可行走范围 <b>±58 单位</b></span>
@@ -150,11 +150,11 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
 
 <section id="world">
   <div class="shead"><span class="snum">§ 02</span><h2>世界连接图</h2></div>
-  <p class="lede">四张地面图沿一条主线首尾相接，副本挂在各自的野外图上，无限裂隙从镇中直下。所有跨区通行都由传送点承担；<code>T</code> 键回城是唯一的单向捷径。</p>
+  <p class="lede">五章沿一条主线往下走：每章一座镇、一张野外、一到两座副本。图示只画到第三章脊线，完整清单见表。无限裂隙从石桥镇直下。<code>T</code> 键回城是唯一的单向捷径。</p>
 
   <div class="plate">
     <div class="plate-hd">
-      <div class="plate-ttl">世界结构 <small>REGION GRAPH · v3.0</small></div>
+      <div class="plate-ttl">世界结构 <small>REGION GRAPH · 五章已接入</small></div>
       <div class="readout">实线 = 双向石门　虚线 = 单向下行　方框数字 = 推荐等级</div>
     </div>
     <svg id="graph" viewBox="0 0 1000 430" role="img" aria-label="区域连接图"></svg>
@@ -162,7 +162,7 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
       <span class="key"><i style="background:#7d8f6a"></i>地面区域</span>
       <span class="key"><i style="background:#a06a4a"></i>副本（有限层）</span>
       <span class="key"><i style="background:#6a5a9a"></i>无限裂隙</span>
-      <span class="key"><i style="background:#8a8578"></i>规划中</span>
+      <span class="key"><i style="background:#8a8578"></i>未画进图示（四、五章见表）</span>
     </div>
   </div>
 
@@ -177,9 +177,21 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
       <tr><td>腐丝蛛巢</td><td>副本 · 2 层</td><td class="num">12</td><td>蛛 · 腐尸 · 怨魂 <span class="tag t-boss">阿拉卡</span></td><td>林地 (−4, −21)</td><td><span class="tag t-live">已实现</span></td></tr>
       <tr><td>熔火要塞</td><td>副本 · 3 层</td><td class="num">20</td><td>使徒 · 屠夫 · 怨魂 <span class="tag t-boss">瓦拉克</span></td><td>峡谷 (12, −19)</td><td><span class="tag t-live">已实现</span></td></tr>
       <tr><td>裂隙</td><td>无限层</td><td class="num">2 + 1.7×层</td><td>地下全表，每 3 层轮换首领</td><td>石桥镇 (−8, 22)</td><td><span class="tag t-live">已实现</span></td></tr>
-      <tr><td>北境冰湖</td><td>地面野外</td><td class="num">24</td><td>霜狼 · 冰蛛 · 寒骸骑士</td><td>峡谷西北（待开）</td><td><span class="tag t-plan">规划</span></td></tr>
-      <tr><td>沉船海岸</td><td>地面野外</td><td class="num">30</td><td>溺亡者 · 触须 · 拾荒者</td><td>冰湖东（待开）</td><td><span class="tag t-plan">规划</span></td></tr>
-      <tr><td>断桥修道院</td><td>副本 · 3 层</td><td class="num">27</td><td>狂信徒 · 唱诗骸骨 <span class="tag t-boss">主祭</span></td><td>冰湖（待开）</td><td><span class="tag t-plan">规划</span></td></tr>
+      <tr><td>白喉隘口</td><td>安全区</td><td class="num">24</td><td>无</td><td>峡谷西北</td><td><span class="tag t-live">已实现</span></td></tr>
+      <tr><td>北境冰湖</td><td>地面野外</td><td class="num">24</td><td>霜狼 · 冰蛛 · 寒骸骑士</td><td>白喉隘口北门</td><td><span class="tag t-live">已实现</span></td></tr>
+      <tr><td>断桥修道院</td><td>副本 · 3 层</td><td class="num">27</td><td>寒骸骑士 · 冰蛛 · 怨魂 <span class="tag t-boss">奥赛尔</span></td><td>冰湖 (6, −21)</td><td><span class="tag t-live">已实现</span></td></tr>
+      <tr><td>湖底钟窖</td><td>副本 · 2 层</td><td class="num">32</td><td>冰蛛 · 怨魂 · 寒骸骑士 <span class="tag t-boss">无名唱者</span></td><td>冰湖 (18, 8)</td><td><span class="tag t-live">已实现</span></td></tr>
+      <tr><td>潮灯港</td><td>安全区</td><td class="num">35</td><td>无</td><td>白喉隘口东路</td><td><span class="tag t-live">已实现</span></td></tr>
+      <tr><td>沉船海岸</td><td>地面野外</td><td class="num">35</td><td>溺亡者 · 沉船匪 · 盐水狼</td><td>潮灯港码头</td><td><span class="tag t-live">已实现</span></td></tr>
+      <tr><td>潮下墓场</td><td>副本 · 2 层</td><td class="num">38</td><td>溺亡者 · 沉船匪 · 腐尸 <span class="tag t-boss">潮引</span></td><td>海岸 (4, −18)</td><td><span class="tag t-live">已实现</span></td></tr>
+      <tr><td>朽舟腹</td><td>副本 · 2 层</td><td class="num">45</td><td>溺亡者 · 沉船匪 · 盐水狼 <span class="tag t-boss">格雷</span></td><td>海岸 (20, 6)</td><td><span class="tag t-live">已实现</span></td></tr>
+      <tr><td>沉降残镇</td><td>安全区</td><td class="num">50</td><td>无</td><td>潮灯港西路</td><td><span class="tag t-live">已实现</span></td></tr>
+      <tr><td>沉降区</td><td>地面野外</td><td class="num">52</td><td>怨魂 · 腐尸 · 屠夫</td><td>沉降残镇井口</td><td><span class="tag t-live">已实现</span></td></tr>
+      <tr><td>账房</td><td>副本 · 2 层</td><td class="num">55</td><td>怨魂 · 使徒 · 屠夫 <span class="tag t-boss">七影</span></td><td>沉降区 (2, −20)</td><td><span class="tag t-live">已实现</span></td></tr>
+      <tr><td>众议厅</td><td>副本 · 2 层</td><td class="num">62</td><td>怨魂 · 使徒 · 腐尸 <span class="tag t-boss">众议之声</span></td><td>沉降区 (18, 4)</td><td><span class="tag t-live">已实现</span></td></tr>
+      <tr><td>桥墩井口</td><td>安全区</td><td class="num">65</td><td>无</td><td>沉降残镇更深</td><td><span class="tag t-live">已实现</span></td></tr>
+      <tr><td>桥墩井道</td><td>地面野外</td><td class="num">66</td><td>屠夫 · 怨魂 · 魔像</td><td>桥墩井口下行</td><td><span class="tag t-live">已实现</span></td></tr>
+      <tr><td>钉底</td><td>副本 · 1 层</td><td class="num">70</td><td>屠夫 · 怨魂 · 魔像 <span class="tag t-boss">柯尔</span></td><td>井道 (4, −22)</td><td><span class="tag t-live">已实现</span></td></tr>
     </tbody>
   </table>
 </section>
@@ -209,8 +221,8 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
       <p>比野外小一圈，跑完全程约 9 秒。所有服务点都在出生点 25 单位内，避免"回城办事"变成跑图。</p></div>
     <div class="card"><div class="k">功能位</div><h4>三 NPC + 两出口</h4>
       <p>铁匠与药剂商对称分布在广场两侧，执政官在正北压住轴线；东门通野外，西南角是裂隙口——两条内容线从空间上就分开。</p></div>
-    <div class="card"><div class="k">留白</div><h4>南侧半张图是空的</h4>
-      <p>预留给后续的：仓库、附魔台、悬赏板、传送石碑。建议落在 z ∈ [8, 24]、x ∈ [−30, 30] 的带状区域。</p></div>
+    <div class="card"><div class="k">南侧</div><h4>仓库与悬赏板已落地</h4>
+      <p>银行 (−20, 14)、悬赏板已在石桥镇。跨区仍靠石门与 <code>T</code> 键回城，没有区域内路径点。</p></div>
   </div>
 
   <div class="plate">
@@ -253,7 +265,7 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
       <span class="key"><i style="background:#ff5a1e"></i>熔岩坑（点光源）</span>
       <span class="key"><i style="background:#c39a4e"></i>石门</span>
       <span class="key"><i style="background:#a06a4a"></i>副本入口</span>
-      <span class="key"><i style="background:#8a8578"></i>预留出口（冰湖）</span>
+      <span class="key"><i style="background:#c39a4e"></i>通往白喉隘口</span>
     </div>
   </div>
 
@@ -291,22 +303,24 @@ footer{margin-top:96px;padding-top:26px;border-top:1px solid var(--line);
   </div>
 
   <h3>建议的固定房间注入点</h3>
-  <p>当前所有房间都是同质的。要加入宝箱房、精英守卫房、祭坛房，最省事的做法是在 <code>genRooms()</code> 之后按房间序号打标签，而不是改生成器本身：</p>
+  <p>房间本身仍由 <code>genRooms()</code> 生成。特殊房间是在生成后按房间序号打标签，不改生成器：</p>
   <table>
     <thead><tr><th>房间序号</th><th>建议角色</th><th>内容</th><th>改动位置</th></tr></thead>
     <tbody>
       <tr><td>0</td><td>入口</td><td>不刷怪，放返回传送点</td><td>已实现</td></tr>
       <tr><td>1 … N−2</td><td>常规</td><td>散怪 + 木桶</td><td>已实现</td></tr>
-      <tr><td>随机 1 间</td><td>宝库</td><td>4 个宝箱 + 一队守卫，首领掉率</td><td><code>enterRift()</code> / <code>enterDungeon()</code> 刷怪循环内</td></tr>
-      <tr><td>随机 1 间</td><td>祭坛</td><td>可选增益（增伤 / 减防），持续到离开本层</td><td>新增 <code>W.shrines[]</code></td></tr>
+      <tr><td>随机 1–2 间</td><td>宝库</td><td>4 个宝箱 + 一队守卫，首领掉率</td><td>已实现 · <code>W.roomTags</code></td></tr>
+      <tr><td>随机 1–2 间</td><td>祭坛</td><td>贪婪 / 迅捷 / 丰饶，三选一，持续到离开本层</td><td>已实现 · <code>P.buffs</code></td></tr>
+      <tr><td>随机 1–2 间</td><td>囚笼</td><td>放出随行者，战斗 60 秒</td><td>已实现</td></tr>
+      <tr><td>随机 1–2 间</td><td>陷阱厅</td><td>地刺 / 落石 / 毒雾，通过后必掉一件稀有</td><td>已实现</td></tr>
       <tr><td>N</td><td>首领 / 下行</td><td>首领房或下行传送门</td><td>已实现</td></tr>
     </tbody>
   </table>
 </section>
 
 <section id="expand">
-  <div class="shead"><span class="snum">§ 05</span><h2>扩张预案</h2></div>
-  <p class="lede">下一批区域沿现有主线继续向东北延伸，等级带接在灰烬峡谷之后。三张新图的接入点已在峡谷图版上标出（灰色虚线框），加区域只需要往 <code>AREA</code> 表里追加一条配置。</p>
+  <div class="shead"><span class="snum">§ 05</span><h2>后续区域</h2></div>
+  <p class="lede">北境冰湖、沉船海岸、断桥修道院已按下面的模板接入，并继续铺到第五章钉底。还缺试炼场——加图本身不再是瓶颈，往 <code>AREA</code> 表追加即可。</p>
 
   <div class="formula">
 <b>新增区域模板</b>
@@ -323,21 +337,21 @@ frost: {
   </div>
 
   <div class="cards">
-    <div class="card"><div class="k">区域 · Lv 24</div><h4>北境冰湖</h4>
+    <div class="card"><div class="k">区域 · Lv 24 · 已接入</div><h4>北境冰湖</h4>
       <p>第一张"亮色"野外图：高反照率地面、冷白雾。可行走域改为不规则湖岸，中央是不可行走的冰面裂缝，逼玩家绕行。</p>
       <ul><li>阻挡样式：冰柱 pillar（新）</li><li>机制：踏入薄冰区持续掉血</li><li>接入：峡谷 (−24, 16)</li></ul></div>
-    <div class="card"><div class="k">区域 · Lv 30</div><h4>沉船海岸</h4>
+    <div class="card"><div class="k">区域 · Lv 35 · 已接入</div><h4>沉船海岸</h4>
       <p>用现有生成器做出"半张图是海"的效果：把椭圆判据换成偏心椭圆 + 海岸线噪声，海一侧全部不可行走。</p>
       <ul><li>阻挡样式：船骸 wreck（新）</li><li>机制：潮汐——每 90 秒淹没最外圈两格</li><li>接入：冰湖 (24, −14)</li></ul></div>
-    <div class="card"><div class="k">副本 · Lv 27</div><h4>断桥修道院</h4>
+    <div class="card"><div class="k">副本 · Lv 27 · 已接入</div><h4>断桥修道院</h4>
       <p>第一个带"固定房间"的副本：中庭 → 唱诗厅 → 钟楼三段式，首领分两阶段（钟声召唤 / 坠落打击）。</p>
-      <ul><li>层数 3，末层首领房固定布局</li><li>首通奖励：套装部件（见卷宗三）</li><li>接入：冰湖 (6, −21)</li></ul></div>
+      <ul><li>层数 3，已接入</li><li>首通必掉绿色套装一件</li><li>接入：冰湖 (6, −21)</li></ul></div>
   </div>
 
   <div class="note">加图前先确认三件事：① 新怪物条目已加进 <code>ETYPES</code>（含 form / 攻击距离 / 掉落等级）；② 阻挡样式在 <code>buildFieldBlockers()</code> 里有对应分支，否则会回落成岩石；③ 出生点落在第一个 travel 传送点偏移 (+3, −3) 处必须可站立——已有螺旋回退兜底，但最好在图版上先取一个空旷点。</div>
 </section>
 
-<footer>幽影深渊 · 卷宗一 / 世界测绘　—　坐标取自 shadow-depths-v3.html 运行时数据</footer>
+<footer>幽影深渊 · 卷宗一 / 世界测绘　—　五章已接入 · 坐标取自 shadow-depths.html</footer>
 </div>
 
 <script>
@@ -527,18 +541,18 @@ document.querySelectorAll("svg.map").forEach(s => drawMap(s, s.dataset.map));
     {id:"waste", n:"落石荒原", lv:"3",  x:320, y:215, c:"#7d8f6a"},
     {id:"wood",  n:"暮语林地", lv:"9",  x:520, y:215, c:"#7d8f6a"},
     {id:"ash",   n:"灰烬峡谷", lv:"17", x:720, y:215, c:"#7d8f6a"},
-    {id:"frost", n:"北境冰湖", lv:"24", x:900, y:130, c:"#8a8578", plan:1},
-    {id:"shore", n:"沉船海岸", lv:"30", x:900, y:300, c:"#8a8578", plan:1},
+    {id:"frost", n:"北境冰湖", lv:"24", x:900, y:130, c:"#7d8f6a"},
+    {id:"shore", n:"沉船海岸", lv:"35", x:900, y:300, c:"#7d8f6a"},
     {id:"crypt", n:"哭嚎墓窖", lv:"6",  x:320, y:80,  c:"#a06a4a"},
     {id:"nest",  n:"腐丝蛛巢", lv:"12", x:520, y:80,  c:"#a06a4a"},
     {id:"fort",  n:"熔火要塞", lv:"20", x:720, y:80,  c:"#a06a4a"},
-    {id:"abbey", n:"断桥修道院",lv:"27",x:900, y:20,  c:"#8a8578", plan:1},
+    {id:"abbey", n:"断桥修道院",lv:"27",x:900, y:20,  c:"#a06a4a"},
     {id:"rift",  n:"裂隙 ∞",   lv:"2+1.7×层", x:120, y:350, c:"#6a5a9a"}
   ];
   const edges = [
     ["town","waste"],["waste","wood"],["wood","ash"],
-    ["ash","frost",1],["frost","shore",1],
-    ["waste","crypt",0,1],["wood","nest",0,1],["ash","fort",0,1],["frost","abbey",1,1],
+    ["ash","frost"],["frost","shore"],
+    ["waste","crypt",0,1],["wood","nest",0,1],["ash","fort",0,1],["frost","abbey",0,1],
     ["town","rift",0,1]
   ];
   const at = id => nodes.find(n => n.id === id);
