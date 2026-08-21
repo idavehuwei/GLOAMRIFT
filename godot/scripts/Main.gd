@@ -1269,7 +1269,7 @@ func _refresh_bars(dt := 0.0) -> void:
 			EventBus.notify.emit("升级！", "达到 %d 级" % Game.P.lvl, "good")
 		_last_lvl = Game.P.lvl
 	if Game.P.bag.size() > _last_bag_n:
-		var d := Game.P.bag.size() - _last_bag_n
+		var d: int = int(Game.P.bag.size()) - _last_bag_n
 		var nm := "物品"
 		if Game.P.bag.size() > 0:
 			var last: Dictionary = Game.P.bag[Game.P.bag.size() - 1]
