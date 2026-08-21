@@ -173,6 +173,7 @@ func _next_path() -> String:
 		if not FileAccess.file_exists(p):
 			return p
 		i += 1
+	return ""  # 安全兜底（实际不可达）
 
 
 func _path_for(res: ItemData) -> String:
