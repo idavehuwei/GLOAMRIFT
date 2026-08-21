@@ -44,7 +44,6 @@ var _talk_id := ""
 var _talk_pick := ""
 var _quest_sel := ""
 var _sk_assign := ""
-var _nav: VBoxContainer
 var _tip: PanelContainer
 var _tip_lab: RichTextLabel
 var _tip_box: HBoxContainer
@@ -81,7 +80,6 @@ var _combo: Label
 var _evt: Label
 var _beat: ColorRect
 var _sheet_veil: ColorRect
-var _nav_btns: Array = []
 var _panel_title: Label
 var _sk_sel := ""
 var _bag_filter := "all"          # 背包分类：all/weapon/gear/rune/charm/scrap
@@ -250,35 +248,41 @@ func _build_hud() -> void:
 	_log.fit_content = false
 	_log.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_log)
-	var bars := HBoxContainer.new()
-	bars.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	bars.offset_left = -420
-	bars.offset_right = 420
-	bars.offset_top = -148
-	bars.offset_bottom = -42
-	bars.alignment = BoxContainer.ALIGNMENT_CENTER
-	bars.add_theme_constant_override("separation", 14)
-	root.add_child(bars)
-	_hp = _orb(bars, Color(0.85, 0.27, 0.19))
-	var mid := VBoxContainer.new()
-	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	mid.add_theme_constant_override("separation", 4)
-	bars.add_child(mid)
+	# ===== 暗黑破坏神2 风格底座：生命/法力宝珠固定左下角 =====
+	# 生命宝珠（红）
+	_hp = _orb(root, Color(0.85, 0.27, 0.19))
+	var hp_wrap := _hp.get_parent() as PanelContainer
+	hp_wrap.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	hp_wrap.offset_left = 14
+	hp_wrap.offset_right = 122
+	hp_wrap.offset_top = -122
+	hp_wrap.offset_bottom = -14
+	# 法力宝珠（蓝），紧邻生命宝珠右侧
+	_mp = _orb(root, Color(0.22, 0.47, 0.85))
+	var mp_wrap := _mp.get_parent() as PanelContainer
+	mp_wrap.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	mp_wrap.offset_left = 130
+	mp_wrap.offset_right = 238
+	mp_wrap.offset_top = -122
+	mp_wrap.offset_bottom = -14
+	# 等级徽章（沿用 _level_badge，挂在宝珠容器下）
+	_lvl_badge = _level_badge(hp_wrap)
+	_lvl_badge_mp = _level_badge(mp_wrap)
+	# 数值标签：覆盖在宝珠中央（红蓝数字显示在球内，暗黑2 风格）
 	_hp_lab = Label.new()
 	_hp_lab.add_theme_font_size_override("font_size", 11)
 	_hp_lab.add_theme_color_override("font_color", UiKit.bone())
 	_hp_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	mid.add_child(_hp_lab)
+	_hp_lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_hp.add_child(_hp_lab)
+	_hp_lab.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_mp_lab = Label.new()
 	_mp_lab.add_theme_font_size_override("font_size", 11)
 	_mp_lab.add_theme_color_override("font_color", UiKit.bone())
 	_mp_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	mid.add_child(_mp_lab)
-	_xp = _bar(mid, Color(0.69, 0.55, 0.31))
-	_xp.custom_minimum_size = Vector2(0, 8)
-	_mp = _orb(bars, Color(0.22, 0.47, 0.85))
-	_lvl_badge = _level_badge(_hp.get_parent() as PanelContainer)
-	_lvl_badge_mp = _level_badge(_mp.get_parent() as PanelContainer)
+	_mp_lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_mp.add_child(_mp_lab)
+	_mp_lab.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_pots = _lab(root, Vector2(0, 0), 12, Color(0.7, 0.66, 0.58))
 	_pots.visible = false
 	_target = _lab(root, Vector2(0, 0), 14, UiKit.brass())
@@ -340,10 +344,10 @@ func _build_hud() -> void:
 	var skplate := PanelContainer.new()
 	skplate.add_theme_stylebox_override("panel", UiKit.plate())
 	skplate.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	skplate.offset_left = -432
-	skplate.offset_right = 432
-	skplate.offset_top = -226
-	skplate.offset_bottom = -146
+	skplate.offset_left = -391
+	skplate.offset_right = 269
+	skplate.offset_top = -118
+	skplate.offset_bottom = -34
 	skplate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(skplate)
 	var skrow := HBoxContainer.new()
@@ -383,26 +387,6 @@ func _build_hud() -> void:
 	_pot_mp.add_theme_stylebox_override("hover", UiKit.slot_hover())
 	_pot_mp.pressed.connect(Game.drink_mp)
 	skrow.add_child(_pot_mp)
-	_nav = VBoxContainer.new()
-	_nav.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	_nav.offset_left = 12
-	_nav.offset_right = 96
-	_nav.offset_top = -520
-	_nav.offset_bottom = -160
-	_nav.add_theme_constant_override("separation", 4)
-	root.add_child(_nav)
-	for pair in [["角色", "C", "char", "nav-char"], ["行囊", "I", "bag", "nav-bag"], ["技能", "S", "skills", "nav-skills"], ["天赋", "K", "talents", "nav-talents"], ["委托", "J", "quests", "nav-quests"], ["功绩", "Y", "achs", "nav-achs"]]:
-		var nb := Button.new()
-		nb.custom_minimum_size = Vector2(80, 52)
-		nb.add_theme_font_size_override("font_size", 11)
-		nb.add_theme_stylebox_override("normal", UiKit.nav())
-		nb.add_theme_stylebox_override("hover", UiKit.nav_on())
-		nb.add_theme_stylebox_override("pressed", UiKit.nav_on())
-		UiKit.stamp_btn(nb, str(pair[3]), "%s\n%s" % [pair[0], pair[1]], 22)
-		nb.set_meta("sheet", str(pair[2]))
-		nb.pressed.connect(_toggle_sheet.bind(str(pair[2])))
-		_nav.add_child(nb)
-		_nav_btns.append(nb)
 
 	# WoW 风格底部微型菜单（仅图标、紧凑、远离其它 UI）
 	var micro := HBoxContainer.new()
@@ -1376,9 +1360,8 @@ func _refresh_bars(dt := 0.0) -> void:
 	_xp_disp = lerp(_xp_disp, float(Game.P.xp), k)
 	_hp.value = _hp_disp
 	_mp.value = _mp_disp
-	_xp.value = _xp_disp
-	_hp_lab.text = "生命  %d / %d" % [int(Game.P.hp), int(Game.P.hpMax)]
-	_mp_lab.text = "法力  %d / %d" % [int(Game.P.mp), int(Game.P.mpMax)]
+	_hp_lab.text = "%d / %d" % [int(Game.P.hp), int(Game.P.hpMax)]
+	_mp_lab.text = "%d / %d" % [int(Game.P.mp), int(Game.P.mpMax)]
 	if _lvl_badge:
 		_lvl_badge.text = str(Game.P.lvl)
 		_lvl_badge_mp.text = str(Game.P.lvl)
@@ -1523,13 +1506,8 @@ func _show_panel() -> void:
 	_panel.visible = true
 	if _sheet_veil:
 		_sheet_veil.visible = true
-	_sync_nav()
 
 
-func _sync_nav() -> void:
-	for nb in _nav_btns:
-		var on: bool = _panel.visible and str(nb.get_meta("sheet")) == _sheet
-		nb.add_theme_stylebox_override("normal", UiKit.nav_on() if on else UiKit.nav())
 
 
 func _btn(t: String, cb: Callable) -> void:
@@ -2474,7 +2452,6 @@ func _close_sheet() -> void:
 	if _sheet_veil:
 		_sheet_veil.visible = false
 	_sheet = ""
-	_sync_nav()
 	_sync_micro()
 	_hide_tip()
 
