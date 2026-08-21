@@ -47,6 +47,9 @@ var _sk_assign := ""
 var _nav: VBoxContainer
 var _tip: PanelContainer
 var _tip_lab: RichTextLabel
+var _tip_box: HBoxContainer
+var _tip_icon: TextureRect
+var _tip_sep: VSeparator
 var _target: Label
 var _buffs: HBoxContainer
 var _cast: ProgressBar
@@ -461,15 +464,27 @@ func _build_hud() -> void:
 	_tip.add_theme_stylebox_override("panel", UiKit.tip())
 	_tip.z_index = 80
 	root.add_child(_tip)
+	_tip_box = HBoxContainer.new()
+	_tip_box.add_theme_constant_override("separation", 10)
+	_tip.add_child(_tip_box)
+	_tip_icon = TextureRect.new()
+	_tip_icon.visible = false
+	_tip_icon.custom_minimum_size = Vector2(44, 44)
+	_tip_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_tip_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_tip_box.add_child(_tip_icon)
+	_tip_sep = VSeparator.new()
+	_tip_sep.visible = false
+	_tip_box.add_child(_tip_sep)
 	_tip_lab = RichTextLabel.new()
 	_tip_lab.bbcode_enabled = true
 	_tip_lab.fit_content = true
 	_tip_lab.scroll_active = false
 	_tip_lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_tip_lab.custom_minimum_size = Vector2(280, 0)
+	_tip_lab.custom_minimum_size = Vector2(300, 0)
 	_tip_lab.add_theme_font_size_override("normal_font_size", 12)
 	_tip_lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_tip.add_child(_tip_lab)
+	_tip_box.add_child(_tip_lab)
 	_dead = ColorRect.new()
 	_dead.color = Color(0.02, 0.01, 0.02, 0.82)
 	_dead.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -709,8 +724,23 @@ func _hd(t: String) -> void:
 		UiKit.header(_panel_body, t)
 
 
-func _show_tip(txt: String) -> void:
+func _show_tip(txt: String, icon: Texture2D = null, hex: int = 0) -> void:
 	_tip_lab.text = txt
+	if icon != null:
+		_tip_icon.texture = icon
+		_tip_icon.visible = true
+		_tip_sep.visible = true
+	else:
+		_tip_icon.visible = false
+		_tip_sep.visible = false
+	if hex != 0:
+		var c := Cfg.hex_color(hex)
+		var sb := UiKit.tip().duplicate() as StyleBoxFlat
+		sb.border_color = c
+		sb.set_border_width_all(2)
+		_tip.add_theme_stylebox_override("panel", sb)
+	else:
+		_tip.add_theme_stylebox_override("panel", UiKit.tip())
 	_tip.visible = txt != ""
 
 
@@ -718,8 +748,11 @@ func _hide_tip() -> void:
 	_tip.visible = false
 
 
-func _wire_tip(c: Control, txt: String) -> void:
-	c.mouse_entered.connect(func(): _show_tip(txt))
+func _wire_tip(c: Control, txt: String, icon: Texture2D = null, hex: int = 0) -> void:
+	var t: String = txt
+	var ic: Texture2D = icon
+	var h: int = hex
+	c.mouse_entered.connect(func(): _show_tip(t, ic, h))
 	c.mouse_exited.connect(_hide_tip)
 
 
@@ -1444,7 +1477,7 @@ func _equip_slot(k: String) -> Button:
 		b.add_theme_color_override("font_color", UiKit.rarity_color(it))
 		b.add_theme_stylebox_override("normal", UiKit.cell(LootData.item_hex(it)))
 		b.add_theme_stylebox_override("hover", UiKit.cell_hover(LootData.item_hex(it)))
-		_wire_tip(b, Game.item_tip(it))
+		_wire_tip(b, Game.item_tip(it), UiKit.tex(UiKit.icon_for_item(it)), LootData.item_hex(it))
 		var slot := k
 		b.pressed.connect(func():
 			Game.unequip_slot(slot)
@@ -1501,7 +1534,7 @@ func _item_cell(it, idx: int, kind: String) -> Button:
 		cell.add_theme_color_override("font_color", UiKit.rarity_color(it as Dictionary))
 		cell.add_theme_stylebox_override("normal", UiKit.cell(LootData.item_hex(it as Dictionary)))
 		cell.add_theme_stylebox_override("hover", UiKit.cell_hover(LootData.item_hex(it as Dictionary)))
-		_wire_tip(cell, Game.item_tip(it as Dictionary, true))
+		_wire_tip(cell, Game.item_tip(it as Dictionary, true), UiKit.tex(UiKit.icon_for_item(it as Dictionary)), LootData.item_hex(it as Dictionary))
 		var i := idx
 		if kind == "bag":
 			cell.pressed.connect(func():

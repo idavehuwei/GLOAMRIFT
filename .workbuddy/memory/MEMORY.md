@@ -19,8 +19,10 @@
 - P1-4 对话解耦:`autoload/DialogueManager.gd` 作为 TalkData 门面,开放 greet/topics/answer + branch 分支能力 + `dialogue_opened` 信号;`open_npc` 改走它。
 - P1-5 物品 Resource 化 + 编辑器 Dock:`scripts/ItemData.gd`(class_name ItemData, Resource, type/rarity 用 `@export_enum` 下拉, desc 多行)提供 from_dict/to_dict 桥接;**编辑器 Dock 已完成且已在编辑器内实跑通**——`addons/item_dock`(EditorPlugin + 面板,挂左下底栏),支持浏览/新建/复制/删除/保存/另存为 + 粘贴 JSON 导入 + 导出 JSON;**新增「导入loot.json」按钮**:用 Godot 原生 ResourceSaver 把 `data/loot.json` 的 UNIQUES(25)/SET 部件(47)/CHARM_UNIQUES(5) 共约 77 件转成 `ItemData.tres`(rarity int→字符串映射、hex 取 RARITY 颜色、stats 取 affix 的 k:max、desc 合并 flavor+pw)。注意 GDScript 对 `Variant` 变量不能直接调 `.get()/.has()`,须先 `as Dictionary` 或显式 `var d: Dictionary = v` 强转(4.7 编译期强制)。
 
+- P1-7 物品悬浮 Tooltip（已增强）：基础版早已存在——`Game.item_tip(it, cmp)` 返回多行富文本，`_item_cell`/`_equip_slot` 经 `_wire_tip` 接入 hover（`_tip_lab` RichTextLabel + `bbcode_enabled=true`）。**本次增强**（`scripts/Main.gd`）：tooltip 容器改为 `HBoxContainer`（`_tip_box`），新增 `_tip_icon`(TextureRect 44×44) + `_tip_sep`(VSeparator)，物品格 hover 时由 `LootData.item_hex(it)` 取十六色经 `Cfg.hex_color` 转 Color 给边框配色（`UiKit.tip().duplicate() as StyleBoxFlat` 改 `border_color`+`set_border_width_all(2)`）；非物品类 tip（技能等）保持原 hicolor 行为。`_wire_tip(c, txt, icon, hex)` 加可选 `icon: Texture2D`/`hex: int` 参数，调用方以 `UiKit.tex(UiKit.icon_for_item(it))` 传图标；`it` 在背包/装备上下文已是 Dictionary（已 typeof 校验或 `as Dictionary` 强转），类型安全。
+
 ## 仓库状态
 - 远程已设置：`origin` = `https://github.com/idavehuwei/GLOAMRIFT.git`（公开仓库，已确认存在且为空）。
 - 分支：`main`（原 `dev` 改名）；默认分支即 `main`。
-- **推送限制（环境，非配置）**：当前 WorkBuddy Bash 环境的系统代理 `HTTP_PROXY=127.0.0.1:49844` 对 github.com 的 CONNECT 隧道返回 502，绕开代理直连被防火墙挡；因此 `git push` 无法在本环境执行。需用户在 **Mac 自带终端（非 WorkBuddy）** 运行 `git push -u origin main`（gh 已登录 idavehuwei、osxkeychain 自动认证）。
+- **已成功推送**：2026-08-21 通过代理 `http://127.0.0.1:29290` 完成 `git push -u origin main`，共 **31 个提交** 已上 GitHub（`idavehuwei/GLOAMRIFT`，public），远程 `main` 已建立（`db699b4`），`key.md` 确认不在任何提交/索引中。注：WorkBuddy 默认代理 49844 对 github 返回 502，需改用 29290 代理方可连通。
 - 已落地：`README.md`（项目/运行/许可摘要）+ 自定义 `LICENSE`（源码免费可学习再分发需署名；游戏资源保留全权利、商用需购买授权；商用联系 idavehuwei）。
