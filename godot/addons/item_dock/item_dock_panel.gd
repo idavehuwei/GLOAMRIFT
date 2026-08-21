@@ -9,6 +9,12 @@ extends VBoxContainer
 
 const ITEMS_DIR := "res://data/items"
 
+## loot.json 用 int 表示稀有度(0普通/1魔法/2稀有/3传奇/4神器)，
+## 需映射到 ItemData 的 @export_enum 字符串，并取对应颜色。
+const RARITY_STR := ["common", "uncommon", "rare", "epic", "legendary"]
+const RARITY_HEX := [0xc8c0ad, 0x6f9ede, 0xd8c15c, 0xc8762c, 0x8e5ad8]
+const LOOT_JSON := "res://data/loot.json"
+
 var item_list: ItemList
 var inspector: EditorInspector
 var path_label: Label
@@ -45,6 +51,7 @@ func _build_ui() -> void:
 	bar.add_child(_btn("另存为", _on_save_as_pressed))
 	bar.add_child(_btn("刷新", refresh))
 	bar.add_child(_btn("导入JSON", _on_import_pressed))
+	bar.add_child(_btn("导入loot.json", _on_import_loot_pressed))
 	bar.add_child(_btn("导出JSON", export_all))
 
 	var split := HSplitContainer.new()
@@ -305,6 +312,74 @@ func _on_import_confirmed() -> void:
 		print("物品库：已导入 %d 个 ItemData 到 %s" % [n, ITEMS_DIR])
 	else:
 		push_warning("物品库：没有导入任何物品（JSON 为空或格式不正确）")
+
+
+## 把 loot.json 中的 UNIQUES / SET 部件 / CHARM_UNIQUES 转成 ItemData 资源，
+## 由 Godot 原生 ResourceSaver 写 .tres（格式零风险），点一次即可灌满物品库。
+func _on_import_loot_pressed() -> void:
+	if not FileAccess.file_exists(LOOT_JSON):
+		push_error("未找到 %s" % LOOT_JSON)
+		return
+	var txt := FileAccess.get_file_as_string(LOOT_JSON)
+	var parsed: Variant = JSON.parse_string(txt)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		push_error("物品库：loot.json 解析失败（根节点应为对象）")
+		return
+	var data: Dictionary = parsed
+	_ensure_items_dir()
+	var items: Array = []
+	var uniques: Array = data.get("UNIQUES", [])
+	var sets: Array = data.get("SETS", [])
+	var charms: Array = data.get("CHARM_UNIQUES", [])
+	for u in uniques:
+		if u is Dictionary:
+			items.append(_loot_to_item(u as Dictionary, "weapon", 3))
+	for s in sets:
+		if s is Dictionary:
+			var sd: Dictionary = s
+			for pc in sd.get("pieces", []) as Array:
+				if pc is Dictionary:
+					items.append(_loot_to_item(pc as Dictionary, "armor", 2))
+	for c in charms:
+		if c is Dictionary:
+			items.append(_loot_to_item(c as Dictionary, "charm", 3))
+	var n := 0
+	for it in items:
+		var ip := _path_for(it)
+		if ResourceSaver.save(it, ip) == OK:
+			n += 1
+	refresh()
+	if Engine.has_singleton("EditorInterface"):
+		EditorInterface.get_resource_filesystem().scan()
+	print("物品库：已从 loot.json 导入 %d 个 ItemData" % n)
+
+
+## loot.json 一件物品(含 affixes/pw/flavor) → ItemData。
+## stats 取每个 affix 的 k:max；desc 合并 flavor 与被动 pw。
+func _loot_to_item(e: Dictionary, default_type: String, default_rarity: int) -> ItemData:
+	var res := ItemData.new()
+	res.id = str(e.get("id", ""))
+	res.name = str(e.get("n", ""))
+	res.type = str(e.get("type", default_type))
+	var ri: int = clampi(int(e.get("rarity", default_rarity)), 0, 4)
+	res.rarity = RARITY_STR[ri]
+	res.qty = 1
+	res.icon = str(e.get("g", ""))
+	var h: int = RARITY_HEX[ri]
+	res.hex = Color.from_rgba8((h >> 16) & 255, (h >> 8) & 255, h & 255)
+	var stats := {}
+	for a in e.get("affixes", []):
+		if a is Dictionary:
+			var ad: Dictionary = a
+			if ad.has("k") and ad.has("max"):
+				stats[str(ad["k"])] = ad["max"]
+	res.stats = stats
+	var desc := str(e.get("flavor", ""))
+	if e.has("pw") and str(e["pw"]) != "":
+		desc += "\n" + str(e["pw"])
+	res.desc = desc
+	res.grade = 1
+	return res
 
 
 func export_all() -> void:
