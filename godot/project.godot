@@ -123,3 +123,7 @@ anti_aliasing/quality/msaa_3d=1
 environment/defaults/default_clear_color=Color(0.0235, 0.0196, 0.0392, 1)
 occlusion_culling/enabled=true
 threads/thread_model=1
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/item_dock/plugin.cfg")
