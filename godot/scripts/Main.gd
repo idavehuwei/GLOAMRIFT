@@ -109,24 +109,27 @@ func _ready() -> void:
 	_apply_pal()
 	if "--smoke" in OS.get_cmdline_user_args():
 		print("SMOKE town=", WorldState.W.area.get("n"), " npcs=", WorldState.W.npcs.size(), " marks=", WorldState.W.marks.size(), " walk=", WorldState.W.grid.count(1))
+		var t0 := Time.get_ticks_msec()
 		WorldState.enter_area("waste")
 		var su_n := 0
 		for e in WorldState.W.enemies:
 			if e.get("su"):
 				su_n += 1
-		print("SMOKE waste enemies=", WorldState.W.enemies.size(), " su=", su_n, " blockers=", WorldState.blocked_tiles().size())
+		print("SMOKE waste enemies=", WorldState.W.enemies.size(), " su=", su_n, " blockers=", WorldState.blocked_tiles().size(), " ms=", Time.get_ticks_msec() - t0)
 		var set_it := Game.roll_set_item(8)
 		var uni := Game.roll_unique("u_hammer", 8, 0)
 		Game.ensure_bounties()
 		print("SMOKE loot sets=", LootData.SETS.size(), " uniques=", LootData.UNIQUES.size(), " setitem=", set_it.get("name", ""), " unique=", uni.get("name", ""), " bounty=", Game.P.bountyList.size())
+		t0 = Time.get_ticks_msec()
 		WorldState.enter_dungeon("crypt", 1)
-		print("SMOKE crypt enemies=", WorldState.W.enemies.size(), " rooms=", WorldState.W.rooms.size())
+		print("SMOKE crypt enemies=", WorldState.W.enemies.size(), " rooms=", WorldState.W.rooms.size(), " ms=", Time.get_ticks_msec() - t0)
+		t0 = Time.get_ticks_msec()
 		WorldState.enter_dungeon("crypt", 2)
 		var sekhra := 0
 		for e in WorldState.W.enemies:
 			if e.get("sekhra"):
 				sekhra += 1
-		print("SMOKE crypt2 sekhra=", sekhra)
+		print("SMOKE crypt2 sekhra=", sekhra, " ms=", Time.get_ticks_msec() - t0)
 		WorldState.enter_rift(5)
 		var rb := 0
 		for e in WorldState.W.enemies:
@@ -147,6 +150,7 @@ func _ready() -> void:
 			else:
 				rk_miss += 1
 		print("SMOKE runes=", rk_n, " miss=", rk_miss, " mouseR=", Game.mouse_skill(1), " white=", Game.show_white_loot())
+		print("SMOKE chboss=", Data.ENEMY_ASSET.lord, ",", Data.ENEMY_ASSET.voice, ",", Data.ENEMY_ASSET.kor, " has=", Assets.has("boss_warrok"), Assets.has("boss_caster"), Assets.has("boss_undead"))
 		get_tree().quit()
 
 

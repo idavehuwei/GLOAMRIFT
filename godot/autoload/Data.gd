@@ -471,8 +471,8 @@ const ENEMY_ASSET := {
 	"skeleton": "mob_skeleton", "ghoul": "mob_zombie", "imp": "mob_goblin",
 	"bandit": "mob_bandit", "banditbow": "npc_rogue", "brute": "mob_bandit",
 	"ashmage": "mob_wizard", "rimeknight": "mob_knight", "drowned": "mob_drowned", "wrecker": "mob_bandit",
-	"boneking": "boss_sekhra", "lord": "mob_lord", "seven": "mob_ninja", "gray": "mob_bandit", "kor": "mob_bandit",
-	"osser": "mob_wizard", "singer": "mob_wizard", "tideguide": "mob_wizard", "voice": "mob_wizard",
+	"boneking": "boss_sekhra", "lord": "boss_warrok", "seven": "mob_ninja", "gray": "mob_bandit", "kor": "boss_undead",
+	"osser": "mob_wizard", "singer": "mob_wizard", "tideguide": "mob_wizard", "voice": "boss_caster",
 	"wolf": "mob_wolf", "boar": "mob_boar", "frostwolf": "mob_husky", "brinewolf": "mob_fox", "lavabeast": "mob_boar", "grom": "mob_stag",
 	"spider": "mob_spider", "icespider": "mob_spider", "broodmother": "mob_spider",
 	"rat": "mob_rat", "snake": "mob_snake", "frog": "mob_frog", "wasp": "mob_wasp"

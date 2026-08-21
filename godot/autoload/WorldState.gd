@@ -917,8 +917,11 @@ func spawn_rift_hoard(lvl: int) -> void:
 
 func clear_actors() -> void:
 	if actors_root:
-		for c in actors_root.get_children():
-			c.queue_free()
+		var kids: Array = actors_root.get_children()
+		for c in kids:
+			if c.name == "Player":
+				continue
+			Assets.recycle(c)
 	W.enemies.clear()
 	W.npcs.clear()
 	W.marks.clear()
@@ -930,21 +933,20 @@ func clear_actors() -> void:
 	_clear_fx_props()
 
 
+func _wipe(n: Node) -> void:
+	if n == null:
+		return
+	var kids: Array = n.get_children()
+	for c in kids:
+		n.remove_child(c)
+		c.free()
+
+
 func _clear_fx_props() -> void:
-	var walls = W.get("walls", [])
-	if typeof(walls) == TYPE_ARRAY:
-		for w in walls:
-			if w.get("mesh"):
-				w.mesh.queue_free()
 	W.walls = []
 	W.torches = []
 	_zones.clear()
 	if typeof(Game.P.get("up")) == TYPE_DICTIONARY:
-		var nails = Game.P.up.get("nails")
-		if typeof(nails) == TYPE_ARRAY:
-			for n in nails:
-				if n.get("mesh"):
-					n.mesh.queue_free()
 		Game.P.up.nails = []
 
 
@@ -1248,7 +1250,8 @@ func spawn_enemy(type: String, x: float, z: float, lvl: int, elite: bool, force_
 		e.xp = round(e.xp * D.xp)
 	if t.get("boss", false):
 		W.boss = e
-	_attach_bar(e)
+	if e.boss or e.elite or gold:
+		_attach_bar(e)
 	W.enemies.append(e)
 	if elite and not e.boss:
 		apply_elite_mods(e, force_mods, opt)
@@ -1598,6 +1601,8 @@ func _name_label(e: Dictionary) -> void:
 
 
 func _show_bar(e: Dictionary, on: bool) -> void:
+	if on and not e.get("bar"):
+		_attach_bar(e)
 	if e.get("bar"):
 		e.bar.visible = on
 	_sync_bar(e)
@@ -1930,7 +1935,10 @@ func _spawn_player_view() -> void:
 		return
 	var old: Node = actors_root.get_node_or_null("Player")
 	if old:
-		old.queue_free()
+		old.position = Vector3(Game.P.x, 0, Game.P.z)
+		old.rotation.y = Game.P.dir
+		W.player_node = old
+		return
 	var aid: String = Data.CLASS_ASSET.get(Game.P.cls, "char_warrior")
 	var look: Dictionary = Data.CLASSES[Game.P.cls].look.duplicate()
 	var node := Assets.make_actor(aid, look, "human")
@@ -1948,8 +1956,7 @@ func rebuild_meshes(pal: Dictionary, dark: bool) -> void:
 	if world_root == null:
 		return
 	W.dark = dark
-	for c in world_root.get_children():
-		c.queue_free()
+	_wipe(world_root)
 	var M := Cfg.MAP
 	var T := Cfg.TILE
 	var under := MeshInstance3D.new()
@@ -2030,12 +2037,13 @@ func rebuild_meshes(pal: Dictionary, dark: bool) -> void:
 		skirt.material_override = sm
 		world_root.add_child(skirt)
 	var kind: String = str(W.area.get("kind", ""))
+	var blocked: Array = blocked_tiles() if (dark or kind == "field") else []
 	if dark:
-		_build_dungeon_walls()
+		_build_dungeon_walls(blocked)
 		_build_dark_props()
 	elif kind == "field":
-		_build_field_blockers(str(W.area.get("block", "rock")))
-		_build_field_landmarks(W.area)
+		_build_field_blockers(str(W.area.get("block", "rock")), blocked)
+		_build_field_landmarks(W.area, blocked)
 
 
 func _build_town_props(area: Dictionary) -> void:
@@ -2071,23 +2079,62 @@ func _build_house(px: float, pz: float, bw: float, bd: float, idx: int, skin: St
 	elif idx % 3 == 2:
 		Assets.tint(n, 0x6E6458)
 	world_root.add_child(n)
+	# 屋外市集/工坊杂物：贴着房子外沿散布几件家具道具
+	var hw := bw * 0.5 + 1.3
+	var hd := bd * 0.5 + 1.3
+	for _k in Cfg.ri(2, 3):
+		var ang := Cfg._rng.randf() * TAU
+		_deco_one(DECO_TOWN, px + cos(ang) * hw, pz + sin(ang) * hd)
 
 
-func _build_dungeon_walls() -> void:
-	var wt: Array = blocked_tiles()
-	if wt.is_empty():
+func _build_dungeon_walls(tiles: Array) -> void:
+	if tiles.is_empty():
 		return
-	for i in wt.size():
-		var p: Vector2i = wt[i]
+	var walls: Array = []
+	var caps: Array = []
+	var cols: Array = []
+	for i in tiles.size():
+		var p: Vector2i = tiles[i]
 		var h := 4.1 + Cfg._rng.randf() * 0.7
-		Assets.place("world_wall", world_root, Vector3(Cfg.wx(p.x), 0, Cfg.wx(p.y)), 0.0, Vector3(1, h / 4.4, 1))
-		Assets.place("world_wall_cap", world_root, Vector3(Cfg.wx(p.x), h, Cfg.wx(p.y)))
+		var pos := Vector3(Cfg.wx(p.x), 0, Cfg.wx(p.y))
+		walls.append(Assets.xf3(pos, 0.0, Vector3(1, h / 4.4, 1)))
+		caps.append(Assets.xf3(Vector3(pos.x, h, pos.z)))
 		var n := walk(p.x, p.y - 1)
 		var s := walk(p.x, p.y + 1)
 		var e := walk(p.x + 1, p.y)
 		var w := walk(p.x - 1, p.y)
 		if (n or s) and (e or w) and Cfg._rng.randf() < 0.7:
-			Assets.place("world_column", world_root, Vector3(Cfg.wx(p.x), 0, Cfg.wx(p.y)), 0.0, Vector3(1, h / 5.2, 1))
+			cols.append(Assets.xf3(pos, 0.0, Vector3(1, h / 5.2, 1)))
+	Assets.batch("world_wall", world_root, walls)
+	Assets.batch("world_wall_cap", world_root, caps)
+	Assets.batch("world_column", world_root, cols)
+
+
+# 环境道具池（Quaternius CC0，随机散布；均为不与现有道具重复的有价值杂物）
+const DECO_DUNGEON: Array[String] = ["prop_crate", "prop_crate_metal", "prop_bag", "prop_pouch", "prop_bucket", "prop_pot", "prop_vase", "prop_vase_broken", "prop_cauldron", "prop_books", "prop_chain", "prop_coinpile", "prop_bench", "prop_stool", "prop_anvil", "prop_banner"]
+const DECO_TOWN: Array[String] = ["prop_table", "prop_chair", "prop_bench", "prop_stool", "prop_bookcase", "prop_shelf", "prop_cabinet", "prop_workbench", "prop_anvil", "prop_weaponstand", "prop_banner", "prop_stall", "prop_dummy", "prop_crate", "prop_bag", "prop_pot"]
+
+
+func _deco_one(pool: Array, x: float, z: float) -> void:
+	if world_root == null or pool.is_empty() or not can_stand(x, z, 0.55):
+		return
+	var id: String = pool[Cfg._rng.randi() % pool.size()]
+	Assets.place(id, world_root, Vector3(x, 0, z), Cfg._rng.randf() * TAU)
+
+
+func _scatter_deco(pool: Array, x0: int, y0: int, x1: int, y1: int, count: int) -> void:
+	if count <= 0 or x1 <= x0 or y1 <= y0:
+		return
+	var placed := 0
+	var tries := 0
+	while placed < count and tries < count * 8:
+		tries += 1
+		var tx := Cfg.ri(x0, x1)
+		var ty := Cfg.ri(y0, y1)
+		if not walk(tx, ty):
+			continue
+		_deco_one(pool, Cfg.wx(tx) + Cfg.rf(-0.25, 0.25), Cfg.wx(ty) + Cfg.rf(-0.25, 0.25))
+		placed += 1
 
 
 func _build_dark_props() -> void:
@@ -2108,6 +2155,10 @@ func _build_dark_props() -> void:
 			var yaw := atan2(Cfg.wx(r.cx) - px, Cfg.wx(r.cy) - pz)
 			var n := Assets.place("prop_torch", world_root, Vector3(px, 0, pz), yaw)
 			W.torches.append({"x": px, "z": pz, "y": 1.95 if n else 2.55, "ph": Cfg._rng.randf() * TAU})
+		# 环境道具：房间内随机散布杂物（裂隙区更稀疏）
+		if int(r.w) > 3 and int(r.h) > 3:
+			var dcount := Cfg.ri(0, 1) if rift else Cfg.ri(1, 3)
+			_scatter_deco(DECO_DUNGEON, int(r.x) + 1, int(r.y) + 1, int(r.x) + int(r.w) - 2, int(r.y) + int(r.h) - 2, dcount)
 
 
 func spawn_stone_wall(x: float, z: float) -> void:
@@ -2189,48 +2240,68 @@ func _tick_torch_lights(dt: float) -> void:
 			l.light_energy = 0.0
 
 
-func _build_field_blockers(style: String) -> void:
-	var tiles: Array = blocked_tiles()
+func _build_field_blockers(style: String, tiles: Array) -> void:
 	if tiles.is_empty():
 		return
 	var n := tiles.size()
 	if style == "tree":
+		var trees: Array = []
+		var bushes: Array = []
+		var logs: Array = []
 		for i in n:
 			var t: Vector2i = tiles[i]
 			var px := Cfg.wx(t.x) + Cfg.rf(-0.25, 0.25)
 			var pz := Cfg.wx(t.y) + Cfg.rf(-0.25, 0.25)
 			var tall := 0.85 + Cfg._rng.randf() * 0.45
-			Assets.place("world_tree", world_root, Vector3(px, 0, pz), Cfg._rng.randf() * TAU, Vector3(tall, tall, tall))
+			trees.append(Assets.xf3(Vector3(px, 0, pz), Cfg._rng.randf() * TAU, Vector3(tall, tall, tall)))
 			if Cfg._rng.randf() < 0.28:
-				Assets.place("world_bush", world_root, Vector3(px + Cfg.rf(-1.1, 1.1), 0, pz + Cfg.rf(-1.1, 1.1)), 0.0, 0.7 + Cfg._rng.randf() * 0.6)
+				bushes.append(Assets.xf3(Vector3(px + Cfg.rf(-1.1, 1.1), 0, pz + Cfg.rf(-1.1, 1.1)), 0.0, 0.7 + Cfg._rng.randf() * 0.6))
 		for _i in 8:
 			var t: Vector2i = Cfg.pick(tiles)
-			Assets.place("world_log", world_root, Vector3(Cfg.wx(t.x) + Cfg.rf(-0.4, 0.4), 0, Cfg.wx(t.y) + Cfg.rf(-0.4, 0.4)), Cfg._rng.randf() * TAU)
+			logs.append(Assets.xf3(Vector3(Cfg.wx(t.x) + Cfg.rf(-0.4, 0.4), 0, Cfg.wx(t.y) + Cfg.rf(-0.4, 0.4)), Cfg._rng.randf() * TAU))
+		Assets.batch("world_tree", world_root, trees)
+		Assets.batch("world_bush", world_root, bushes)
+		Assets.batch("world_log", world_root, logs)
 	elif style == "spire":
+		var spires: Array = []
+		var shards: Array = []
+		var glows: Array = []
 		for i in n:
 			var t: Vector2i = tiles[i]
 			var h := 0.85 + Cfg._rng.randf() * 0.7
-			Assets.place("world_spire", world_root, Vector3(Cfg.wx(t.x) + Cfg.rf(-0.25, 0.25), 0, Cfg.wx(t.y) + Cfg.rf(-0.25, 0.25)), Cfg._rng.randf() * TAU, Vector3(1, h, 1))
-			Assets.place("world_shard", world_root, Vector3(Cfg.wx(t.x) + Cfg.rf(-0.9, 0.9), 0, Cfg.wx(t.y) + Cfg.rf(-0.9, 0.9)), 0.0, Vector3(1, 0.6 + Cfg._rng.randf() * 0.8, 1))
+			spires.append(Assets.xf3(Vector3(Cfg.wx(t.x) + Cfg.rf(-0.25, 0.25), 0, Cfg.wx(t.y) + Cfg.rf(-0.25, 0.25)), Cfg._rng.randf() * TAU, Vector3(1, h, 1)))
+			shards.append(Assets.xf3(Vector3(Cfg.wx(t.x) + Cfg.rf(-0.9, 0.9), 0, Cfg.wx(t.y) + Cfg.rf(-0.9, 0.9)), 0.0, Vector3(1, 0.6 + Cfg._rng.randf() * 0.8, 1)))
 		for _i in 6:
 			var t: Vector2i = Cfg.pick(tiles)
-			Assets.place("world_glow", world_root, Vector3(Cfg.wx(t.x) + Cfg.rf(-1.6, 1.6), 0, Cfg.wx(t.y) + Cfg.rf(-1.6, 1.6)), 0.0, Cfg.rf(0.7, 1.5))
+			glows.append(Assets.xf3(Vector3(Cfg.wx(t.x) + Cfg.rf(-1.6, 1.6), 0, Cfg.wx(t.y) + Cfg.rf(-1.6, 1.6)), 0.0, Cfg.rf(0.7, 1.5)))
+		Assets.batch("world_spire", world_root, spires)
+		Assets.batch("world_shard", world_root, shards)
+		Assets.batch("world_glow", world_root, glows)
 	elif style == "pillar":
+		var ice: Array = []
 		for i in n:
 			var t: Vector2i = tiles[i]
 			var h := 0.8 + Cfg._rng.randf() * 0.7
-			Assets.place("world_icicle", world_root, Vector3(Cfg.wx(t.x) + Cfg.rf(-0.2, 0.2), 0, Cfg.wx(t.y) + Cfg.rf(-0.2, 0.2)), Cfg._rng.randf() * TAU, Vector3(1, h, 1))
+			ice.append(Assets.xf3(Vector3(Cfg.wx(t.x) + Cfg.rf(-0.2, 0.2), 0, Cfg.wx(t.y) + Cfg.rf(-0.2, 0.2)), Cfg._rng.randf() * TAU, Vector3(1, h, 1)))
+		Assets.batch("world_icicle", world_root, ice)
 	elif style == "wreck":
+		var wrecks: Array = []
+		var masts: Array = []
 		for i in n:
 			var t: Vector2i = tiles[i]
-			Assets.place("world_wreck", world_root, Vector3(Cfg.wx(t.x) + Cfg.rf(-0.3, 0.3), 0, Cfg.wx(t.y) + Cfg.rf(-0.3, 0.3)), Cfg._rng.randf() * TAU, Vector3(1, Cfg.rf(0.6, 1.3), Cfg.rf(0.7, 1.2)))
+			wrecks.append(Assets.xf3(Vector3(Cfg.wx(t.x) + Cfg.rf(-0.3, 0.3), 0, Cfg.wx(t.y) + Cfg.rf(-0.3, 0.3)), Cfg._rng.randf() * TAU, Vector3(1, Cfg.rf(0.6, 1.3), Cfg.rf(0.7, 1.2))))
 			if Cfg._rng.randf() < 0.28:
-				Assets.place("world_mast", world_root, Vector3(Cfg.wx(t.x), 0, Cfg.wx(t.y)), 0.0)
+				masts.append(Assets.xf3(Vector3(Cfg.wx(t.x), 0, Cfg.wx(t.y))))
+		Assets.batch("world_wreck", world_root, wrecks)
+		Assets.batch("world_mast", world_root, masts)
 	else:
+		var rocks: Array = []
+		var pebbles: Array = []
+		var grass: Array = []
 		for i in n:
 			var t: Vector2i = tiles[i]
-			Assets.place("world_rock", world_root, Vector3(Cfg.wx(t.x) + Cfg.rf(-0.25, 0.25), 0, Cfg.wx(t.y) + Cfg.rf(-0.25, 0.25)), Cfg._rng.randf() * TAU, Vector3(Cfg.rf(0.7, 1.15), Cfg.rf(0.55, 1.05), Cfg.rf(0.7, 1.2)))
-			Assets.place("world_pebble", world_root, Vector3(Cfg.wx(t.x) + Cfg.rf(-1.1, 1.1), 0, Cfg.wx(t.y) + Cfg.rf(-1.1, 1.1)), 0.0, 0.5 + Cfg._rng.randf() * 0.7)
+			rocks.append(Assets.xf3(Vector3(Cfg.wx(t.x) + Cfg.rf(-0.25, 0.25), 0, Cfg.wx(t.y) + Cfg.rf(-0.25, 0.25)), Cfg._rng.randf() * TAU, Vector3(Cfg.rf(0.7, 1.15), Cfg.rf(0.55, 1.05), Cfg.rf(0.7, 1.2))))
+			pebbles.append(Assets.xf3(Vector3(Cfg.wx(t.x) + Cfg.rf(-1.1, 1.1), 0, Cfg.wx(t.y) + Cfg.rf(-1.1, 1.1)), 0.0, 0.5 + Cfg._rng.randf() * 0.7))
 		var gsi := 0
 		var tries := 0
 		while tries < 280 and gsi < 160:
@@ -2239,12 +2310,14 @@ func _build_field_blockers(style: String) -> void:
 			var z := Cfg.rf(-52, 52)
 			if not can_stand(x, z, 0.3):
 				continue
-			Assets.place("world_grass", world_root, Vector3(x, 0, z), Cfg._rng.randf() * TAU, Vector3(1, Cfg.rf(0.7, 1.5), 1))
+			grass.append(Assets.xf3(Vector3(x, 0, z), Cfg._rng.randf() * TAU, Vector3(1, Cfg.rf(0.7, 1.5), 1)))
 			gsi += 1
+		Assets.batch("world_rock", world_root, rocks)
+		Assets.batch("world_pebble", world_root, pebbles)
+		Assets.batch("world_grass", world_root, grass)
 
 
-func _build_field_landmarks(area: Dictionary) -> void:
-	var tiles: Array = blocked_tiles()
+func _build_field_landmarks(area: Dictionary, tiles: Array) -> void:
 	if tiles.is_empty():
 		return
 	var t: Vector2i = tiles[tiles.size() >> 2]
