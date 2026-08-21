@@ -94,8 +94,7 @@ func _btn(text: String, cb: Callable) -> Button:
 
 func refresh() -> void:
 	entries.clear()
-	if DirAccess.open(ITEMS_DIR) == null:
-		DirAccess.make_dir_recursive(ITEMS_DIR)
+	_ensure_items_dir()
 	var dir := DirAccess.open(ITEMS_DIR)
 	if dir != null:
 		dir.list_dir_begin()
@@ -109,6 +108,15 @@ func refresh() -> void:
 			fname = dir.get_next()
 		dir.list_dir_end()
 	_render_list()
+
+
+## 4.7 中 DirAccess.make_dir_recursive 已变为实例方法，需用实例调用。
+func _ensure_items_dir() -> void:
+	if DirAccess.open(ITEMS_DIR) != null:
+		return
+	var da := DirAccess.open("res://")
+	if da != null:
+		da.make_dir_recursive(ITEMS_DIR)
 
 
 func _render_list() -> void:
@@ -179,8 +187,7 @@ func _path_for(res: ItemData) -> String:
 
 
 func _on_new_pressed() -> void:
-	if DirAccess.open(ITEMS_DIR) == null:
-		DirAccess.make_dir_recursive(ITEMS_DIR)
+	_ensure_items_dir()
 	var res := ItemData.new()
 	res.id = "item_new"
 	res.name = "新物品"
@@ -275,8 +282,7 @@ func _on_import_pressed() -> void:
 
 
 func _on_import_confirmed() -> void:
-	if DirAccess.open(ITEMS_DIR) == null:
-		DirAccess.make_dir_recursive(ITEMS_DIR)
+	_ensure_items_dir()
 	var txt := import_text.text
 	var parsed: Variant = JSON.parse_string(txt)
 	if typeof(parsed) != TYPE_ARRAY:
