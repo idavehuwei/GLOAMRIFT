@@ -94,7 +94,7 @@ func _btn(text: String, cb: Callable) -> Button:
 
 func refresh() -> void:
 	entries.clear()
-	if DirAccess.dir_exists(ITEMS_DIR) == false:
+	if DirAccess.open(ITEMS_DIR) == null:
 		DirAccess.make_dir_recursive(ITEMS_DIR)
 	var dir := DirAccess.open(ITEMS_DIR)
 	if dir != null:
@@ -179,7 +179,7 @@ func _path_for(res: ItemData) -> String:
 
 
 func _on_new_pressed() -> void:
-	if DirAccess.dir_exists(ITEMS_DIR) == false:
+	if DirAccess.open(ITEMS_DIR) == null:
 		DirAccess.make_dir_recursive(ITEMS_DIR)
 	var res := ItemData.new()
 	res.id = "item_new"
@@ -275,7 +275,7 @@ func _on_import_pressed() -> void:
 
 
 func _on_import_confirmed() -> void:
-	if DirAccess.dir_exists(ITEMS_DIR) == false:
+	if DirAccess.open(ITEMS_DIR) == null:
 		DirAccess.make_dir_recursive(ITEMS_DIR)
 	var txt := import_text.text
 	var parsed: Variant = JSON.parse_string(txt)
