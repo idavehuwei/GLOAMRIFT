@@ -29,6 +29,8 @@ UiKit="*res://scripts/UiKit.gd"
 TalkData="*res://scripts/TalkData.gd"
 AchData="*res://scripts/AchData.gd"
 ThreadPool="*res://autoload/ThreadPool.gd"
+EventBus="*res://autoload/EventBus.gd"
+Notify="*res://autoload/Notify.gd"
 
 [display]
 

@@ -81,6 +81,12 @@ var _sheet_veil: ColorRect
 var _nav_btns: Array = []
 var _panel_title: Label
 var _sk_sel := ""
+var _bag_filter := "all"          # 背包分类：all/weapon/gear/rune/charm/scrap
+var _last_lvl := 1
+var _last_bag_n := 0
+var _hp_disp := -1.0              # 平滑血条显示值（<0 表示未初始化）
+var _mp_disp := -1.0
+var _xp_disp := -1.0
 
 
 func _ready() -> void:
@@ -97,6 +103,9 @@ func _ready() -> void:
 	Game.floats.connect(_spawn_float)
 	AchData.toast_show.connect(_on_ach_toast)
 	AchData.toast_hide.connect(func(): _ach_toast.visible = false)
+	InvCell.host = self
+	_last_lvl = Game.P.lvl
+	_last_bag_n = Game.P.bag.size()
 	if Game.pending_enter != "":
 		var dest := Game.pending_enter
 		Game.pending_enter = ""
@@ -717,6 +726,7 @@ func _on_ach_toast(a: Dictionary) -> void:
 	_ach_toast_n.text = str(a.get("n", ""))
 	_ach_toast_d.text = str(a.get("d", ""))
 	_ach_toast.visible = true
+	EventBus.notify.emit(str(a.get("n", "成就")), str(a.get("d", "")), "ach")
 
 
 func _tick_minimap(dt: float) -> void:
@@ -1043,7 +1053,7 @@ func _process(dt: float) -> void:
 				var en := _enemy_under()
 				if not en.is_empty():
 					Game.P.target = en
-	_refresh_bars()
+	_refresh_bars(dt)
 	_update_floats(dt)
 	_refresh_combat_hud()
 	_tick_minimap(dt)
@@ -1237,15 +1247,35 @@ func _on_cine(kind: String, meta: Dictionary) -> void:
 	_cine_d.text = str(meta.get("d", ""))
 
 
-func _refresh_bars() -> void:
+func _refresh_bars(dt := 0.0) -> void:
 	_hp.max_value = Game.P.hpMax
-	_hp.value = Game.P.hp
 	_mp.max_value = Game.P.mpMax
-	_mp.value = Game.P.mp
 	_xp.max_value = Game.P.xpNext
-	_xp.value = Game.P.xp
+	# 平滑过渡：显示值向真实值收敛，避免硬跳变（HUD 最佳实践）
+	var k := clampf(dt * 14.0, 0.0, 1.0)
+	if _hp_disp < 0.0:
+		_hp_disp = float(Game.P.hp); _mp_disp = float(Game.P.mp); _xp_disp = float(Game.P.xp)
+	_hp_disp = lerp(_hp_disp, float(Game.P.hp), k)
+	_mp_disp = lerp(_mp_disp, float(Game.P.mp), k)
+	_xp_disp = lerp(_xp_disp, float(Game.P.xp), k)
+	_hp.value = _hp_disp
+	_mp.value = _mp_disp
+	_xp.value = _xp_disp
 	_hp_lab.text = "生命  %d / %d" % [int(Game.P.hp), int(Game.P.hpMax)]
 	_mp_lab.text = "法力  %d / %d" % [int(Game.P.mp), int(Game.P.mpMax)]
+	# 事件钩子：升级 / 拾取 通知（经 EventBus -> Notify 通知栈）
+	if Game.P.lvl != _last_lvl:
+		if Game.P.lvl > _last_lvl:
+			EventBus.notify.emit("升级！", "达到 %d 级" % Game.P.lvl, "good")
+		_last_lvl = Game.P.lvl
+	if Game.P.bag.size() > _last_bag_n:
+		var d := Game.P.bag.size() - _last_bag_n
+		var nm := "物品"
+		if Game.P.bag.size() > 0:
+			var last: Dictionary = Game.P.bag[Game.P.bag.size() - 1]
+			nm = str(last.get("name", "物品"))
+		EventBus.notify.emit("拾取 +%d" % d, nm, "loot")
+		_last_bag_n = Game.P.bag.size()
 
 
 func _refresh_hud() -> void:
@@ -1392,7 +1422,10 @@ func _plab(t: String, sz: int = 14) -> void:
 
 func _equip_slot(k: String) -> Button:
 	var it = Game.P.equip.get(k)
-	var b := Button.new()
+	var b := InvCell.new()
+	b.cell_kind = "equip"
+	b.slot_key = k
+	b.it_ref = it if (typeof(it) == TYPE_DICTIONARY) else {}
 	b.custom_minimum_size = Vector2(64, 64)
 	b.clip_text = true
 	b.add_theme_font_size_override("font_size", 11)
@@ -1446,7 +1479,10 @@ func _reload_gear() -> void:
 
 
 func _item_cell(it, idx: int, kind: String) -> Button:
-	var cell := Button.new()
+	var cell := InvCell.new()
+	cell.cell_kind = kind
+	cell.cell_idx = idx
+	cell.it_ref = it if (typeof(it) == TYPE_DICTIONARY) else {}
 	cell.custom_minimum_size = Vector2(70, 70)
 	cell.clip_text = true
 	cell.add_theme_font_size_override("font_size", 20)
@@ -1480,6 +1516,16 @@ func _item_cell(it, idx: int, kind: String) -> Button:
 					Game.discard_charm(i)
 					_reload_gear()
 			)
+		# 堆叠数量角标（qty>1 时显示）
+		var qty := int(it.get("qty", 1))
+		if qty > 1:
+			var badge := Label.new()
+			badge.text = "x%d" % qty
+			badge.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+			badge.add_theme_font_size_override("font_size", 11)
+			badge.add_theme_color_override("font_color", UiKit.bone())
+			badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			cell.add_child(badge)
 	else:
 		cell.disabled = true
 		cell.add_theme_stylebox_override("disabled", UiKit.cell_empty())
@@ -1487,6 +1533,25 @@ func _item_cell(it, idx: int, kind: String) -> Button:
 
 
 func _bag_grid(parent: Control) -> void:
+	# 分类筛选标签
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 4)
+	parent.add_child(tabs)
+	var cats := [["all", "全部"], ["weapon", "武器"], ["gear", "护甲"], ["rune", "符文"], ["charm", "护符"], ["scrap", "材料"]]
+	for c in cats:
+		var tb := Button.new()
+		tb.text = c[1]
+		tb.custom_minimum_size = Vector2(54, 24)
+		tb.add_theme_font_size_override("font_size", 12)
+		tb.add_theme_stylebox_override("normal", UiKit.tab_on() if _bag_filter == c[0] else UiKit.tab())
+		tb.add_theme_color_override("font_color", UiKit.brass_hi() if _bag_filter == c[0] else UiKit.ash())
+		var cat := c[0]
+		tb.pressed.connect(func():
+			if _bag_filter != cat:
+				_bag_filter = cat
+				_reload_gear()
+		)
+		tabs.add_child(tb)
 	var grid := GridContainer.new()
 	grid.columns = 8
 	grid.add_theme_constant_override("h_separation", 5)
@@ -1494,9 +1559,53 @@ func _bag_grid(parent: Control) -> void:
 	parent.add_child(grid)
 	for i in Cfg.BAG:
 		if i < Game.P.bag.size():
-			grid.add_child(_item_cell(Game.P.bag[i], i, "bag"))
+			var it: Dictionary = Game.P.bag[i]
+			if _bag_filter != "all" and _cat(it) != _bag_filter:
+				continue
+			grid.add_child(_item_cell(it, i, "bag"))
 		else:
 			grid.add_child(_item_cell(null, i, "bag"))
+
+
+func _cat(it: Dictionary) -> String:
+	var t := str(it.get("type", ""))
+	if t == "weapon":
+		return "weapon"
+	if t == "rune":
+		return "rune"
+	if t == "charm":
+		return "charm"
+	if t == "scrap":
+		return "scrap"
+	return "gear"
+
+
+## 拖拽落点协调：复用既有 Game.equip_from_bag / unequip_slot / charm_to_bag。
+func _inv_drop(src: Dictionary, dst: Dictionary) -> void:
+	if src.kind == dst.kind and src.get("idx", -1) == dst.get("idx", -1) and src.get("slot", "") == dst.get("slot", ""):
+		return
+	match src.kind:
+		"bag":
+			if dst.kind == "equip":
+				Game.equip_from_bag(int(src.idx))
+			elif dst.kind == "bag":
+				_swap_bag(int(src.idx), int(dst.idx))
+		"equip":
+			if dst.kind == "bag":
+				Game.unequip_slot(str(src.slot))
+		"charm":
+			if dst.kind == "bag":
+				Game.charm_to_bag(int(src.idx))
+	_reload_gear()
+
+
+func _swap_bag(i: int, j: int) -> void:
+	var b: Array = Game.P.bag
+	if i < 0 or j < 0 or i >= b.size() or j >= b.size() or i == j:
+		return
+	var t = b[i]
+	b[i] = b[j]
+	b[j] = t
 
 
 func _charm_grid(parent: Control) -> void:
