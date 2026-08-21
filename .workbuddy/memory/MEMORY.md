@@ -20,6 +20,11 @@
 - P1-5 物品 Resource 化 + 编辑器 Dock:`scripts/ItemData.gd`(class_name ItemData, Resource, type/rarity 用 `@export_enum` 下拉, desc 多行)提供 from_dict/to_dict 桥接;**编辑器 Dock 已完成且已在编辑器内实跑通**——`addons/item_dock`(EditorPlugin + 面板,挂左下底栏),支持浏览/新建/复制/删除/保存/另存为 + 粘贴 JSON 导入 + 导出 JSON;**新增「导入loot.json」按钮**:用 Godot 原生 ResourceSaver 把 `data/loot.json` 的 UNIQUES(25)/SET 部件(47)/CHARM_UNIQUES(5) 共约 77 件转成 `ItemData.tres`(rarity int→字符串映射、hex 取 RARITY 颜色、stats 取 affix 的 k:max、desc 合并 flavor+pw)。注意 GDScript 对 `Variant` 变量不能直接调 `.get()/.has()`,须先 `as Dictionary` 或显式 `var d: Dictionary = v` 强转(4.7 编译期强制)。
 
 - P1-7 物品悬浮 Tooltip（已增强）：基础版早已存在——`Game.item_tip(it, cmp)` 返回多行富文本，`_item_cell`/`_equip_slot` 经 `_wire_tip` 接入 hover（`_tip_lab` RichTextLabel + `bbcode_enabled=true`）。**本次增强**（`scripts/Main.gd`）：tooltip 容器改为 `HBoxContainer`（`_tip_box`），新增 `_tip_icon`(TextureRect 44×44) + `_tip_sep`(VSeparator)，物品格 hover 时由 `LootData.item_hex(it)` 取十六色经 `Cfg.hex_color` 转 Color 给边框配色（`UiKit.tip().duplicate() as StyleBoxFlat` 改 `border_color`+`set_border_width_all(2)`）；非物品类 tip（技能等）保持原 hicolor 行为。`_wire_tip(c, txt, icon, hex)` 加可选 `icon: Texture2D`/`hex: int` 参数，调用方以 `UiKit.tex(UiKit.icon_for_item(it))` 传图标；`it` 在背包/装备上下文已是 Dictionary（已 typeof 校验或 `as Dictionary` 强转），类型安全。
+- P1-8 HUD 增强（`scripts/Main.gd`，纯增量零回归，4.7 类型安全）：
+  - ① WoW 风格底部微型菜单：右下角 6 颗 48×30 仅图标按钮（复用 nav 字体图标，无文字），活动 sheet 经新增 `_sync_micro()` 高亮，与左下 `_nav` 并列不重叠；
+  - ② 技能/快捷动作条整体包入 `UiKit.plate()` 圆角面板框（`skplate` 容器，原 skrow 改为其子节点）；
+  - ③ 血/蓝球各加 `_level_badge` 圆形等级徽章（`orb_ring` 风格 32×32，显示 `Game.P.lvl`，`_refresh_bars` 更新）；
+  - ④ 小地图加 `plate_inner` 内描边（`mmframe`） + 右下角坐标读条 `X %d Z %d`（`_mm_coord`，`_tick_minimap` 节流更新）。
 
 ## 仓库状态
 - 远程已设置：`origin` = `https://github.com/idavehuwei/GLOAMRIFT.git`（公开仓库，已确认存在且为空）。

@@ -90,6 +90,10 @@ var _last_bag_n := 0
 var _hp_disp := -1.0              # 平滑血条显示值（<0 表示未初始化）
 var _mp_disp := -1.0
 var _xp_disp := -1.0
+var _lvl_badge: Label
+var _lvl_badge_mp: Label
+var _micro_btns: Array = []
+var _mm_coord: Label
 
 
 func _ready() -> void:
@@ -273,6 +277,8 @@ func _build_hud() -> void:
 	_xp = _bar(mid, Color(0.69, 0.55, 0.31))
 	_xp.custom_minimum_size = Vector2(0, 8)
 	_mp = _orb(bars, Color(0.22, 0.47, 0.85))
+	_lvl_badge = _level_badge(_hp.get_parent() as PanelContainer)
+	_lvl_badge_mp = _level_badge(_mp.get_parent() as PanelContainer)
 	_pots = _lab(root, Vector2(0, 0), 12, Color(0.7, 0.66, 0.58))
 	_pots.visible = false
 	_target = _lab(root, Vector2(0, 0), 14, UiKit.brass())
@@ -331,15 +337,19 @@ func _build_hud() -> void:
 	_xp_fill.set_anchors_preset(Control.PRESET_LEFT_WIDE)
 	_xp_fill.offset_right = 0
 	_xp_strip.add_child(_xp_fill)
+	var skplate := PanelContainer.new()
+	skplate.add_theme_stylebox_override("panel", UiKit.plate())
+	skplate.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	skplate.offset_left = -432
+	skplate.offset_right = 432
+	skplate.offset_top = -226
+	skplate.offset_bottom = -146
+	skplate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(skplate)
 	var skrow := HBoxContainer.new()
-	skrow.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	skrow.offset_left = -420
-	skrow.offset_right = 420
-	skrow.offset_top = -218
-	skrow.offset_bottom = -154
 	skrow.alignment = BoxContainer.ALIGNMENT_CENTER
 	skrow.add_theme_constant_override("separation", 6)
-	root.add_child(skrow)
+	skplate.add_child(skrow)
 	for i in 2:
 		var mb := Button.new()
 		mb.custom_minimum_size = Vector2(56, 56)
@@ -393,6 +403,29 @@ func _build_hud() -> void:
 		nb.pressed.connect(_toggle_sheet.bind(str(pair[2])))
 		_nav.add_child(nb)
 		_nav_btns.append(nb)
+
+	# WoW 风格底部微型菜单（仅图标、紧凑、远离其它 UI）
+	var micro := HBoxContainer.new()
+	micro.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	micro.offset_left = -360
+	micro.offset_right = -12
+	micro.offset_top = -44
+	micro.offset_bottom = -12
+	micro.alignment = BoxContainer.ALIGNMENT_CENTER
+	micro.add_theme_constant_override("separation", 4)
+	micro.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(micro)
+	for pair in [["char", "nav-char"], ["bag", "nav-bag"], ["skills", "nav-skills"], ["talents", "nav-talents"], ["quests", "nav-quests"], ["achs", "nav-achs"]]:
+		var mb := Button.new()
+		mb.custom_minimum_size = Vector2(48, 30)
+		mb.add_theme_stylebox_override("normal", UiKit.nav())
+		mb.add_theme_stylebox_override("hover", UiKit.nav_on())
+		mb.add_theme_stylebox_override("pressed", UiKit.nav_on())
+		UiKit.stamp_btn(mb, str(pair[1]), "", 20)
+		mb.set_meta("sheet", str(pair[0]))
+		mb.pressed.connect(_toggle_sheet.bind(str(pair[0])))
+		micro.add_child(mb)
+		_micro_btns.append(mb)
 	_sheet_veil = ColorRect.new()
 	_sheet_veil.color = Color(0.012, 0.008, 0.012, 0.72)
 	_sheet_veil.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -616,6 +649,24 @@ func _build_hud() -> void:
 	root.add_child(_mm_wrap)
 	_mm = preload("res://scripts/Minimap.gd").new()
 	_mm_wrap.add_child(_mm)
+	var mmframe := PanelContainer.new()
+	mmframe.add_theme_stylebox_override("panel", UiKit.plate_inner())
+	mmframe.set_anchors_preset(Control.PRESET_FULL_RECT)
+	mmframe.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mmframe.z_index = 2
+	_mm_wrap.add_child(mmframe)
+	var mmc := Label.new()
+	mmc.add_theme_font_size_override("font_size", 10)
+	mmc.add_theme_color_override("font_color", UiKit.brass())
+	mmc.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	mmc.offset_left = -88
+	mmc.offset_right = -8
+	mmc.offset_top = 158
+	mmc.offset_bottom = 174
+	mmc.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	mmc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_mm_wrap.add_child(mmc)
+	_mm_coord = mmc
 	_ach_toast = PanelContainer.new()
 	_ach_toast.visible = false
 	_ach_toast.add_theme_stylebox_override("panel", UiKit.plate())
@@ -695,6 +746,34 @@ func _orb(parent: Control, col: Color) -> ProgressBar:
 	return p
 
 
+func _level_badge(host: Control) -> Label:
+	var b := PanelContainer.new()
+	b.add_theme_stylebox_override("panel", UiKit.orb_ring())
+	b.custom_minimum_size = Vector2(32, 32)
+	b.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	b.offset_left = -16
+	b.offset_right = 16
+	b.offset_top = 38
+	b.offset_bottom = 70
+	b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	host.add_child(b)
+	var lab := Label.new()
+	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lab.add_theme_font_size_override("font_size", 12)
+	lab.add_theme_color_override("font_color", UiKit.brass_hi())
+	lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(lab)
+	return lab
+
+
+func _sync_micro() -> void:
+	for b in _micro_btns:
+		var bb: Button = b
+		var on: bool = _panel.visible and _sheet == str(bb.get_meta("sheet", ""))
+		bb.add_theme_stylebox_override("normal", UiKit.nav_on() if on else UiKit.nav())
+
+
 func _toggle_sheet(kind: String) -> void:
 	if _panel.visible and _sheet == kind:
 		_close_sheet()
@@ -715,6 +794,7 @@ func _toggle_sheet(kind: String) -> void:
 			open_achs()
 		_:
 			pass
+	_sync_micro()
 
 
 func _hd(t: String) -> void:
@@ -770,6 +850,8 @@ func _tick_minimap(dt: float) -> void:
 	_mm_t = 0.0
 	if _mm:
 		_mm.queue_redraw()
+	if _mm_coord:
+		_mm_coord.text = "X %d  Z %d" % [int(Game.P.x), int(Game.P.z)]
 
 
 func _setup_doll(root: Control) -> void:
@@ -1297,6 +1379,9 @@ func _refresh_bars(dt := 0.0) -> void:
 	_xp.value = _xp_disp
 	_hp_lab.text = "生命  %d / %d" % [int(Game.P.hp), int(Game.P.hpMax)]
 	_mp_lab.text = "法力  %d / %d" % [int(Game.P.mp), int(Game.P.mpMax)]
+	if _lvl_badge:
+		_lvl_badge.text = str(Game.P.lvl)
+		_lvl_badge_mp.text = str(Game.P.lvl)
 	# 事件钩子：升级 / 拾取 通知（经 EventBus -> Notify 通知栈）
 	if Game.P.lvl != _last_lvl:
 		if Game.P.lvl > _last_lvl:
@@ -2390,6 +2475,7 @@ func _close_sheet() -> void:
 		_sheet_veil.visible = false
 	_sheet = ""
 	_sync_nav()
+	_sync_micro()
 	_hide_tip()
 
 
