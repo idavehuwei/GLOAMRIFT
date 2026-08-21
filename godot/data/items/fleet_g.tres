@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bnk7hd3dtc2f4"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_jk4q1"]
+
+[resource]
+script = ExtResource("1_jk4q1")
+id = "fleet_g"
+name = "缆绳手套"
+type = "gloves"
+rarity = "rare"
+icon = "🧤"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"as": 15.0,
+"dex": 18.0
+}
+desc = "掌心一道沟，是缆勒的。"

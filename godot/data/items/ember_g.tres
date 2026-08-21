@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://h8ow1obdmma5"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_au2dp"]
+
+[resource]
+script = ExtResource("1_au2dp")
+id = "ember_g"
+name = "余烬手套"
+type = "gloves"
+rarity = "rare"
+icon = "🧤"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"cdr": 7.0,
+"mpre": 5.0
+}
+desc = "指尖黑了。洗不掉。"

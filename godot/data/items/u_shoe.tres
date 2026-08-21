@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://ghgra4afmq44"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_mrd1n"]
+
+[resource]
+script = ExtResource("1_mrd1n")
+id = "u_shoe"
+name = "那只鞋"
+type = "amulet"
+rarity = "legendary"
+icon = "📿"
+hex = Color(0.5568628, 0.3529412, 0.84705883, 1)
+stats = {
+"all": 60.0,
+"dr": 30.0
+}
+desc = "水面上浮起一只小孩的鞋。他看了很久。
+生命降至 25% 以下时，若 8 码内没有其他敌人，立刻回复 40% 生命——但必须停在原地 1.5 秒。"

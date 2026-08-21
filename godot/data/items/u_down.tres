@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://j6vdc0olm1ar"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_jqb76"]
+
+[resource]
+script = ExtResource("1_jqb76")
+id = "u_down"
+name = "我下去"
+type = "weapon"
+rarity = "epic"
+icon = "⚔"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"dmg": 260.0,
+"main": 76.0
+}
+desc = "第四年，他站在裂口边上说：我下去。
+位移落地时，对 6 码内造成 {d}% 武器伤害，并使自己 3 秒内受伤 −30%。"

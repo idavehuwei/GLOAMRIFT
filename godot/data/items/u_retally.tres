@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://ot3vmh7ubud8"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_rofdv"]
+
+[resource]
+script = ExtResource("1_rofdv")
+id = "u_retally"
+name = "重新计票"
+type = "ring"
+rarity = "legendary"
+icon = "💍"
+hex = Color(0.5568628, 0.3529412, 0.84705883, 1)
+stats = {
+"all": 68.0,
+"cdr": 18.0
+}
+desc = "三百年后，有人把那天的票又数了一遍。
+按 R：立即重置全部技能冷却，并把近 10 秒受伤的 {d}% 分摊给周围 10 码敌人。冷却 45 秒。"

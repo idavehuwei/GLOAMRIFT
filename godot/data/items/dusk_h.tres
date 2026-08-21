@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bykla2cb735av"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_tjhbp"]
+
+[resource]
+script = ExtResource("1_tjhbp")
+id = "dusk_h"
+name = "暮语兜帽"
+type = "helm"
+rarity = "rare"
+icon = "🎩"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"crit": 7.0,
+"dex": 10.0
+}
+desc = "帽沿压得很低。她不想被林子看见。"

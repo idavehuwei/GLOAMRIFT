@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://drroixhq11ag"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_w701i"]
+
+[resource]
+script = ExtResource("1_w701i")
+id = "rift_a"
+name = "裂口里的外套"
+type = "armor"
+rarity = "rare"
+icon = "🦺"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"all": 14.0,
+"armor": 30.0
+}
+desc = "领口朝下。它记得怎么下去。"

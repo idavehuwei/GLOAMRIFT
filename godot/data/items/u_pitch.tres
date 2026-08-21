@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bcgc1y70dk46c"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_1sxrd"]
+
+[resource]
+script = ExtResource("1_1sxrd")
+id = "u_pitch"
+name = "走调的那个"
+type = "weapon"
+rarity = "epic"
+icon = "🪄"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"crit": 9.0,
+"dmg": 88.0,
+"ene": 46.0
+}
+desc = "皮尔，八岁。音总是高半度，但他们从没让他停。
+法术有 {p}% 概率高半度：伤害翻倍，但目标获得 2 秒法术免疫。火球分裂成三枚。"

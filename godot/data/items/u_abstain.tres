@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dwguew6yd0kry"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_g31di"]
+
+[resource]
+script = ExtResource("1_g31di")
+id = "u_abstain"
+name = "十二张弃权"
+type = "ring"
+rarity = "epic"
+icon = "💍"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"dr": 34.0,
+"hpre": 20.0
+}
+desc = "我不懂这些。我弃权。
+有 {p}% 概率完全无视一次伤害——但下次攻击也会落空。"

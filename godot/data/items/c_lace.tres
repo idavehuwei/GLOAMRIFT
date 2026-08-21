@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://d2vq1c87sf2b4"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_gt464"]
+
+[resource]
+script = ExtResource("1_gt464")
+id = "c_lace"
+name = "舱底的鞋带"
+type = "charm"
+rarity = "epic"
+icon = "🪢"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"hp": 90.0,
+"vit": 18.0
+}
+desc = "水面上浮起一只小孩的鞋。带子还在。
+生命低于 40% 时减伤 +{dr}%。"

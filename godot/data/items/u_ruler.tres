@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://c1kqxnyt7y1s1"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_klf5q"]
+
+[resource]
+script = ExtResource("1_klf5q")
+id = "u_ruler"
+name = "工头的量尺"
+type = "amulet"
+rarity = "epic"
+icon = "📿"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"all": 24.0,
+"critDmg": 55.0
+}
+desc = "刻度磨掉了大半，只剩下一格——一个人的高度。
+对生命高于 75% 的目标伤害 +{hi}%；低于 25% 时 +{lo}%。中间不加。"

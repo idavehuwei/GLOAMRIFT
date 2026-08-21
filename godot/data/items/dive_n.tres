@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://h36p8ejfro5p"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_cdtap"]
+
+[resource]
+script = ExtResource("1_cdtap")
+id = "dive_n"
+name = "下去的坠"
+type = "amulet"
+rarity = "rare"
+icon = "📿"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"all": 32.0,
+"cdr": 12.0
+}
+desc = "坠子是一颗没点亮的灯。"

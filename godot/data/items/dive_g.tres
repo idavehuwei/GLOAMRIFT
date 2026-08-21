@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://f0rd7ydwb6ei"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_nbqaj"]
+
+[resource]
+script = ExtResource("1_nbqaj")
+id = "dive_g"
+name = "下去的手"
+type = "gloves"
+rarity = "rare"
+icon = "🧤"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"as": 14.0,
+"critDmg": 40.0
+}
+desc = "抓紧过裂口的边。边上没有了。"

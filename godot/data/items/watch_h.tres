@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bfpfkcrg3drji"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_4vkn4"]
+
+[resource]
+script = ExtResource("1_4vkn4")
+id = "watch_h"
+name = "守桥盔"
+type = "helm"
+rarity = "rare"
+icon = "⛑"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"armor": 14.0,
+"vit": 12.0
+}
+desc = "帽檐挡住了北风，也挡住了脸。"

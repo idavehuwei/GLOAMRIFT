@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cnayg0cmtu8ne"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_o8set"]
+
+[resource]
+script = ExtResource("1_o8set")
+id = "watch_w"
+name = "守桥阔剑"
+type = "weapon"
+rarity = "rare"
+icon = "⚔"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"dmg": 9.0,
+"str": 14.0
+}
+desc = "刃口对着河，从来没转过来。"

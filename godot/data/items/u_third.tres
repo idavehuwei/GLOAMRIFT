@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://d134xnwj2pa4u"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_omvvg"]
+
+[resource]
+script = ExtResource("1_omvvg")
+id = "u_third"
+name = "第三条开始顺手"
+type = "weapon"
+rarity = "epic"
+icon = "⚔"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"as": 18.0,
+"dmg": 140.0
+}
+desc = "头两条我吐了。
+对同一目标连续攻击，每次伤害 +{s}%，最多 10 层。换目标清空。"

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://d2yb4akphr62v"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_qfmyr"]
+
+[resource]
+script = ExtResource("1_qfmyr")
+id = "silk_a"
+name = "织母袍"
+type = "armor"
+rarity = "rare"
+icon = "🥋"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"ene": 28.0,
+"skDmg": 18.0
+}
+desc = "袍上的纹会动。你一眨眼它就换一条。"

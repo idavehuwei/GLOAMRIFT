@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://drcouhtwlb8t1"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_ny553"]
+
+[resource]
+script = ExtResource("1_ny553")
+id = "c_whistle"
+name = "走调的口哨"
+type = "charm"
+rarity = "epic"
+icon = "🎵"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"ene": 20.0,
+"mp": 48.0
+}
+desc = "皮尔吹过。音总是高半度。
+击杀回复 {mp} 点法力。"

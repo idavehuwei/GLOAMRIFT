@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cgojef1f8vmw8"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_yapwk"]
+
+[resource]
+script = ExtResource("1_yapwk")
+id = "u_acres"
+name = "二十亩地"
+type = "armor"
+rarity = "epic"
+icon = "🦺"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"armor": 360.0,
+"hp": 480.0,
+"vit": 80.0
+}
+desc = "湖北边，二十亩。他记得每一垄。
+同一区域每停留 30 秒减伤 +{dr}%，最多 8 层。离开清空。"

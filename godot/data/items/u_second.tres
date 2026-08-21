@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dpdc61rm7pj86"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_r4her"]
+
+[resource]
+script = ExtResource("1_r4her")
+id = "u_second"
+name = "第二根的位置"
+type = "belt"
+rarity = "legendary"
+icon = "🎗"
+hex = Color(0.5568628, 0.3529412, 0.84705883, 1)
+stats = {
+"dr": 14.0,
+"hp": 320.0,
+"vit": 70.0
+}
+desc = "他们量好了第二根的位置。坑到现在还在那儿，空着。
+站定 2 秒后脚下钉一根虚影钉子（最多 3 根）。5 码内敌人移速 −40%，你对他们伤害 +{dmg}%。钉子不跟你走。"

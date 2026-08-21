@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://c011w1tb0hjfs"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_1xjni"]
+
+[resource]
+script = ExtResource("1_1xjni")
+id = "u_green"
+name = "多吃一口青的"
+type = "belt"
+rarity = "epic"
+icon = "🎗"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"all": 50.0,
+"leech": 7.0
+}
+desc = "她想吃点新鲜的。就这么点事。
+治疗药水改为 6 秒持续回复，总量 +{h}%；期间移速 +25%。"

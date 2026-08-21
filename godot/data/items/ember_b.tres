@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dugnbpmmier08"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_0ikf2"]
+
+[resource]
+script = ExtResource("1_0ikf2")
+id = "ember_b"
+name = "余烬便鞋"
+type = "boots"
+rarity = "rare"
+icon = "🥾"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"ene": 9.0,
+"ms": 9.0
+}
+desc = "走过的地上会留一圈温的。"

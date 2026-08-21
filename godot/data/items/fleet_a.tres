@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://c8v1c0lga1kby"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_gs3ac"]
+
+[resource]
+script = ExtResource("1_gs3ac")
+id = "fleet_a"
+name = "舱底皮甲"
+type = "armor"
+rarity = "rare"
+icon = "🥋"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"dex": 26.0,
+"hp": 80.0
+}
+desc = "盐渍到领口。领口下面还有名字。"

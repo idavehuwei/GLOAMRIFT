@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cs22reo6vevdy"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_8m6g4"]
+
+[resource]
+script = ExtResource("1_8m6g4")
+id = "u_enough"
+name = "够了吗"
+type = "amulet"
+rarity = "legendary"
+icon = "📿"
+hex = Color(0.5568628, 0.3529412, 0.84705883, 1)
+stats = {
+"all": 90.0,
+"cdr": 24.0,
+"dr": 44.0
+}
+desc = "三百年了，没人回答他。
+每承受 {need} 点累计伤害，立刻满血、清空冷却，周围敌人静止 3 秒。累计值不会因死亡重置。"

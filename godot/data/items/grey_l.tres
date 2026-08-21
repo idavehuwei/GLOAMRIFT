@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://c6c014h237ex"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_a2178"]
+
+[resource]
+script = ExtResource("1_a2178")
+id = "grey_l"
+name = "旧例腰带"
+type = "belt"
+rarity = "rare"
+icon = "🎗"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"hp": 90.0,
+"leech": 4.0
+}
+desc = "扣环是一枚空选票。"

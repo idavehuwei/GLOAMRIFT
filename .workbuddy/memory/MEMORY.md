@@ -17,7 +17,7 @@
 - P0:EventBus 信号总线 + Notify 通知栈 + InvCell 可拖拽物品格 + 背包分类筛选 + 平滑血条。
 - P1-6 任务追踪:`Game.quest_steps(q)` 支持 steps 多步骤 + `_track` 渲染 ✓/▢;`EventBus.quest_changed` 已发射(turn_in/unlock_quests)并接 `_refresh_hud`。
 - P1-4 对话解耦:`autoload/DialogueManager.gd` 作为 TalkData 门面,开放 greet/topics/answer + branch 分支能力 + `dialogue_opened` 信号;`open_npc` 改走它。
-- P1-5 物品 Resource 化 + 编辑器 Dock:`scripts/ItemData.gd`(class_name ItemData, Resource, type/rarity 用 `@export_enum` 下拉, desc 多行)提供 from_dict/to_dict 桥接;**编辑器 Dock 已完成**——`addons/item_dock`(EditorPlugin + 面板,挂左下底栏),支持浏览/新建/复制/删除/保存/另存为 + JSON 批量导入导出,编辑复用原生 EditorInspector。
+- P1-5 物品 Resource 化 + 编辑器 Dock:`scripts/ItemData.gd`(class_name ItemData, Resource, type/rarity 用 `@export_enum` 下拉, desc 多行)提供 from_dict/to_dict 桥接;**编辑器 Dock 已完成且已在编辑器内实跑通**——`addons/item_dock`(EditorPlugin + 面板,挂左下底栏),支持浏览/新建/复制/删除/保存/另存为 + 粘贴 JSON 导入 + 导出 JSON;**新增「导入loot.json」按钮**:用 Godot 原生 ResourceSaver 把 `data/loot.json` 的 UNIQUES(25)/SET 部件(47)/CHARM_UNIQUES(5) 共约 77 件转成 `ItemData.tres`(rarity int→字符串映射、hex 取 RARITY 颜色、stats 取 affix 的 k:max、desc 合并 flavor+pw)。注意 GDScript 对 `Variant` 变量不能直接调 `.get()/.has()`,须先 `as Dictionary` 或显式 `var d: Dictionary = v` 强转(4.7 编译期强制)。
 
 ## 仓库状态
 - 纯本地仓库,**无远程(无 origin)**,`git push` 当前执行不了;需用户先提供 GitHub 仓库 URL 才能 `git remote add origin` + push dev 分支。

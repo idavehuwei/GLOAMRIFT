@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bpbqh3rcf4vtk"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_ni1vt"]
+
+[resource]
+script = ExtResource("1_ni1vt")
+id = "fleet_l"
+name = "潮线腰带"
+type = "belt"
+rarity = "rare"
+icon = "🎗"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"hp": 72.0,
+"leech": 5.0
+}
+desc = "扣在涨潮的那一格。"

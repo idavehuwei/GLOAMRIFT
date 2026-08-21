@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cnrchhnnos4io"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_41prd"]
+
+[resource]
+script = ExtResource("1_41prd")
+id = "u_son"
+name = "守桥人之子"
+type = "ring"
+rarity = "epic"
+icon = "💍"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"all": 32.0,
+"crit": 8.0
+}
+desc = "他一辈子在证明他爹没有白死。
+治疗药水改为 8 秒护盾（等量），护盾期间伤害 +{d}%。"

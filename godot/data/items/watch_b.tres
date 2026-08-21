@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://7a28cwvv45x2"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_qtxo6"]
+
+[resource]
+script = ExtResource("1_qtxo6")
+id = "watch_b"
+name = "守桥靴"
+type = "boots"
+rarity = "rare"
+icon = "🥾"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"armor": 10.0,
+"ms": 10.0
+}
+desc = "鞋底还沾着桥板的灰。"

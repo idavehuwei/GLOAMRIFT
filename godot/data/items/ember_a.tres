@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bdw7ms74dt6t8"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_rkp3g"]
+
+[resource]
+script = ExtResource("1_rkp3g")
+id = "ember_a"
+name = "余烬袍"
+type = "armor"
+rarity = "rare"
+icon = "🥋"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"ene": 14.0,
+"mp": 28.0
+}
+desc = "下摆烧焦了一圈，像课桌的边。"

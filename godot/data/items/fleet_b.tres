@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://drjppfpiyvhj4"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_ju8gs"]
+
+[resource]
+script = ExtResource("1_ju8gs")
+id = "fleet_b"
+name = "甲板靴"
+type = "boots"
+rarity = "rare"
+icon = "🥾"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"dodge": 8.0,
+"ms": 14.0
+}
+desc = "走在地上也像走在船上。"

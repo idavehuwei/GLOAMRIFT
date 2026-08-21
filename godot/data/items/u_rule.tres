@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bwrwaxebmdx5q"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_owhxe"]
+
+[resource]
+script = ExtResource("1_owhxe")
+id = "u_rule"
+name = "不肯停的规矩"
+type = "amulet"
+rarity = "epic"
+icon = "📿"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"all": 28.0,
+"mpre": 8.0
+}
+desc = "唱起来就不能停。这是规矩。
+连续施放不同技能时，后续技能法力 −25%（最多 4 层）。重复同一技能则清空。与「照旧例」不能同用。"

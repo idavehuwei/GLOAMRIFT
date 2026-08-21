@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cg2w6l1bue51h"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_iymvv"]
+
+[resource]
+script = ExtResource("1_iymvv")
+id = "dusk_w"
+name = "暮语长弓"
+type = "weapon"
+rarity = "rare"
+icon = "🏹"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"dex": 14.0,
+"dmg": 8.0
+}
+desc = "弦是蛛丝。她说这样听得见风。"

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cb4eejmqj5es2"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_0nkfh"]
+
+[resource]
+script = ExtResource("1_0nkfh")
+id = "u_nineteen"
+name = "十九道拦阻"
+type = "armor"
+rarity = "epic"
+icon = "🦺"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"armor": 190.0,
+"dr": 20.0,
+"vit": 46.0
+}
+desc = "一道刻痕一个人。他记得每一个。
+3 码内每有一个敌人，减伤 {dr}%，最多 19 层。叠满时下一次技能不耗法力。"

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://defcb1qrfcmqw"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_6l0c0"]
+
+[resource]
+script = ExtResource("1_6l0c0")
+id = "u_hammer"
+name = "不肯落下的锤"
+type = "weapon"
+rarity = "epic"
+icon = "🔨"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"as": 14.0,
+"dmg": 96.0,
+"str": 40.0
+}
+desc = "他这辈子只有一次没把锤子落下去。
+位移冷却缩短 {dash}%。落地后 3 秒内下一次受伤延迟 2 秒，期间击杀则取消。猛冲可在 1.5 秒内再冲一次。"

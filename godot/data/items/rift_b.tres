@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://eo108af2yp5"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_21adu"]
+
+[resource]
+script = ExtResource("1_21adu")
+id = "rift_b"
+name = "裂口里的靴"
+type = "boots"
+rarity = "rare"
+icon = "🥾"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"dodge": 7.0,
+"ms": 14.0
+}
+desc = "底上没有泥。泥不敢粘。"

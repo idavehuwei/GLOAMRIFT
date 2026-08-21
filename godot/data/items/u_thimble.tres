@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://lb1hlkcvg0x"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_y2mxa"]
+
+[resource]
+script = ExtResource("1_y2mxa")
+id = "u_thimble"
+name = "封墙人的顶针"
+type = "ring"
+rarity = "epic"
+icon = "💍"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"dex": 32.0,
+"leech": 5.0,
+"ms": 11.0
+}
+desc = "第七个。她说她是自愿的。她带着顶针。
+每 10 秒，下一次受击被格挡，并在原地留下一堵持续 4 秒的石墙。"

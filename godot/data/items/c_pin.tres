@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cuotawmqm8tb4"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_00bkq"]
+
+[resource]
+script = ExtResource("1_00bkq")
+id = "c_pin"
+name = "磨亮的顶针"
+type = "charm"
+rarity = "epic"
+icon = "🪡"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"hpre": 18.0
+}
+desc = "第七个。她说她是自愿的。她带着顶针。
+被击中时有 {p}% 概率格挡。"

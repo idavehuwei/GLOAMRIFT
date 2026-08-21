@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cr2gyirsr1yw8"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_we88y"]
+
+[resource]
+script = ExtResource("1_we88y")
+id = "u_tide"
+name = "涨潮的舱"
+type = "boots"
+rarity = "epic"
+icon = "🥾"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"dex": 46.0,
+"ms": 13.0
+}
+desc = "水一格一格涨。他不受影响，因为他早就在水里了。
+静止时每秒积 1 层水位（最多 10）。移动时消耗，每层使下一次攻击伤害 +{s}%。"

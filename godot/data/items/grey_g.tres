@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://8hyohccxs8ec"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_23b2u"]
+
+[resource]
+script = ExtResource("1_23b2u")
+id = "grey_g"
+name = "旧例手甲"
+type = "gloves"
+rarity = "rare"
+icon = "🧤"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"as": 13.0,
+"crit": 7.0
+}
+desc = "握锤的人换过十一任。"

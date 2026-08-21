@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://b7q7ps6617ca4"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_as8bl"]
+
+[resource]
+script = ExtResource("1_as8bl")
+id = "dive_a"
+name = "下去的甲"
+type = "armor"
+rarity = "rare"
+icon = "🦺"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"all": 26.0,
+"armor": 70.0,
+"dr": 14.0
+}
+desc = "甲里面写着日期。没有回来的日期。"

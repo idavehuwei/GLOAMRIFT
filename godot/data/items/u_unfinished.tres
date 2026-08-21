@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bb0tksyr40e0d"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_37o2e"]
+
+[resource]
+script = ExtResource("1_37o2e")
+id = "u_unfinished"
+name = "还没唱完"
+type = "helm"
+rarity = "legendary"
+icon = "⛑"
+hex = Color(0.5568628, 0.3529412, 0.84705883, 1)
+stats = {
+"cdr": 20.0,
+"dr": 26.0,
+"ene": 76.0
+}
+desc = "他们唱到一半沉了下去。三百年，还差最后一段。
+本应死亡时获得 8 秒「还没唱完」：无法被杀死、伤害 +50%、无法回血。期间击杀至少一只则以 30% 生命复活，否则死亡。冷却 5 分钟。"

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://b2ctw20xulv38"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_ue3k6"]
+
+[resource]
+script = ExtResource("1_ue3k6")
+id = "rift_l"
+name = "裂口里的带"
+type = "belt"
+rarity = "rare"
+icon = "🎗"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"gf": 22.0,
+"hp": 52.0
+}
+desc = "扣一次，深一层。"

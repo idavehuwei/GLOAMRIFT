@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dfhyvv7sw7f08"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_47coy"]
+
+[resource]
+script = ExtResource("1_47coy")
+id = "u_law"
+name = "世世代代，不得替"
+type = "ring"
+rarity = "epic"
+icon = "💍"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"all": 54.0,
+"critDmg": 80.0
+}
+desc = "他给赖账写了后果。三百年后他正在执行它。
+无法被治疗到超过 80% 生命上限。全部伤害 +{d}%。"

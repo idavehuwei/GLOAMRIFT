@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://do7p8f8sbir3o"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_wmm82"]
+
+[resource]
+script = ExtResource("1_wmm82")
+id = "u_names"
+name = "十一个名字"
+type = "belt"
+rarity = "epic"
+icon = "🎗"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"hp": 260.0,
+"vit": 56.0
+}
+desc = "他记得每一条船。
+每击杀一个敌人记下一个名字（最多 11）。满 11 时，下一次致命伤害改为生命保留 1，并清空名字。"

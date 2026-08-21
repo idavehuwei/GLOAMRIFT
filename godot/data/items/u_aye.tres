@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dm8s8keparh38"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_q3mbp"]
+
+[resource]
+script = ExtResource("1_q3mbp")
+id = "u_aye"
+name = "附　议"
+type = "armor"
+rarity = "epic"
+icon = "🦺"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"all": 38.0,
+"armor": 260.0
+}
+desc = "一个人开口，剩下的就好办了。
+你的持续区域每存在一个，全体效果强度 +{s}%。"

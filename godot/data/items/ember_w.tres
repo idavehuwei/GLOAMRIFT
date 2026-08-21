@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bbfg1ghtheq1c"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_0pluk"]
+
+[resource]
+script = ExtResource("1_0pluk")
+id = "ember_w"
+name = "余烬短杖"
+type = "weapon"
+rarity = "rare"
+icon = "🪄"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"dmg": 8.0,
+"ene": 14.0
+}
+desc = "杖头还烫。课没上完。"

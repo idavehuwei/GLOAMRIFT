@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://c38e8kkqfi2dl"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_g6now"]
+
+[resource]
+script = ExtResource("1_g6now")
+id = "watch_a"
+name = "守桥胸甲"
+type = "armor"
+rarity = "rare"
+icon = "🦺"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"armor": 22.0,
+"dr": 7.0,
+"vit": 16.0
+}
+desc = "铁锈比漆厚。漆下面还有名字。"

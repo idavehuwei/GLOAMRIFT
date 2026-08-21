@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cbx0lpq4iymsu"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_kt35v"]
+
+[resource]
+script = ExtResource("1_kt35v")
+id = "silk_w"
+name = "丝腺长杖"
+type = "weapon"
+rarity = "rare"
+icon = "🔱"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"dmg": 20.0,
+"ene": 26.0
+}
+desc = "杖身会自己往前伸。"

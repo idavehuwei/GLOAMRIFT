@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dtw3q7c80f5iq"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_g68i0"]
+
+[resource]
+script = ExtResource("1_g68i0")
+id = "u_breath"
+name = "换气的半拍"
+type = "boots"
+rarity = "epic"
+icon = "🥾"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"dex": 40.0,
+"dodge": 10.0,
+"ms": 16.0
+}
+desc = "他们从不在同一拍上换气。
+每 4 秒的第 4 秒内移速 +60%，且免疫范围伤害。学会踩点。"

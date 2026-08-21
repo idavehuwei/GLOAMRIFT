@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://biuvlpic6ybiq"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_7rqrq"]
+
+[resource]
+script = ExtResource("1_7rqrq")
+id = "dusk_g"
+name = "暮语手套"
+type = "gloves"
+rarity = "rare"
+icon = "🧤"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"as": 11.0,
+"crit": 5.0
+}
+desc = "指节上有拉弦的茧。"

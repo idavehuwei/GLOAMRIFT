@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cucwcik1el0bq"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_2p1gp"]
+
+[resource]
+script = ExtResource("1_2p1gp")
+id = "grey_h"
+name = "旧例盔"
+type = "helm"
+rarity = "rare"
+icon = "⛑"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"armor": 26.0,
+"str": 22.0
+}
+desc = "面罩只留一条缝。开口的人用这条缝。"

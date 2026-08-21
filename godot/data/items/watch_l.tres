@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://0sllwqoqb60s"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_rs027"]
+
+[resource]
+script = ExtResource("1_rs027")
+id = "watch_l"
+name = "守桥腰带"
+type = "belt"
+rarity = "rare"
+icon = "🎗"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"hp": 40.0,
+"hpre": 5.0
+}
+desc = "扣环是桥钉做的。"

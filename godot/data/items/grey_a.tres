@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://c5xc0e7lc4dt8"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_q83vl"]
+
+[resource]
+script = ExtResource("1_q83vl")
+id = "grey_a"
+name = "旧例板甲"
+type = "armor"
+rarity = "rare"
+icon = "🦺"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"armor": 48.0,
+"dr": 11.0,
+"vit": 30.0
+}
+desc = "甲缝里还夹着一张弃权票。"

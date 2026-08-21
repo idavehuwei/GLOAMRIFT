@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://fjw2xl5gcqqo"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_xmadj"]
+
+[resource]
+script = ExtResource("1_xmadj")
+id = "u_voices"
+name = "四十七个声部"
+type = "armor"
+rarity = "epic"
+icon = "🦺"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"armor": 170.0,
+"ene": 50.0,
+"mp": 150.0
+}
+desc = "少一个人，就薄一分。
+每击中一个不同的敌人获得一层声部（伤害 +{d}%，最多 47）。满层时下一个技能范围扩大一倍。脱战 6 秒清空。"

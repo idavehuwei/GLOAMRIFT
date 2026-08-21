@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dmxcdkiiyq7bw"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_44wdf"]
+
+[resource]
+script = ExtResource("1_44wdf")
+id = "silk_o"
+name = "未写完的课"
+type = "offhand"
+rarity = "rare"
+icon = "📖"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"mp": 80.0,
+"mpre": 8.0
+}
+desc = "页与页之间是丝。"

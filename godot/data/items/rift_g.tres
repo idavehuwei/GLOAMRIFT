@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cmim637dfc54r"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_jn07o"]
+
+[resource]
+script = ExtResource("1_jn07o")
+id = "rift_g"
+name = "裂口里的手套"
+type = "gloves"
+rarity = "rare"
+icon = "🧤"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"as": 9.0,
+"mf": 18.0
+}
+desc = "掌纹被抹平了。"

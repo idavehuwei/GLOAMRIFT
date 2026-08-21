@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://d4lwehusscghb"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_tnliv"]
+
+[resource]
+script = ExtResource("1_tnliv")
+id = "c_clod"
+name = "垄上的泥块"
+type = "charm"
+rarity = "epic"
+icon = "🪨"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"hp": 110.0,
+"leech": 5.0
+}
+desc = "湖北边，二十亩。他还记得土的味道。
+击杀回复 {h}% 生命。"

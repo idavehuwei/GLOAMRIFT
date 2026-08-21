@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://c0mij7neuqadp"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_eiiuj"]
+
+[resource]
+script = ExtResource("1_eiiuj")
+id = "c_ticket"
+name = "弃权的票根"
+type = "charm"
+rarity = "epic"
+icon = "🎟"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"dodge": 8.0,
+"dr": 10.0
+}
+desc = "我不懂这些。我弃权。
+每 {cd} 秒，下一次受击被完全无视。"

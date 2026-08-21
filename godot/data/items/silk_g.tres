@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://c2u6n0bfsrrcu"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_8ynbe"]
+
+[resource]
+script = ExtResource("1_8ynbe")
+id = "silk_g"
+name = "抽丝手套"
+type = "gloves"
+rarity = "rare"
+icon = "🧤"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"critDmg": 28.0,
+"ene": 18.0
+}
+desc = "指间总粘着一根，拔不掉。"

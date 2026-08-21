@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bkhaj85s0m1i2"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_j7sx4"]
+
+[resource]
+script = ExtResource("1_j7sx4")
+id = "dive_h"
+name = "下去的盔"
+type = "helm"
+rarity = "rare"
+icon = "⛑"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"elitedmg": 16.0,
+"vit": 36.0
+}
+desc = "戴上会看不见天。这是设计。"

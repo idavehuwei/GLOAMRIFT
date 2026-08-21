@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bsj6jrmo0wg6i"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_8re8j"]
+
+[resource]
+script = ExtResource("1_8re8j")
+id = "dusk_b"
+name = "暮语软靴"
+type = "boots"
+rarity = "rare"
+icon = "🥾"
+hex = Color(0.84705883, 0.75686276, 0.36078432, 1)
+stats = {
+"dex": 9.0,
+"ms": 12.0
+}
+desc = "踩落叶不响。林子喜欢这样的人。"

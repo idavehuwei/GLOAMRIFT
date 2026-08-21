@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://vejb12pha4g4"]
+
+[ext_resource type="Script" uid="uid://cj1ukajuxv0ak" path="res://scripts/ItemData.gd" id="1_b484o"]
+
+[resource]
+script = ExtResource("1_b484o")
+id = "u_erl"
+name = "厄尔的位置"
+type = "weapon"
+rarity = "epic"
+icon = "🏹"
+hex = Color(0.78431374, 0.4627451, 0.17254902, 1)
+stats = {
+"critDmg": 70.0,
+"dex": 58.0,
+"dmg": 160.0
+}
+desc = "第四十一张。也是唯一一张开了口的。
+对满血目标的第一次攻击额外 {d}% 伤害。若未能击杀，6 秒内伤害 −20%。翻滚时射出三箭。"
