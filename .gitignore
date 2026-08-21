@@ -1,10 +1,7 @@
 .DS_Store
 *.DS_Store
 
-node_modules/
-public/assets/models/_raw*.glb
-scripts/tripo_build.log
-
+# Godot 工程忽略规则（纯 Godot 版本）
 godot/.godot/
 godot/.import/
 godot/export/
