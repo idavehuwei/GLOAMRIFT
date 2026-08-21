@@ -289,6 +289,17 @@ func find_path(sx: int, sy: int, gx: int, gy: int, limit: int = 4500) -> Variant
 	return null
 
 
+# 异步寻路:在 WorkerThreadPool 后台线程计算 A*,完成后于主线程调用 on_done.call(path)。
+# find_path 仅读取 walk() 与 Cfg 等纯数据,不触碰场景树,可安全并发。
+# 现有同步 find_path 保持不变(零回归);需要降低主线程卡顿的调用方(如怪物 AI)可改用本方法。
+func find_path_async(sx: int, sy: int, gx: int, gy: int, on_done: Callable, limit: int = 4500) -> void:
+	ThreadPool.submit(
+		func() -> Variant:
+			return find_path(sx, sy, gx, gy, limit),
+		on_done
+	)
+
+
 func path_to_world(tiles) -> Array:
 	if tiles == null:
 		return []

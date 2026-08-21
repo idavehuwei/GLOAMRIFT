@@ -179,10 +179,23 @@ func _prep_loops(ap: AnimationPlayer) -> void:
 
 func _swing(n: Node, walk: float, atk: float) -> void:
 	var swing := 1.4 if atk > 0.0 else sin(walk) * 0.6
-	var arm_r := n.find_child("ArmR", true, false)
-	var arm_l := n.find_child("ArmL", true, false)
-	var leg_r := n.find_child("LegR", true, false)
-	var leg_l := n.find_child("LegL", true, false)
+	# 缓存四肢节点,避免每帧对每角色递归 find_child(高配场景下的明显热点)。
+	var limbs: Dictionary
+	if n.has_meta("__swing_limbs"):
+		limbs = n.get_meta("__swing_limbs")
+	else:
+		var arm_r := n.find_child("ArmR", true, false)
+		var arm_l := n.find_child("ArmL", true, false)
+		var leg_r := n.find_child("LegR", true, false)
+		var leg_l := n.find_child("LegL", true, false)
+		if arm_r == null and arm_l == null and leg_r == null and leg_l == null:
+			return  # 模型尚未就绪,留待下一帧重试
+		limbs = {"arm_r": arm_r, "arm_l": arm_l, "leg_r": leg_r, "leg_l": leg_l}
+		n.set_meta("__swing_limbs", limbs)
+	var arm_r: Node = limbs["arm_r"]
+	var arm_l: Node = limbs["arm_l"]
+	var leg_r: Node = limbs["leg_r"]
+	var leg_l: Node = limbs["leg_l"]
 	if arm_r:
 		arm_r.rotation.x = swing
 	if arm_l:
