@@ -14,6 +14,7 @@ signal bag_changed()
 signal quest_changed()
 signal target_changed()
 signal buff_changed()
+signal dialogue_opened(id: String)   # 对话开始（id = NPC id）
 
 # —— 反馈层 ——
 signal notify(title: String, body: String, kind: String)

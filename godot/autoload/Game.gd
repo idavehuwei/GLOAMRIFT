@@ -1695,6 +1695,7 @@ func kill_enemy(e: Dictionary) -> void:
 				deal_to_enemy(o, nova, false, Color(0.89, 0.77, 0.5), true)
 		P._bursting = false
 	unlock_quests()
+	EventBus.quest_changed.emit()
 	ach_check()
 	ui_refresh.emit()
 	save_soon()
@@ -3344,16 +3345,34 @@ func learn_skill(id: String) -> void:
 	save_soon()
 
 
-func quest_prog(q: Dictionary) -> int:
-	if q.type == "killtype":
-		return mini(int(P.killByType.get(q.t, 0)), int(q.need))
-	if q.type == "elite":
-		return mini(int(P.eliteKills), int(q.need))
-	if q.type == "dungeon":
-		return 1 if P.cleared.get(q.t, false) else 0
-	if q.type == "rift":
-		return mini(int(WorldState.W.get("riftDeepest", 0)), int(q.need))
+func _qprog(type: String, t: String, need: int) -> int:
+	if type == "killtype":
+		return mini(int(P.killByType.get(t, 0)), need)
+	if type == "elite":
+		return mini(int(P.eliteKills), need)
+	if type == "dungeon":
+		return 1 if P.cleared.get(t, false) else 0
+	if type == "rift":
+		return mini(int(WorldState.W.get("riftDeepest", 0)), need)
 	return 0
+
+
+func quest_prog(q: Dictionary) -> int:
+	return _qprog(str(q.type), str(q.get("t", "")), int(q.need))
+
+
+## 步骤式任务目标（可选）：任务 dict 含 steps:[{n, type, t, need}] 时返回每步进度。
+## 现有单目标任务无 steps 字段，返回空数组，调用方回落到单行显示，零回归。
+func quest_steps(q: Dictionary) -> Array:
+	if not q.has("steps"):
+		return []
+	var out: Array = []
+	for s in q.steps:
+		var sd: Dictionary = s
+		var need := int(sd.get("need", 1))
+		var cur := _qprog(str(sd.get("type", q.type)), str(sd.get("t", q.get("t", ""))), need)
+		out.append({"n": str(sd.get("n", "")), "cur": cur, "need": need, "done": cur >= need})
+	return out
 
 
 func quest_done(q: Dictionary) -> bool:
@@ -3392,6 +3411,7 @@ func turn_in(qid: String) -> void:
 		say("塞琳：\"塞克拉死了？好。你叫……算了。裂口又偷名字了。\"")
 		say("去桥头念一遍。北面林地开了。蜘蛛、弓手，比荒原狠。去清。")
 	unlock_quests()
+	EventBus.quest_changed.emit()
 	ach_check()
 	ui_refresh.emit()
 	save_soon()

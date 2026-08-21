@@ -100,6 +100,7 @@ func _ready() -> void:
 	Game.npc_open.connect(open_npc)
 	Game.world_ui.connect(_on_world_ui)
 	Game.ui_refresh.connect(_refresh_hud)
+	EventBus.quest_changed.connect(_refresh_hud)
 	Game.floats.connect(_spawn_float)
 	AchData.toast_show.connect(_on_ach_toast)
 	AchData.toast_hide.connect(func(): _ach_toast.visible = false)
@@ -1291,7 +1292,16 @@ func _refresh_hud() -> void:
 	if q.is_empty():
 		_track.text = ""
 	else:
-		_track.text = "%s\n%d / %d" % [q.n, Game.quest_prog(q), int(q.need)]
+		var steps: Array = Game.quest_steps(q)
+		if steps.is_empty():
+			_track.text = "%s\n%d / %d" % [q.n, Game.quest_prog(q), int(q.need)]
+		else:
+			var txt := str(q.n)
+			for s in steps:
+				var sd: Dictionary = s
+				var mark := "✓" if bool(sd.get("done", false)) else "▢"
+				txt += "\n  %s %s  %d/%d" % [mark, str(sd.get("n", "")), int(sd.get("cur", 0)), int(sd.get("need", 0))]
+			_track.text = txt
 	for i in 6:
 		var id: String = Game.P.barSkills[i]
 		var b: Button = _skills[i]
@@ -1795,6 +1805,7 @@ func _stat_panel(parent: Control) -> void:
 func open_npc(id: String) -> void:
 	_sheet = "npc"
 	_talk_id = id
+	DialogueManager.open(id)
 	_clear_panel()
 	_show_panel()
 	var def: Dictionary = {}
@@ -1805,8 +1816,8 @@ func open_npc(id: String) -> void:
 	if not def.is_empty() and str(def.get("kind", "")) == "":
 		_hd(str(def.get("n", id)))
 		_plab(str(def.get("t", "")), 12)
-		_plab(TalkData.greet(id))
-		var topics: Array = TalkData.topics(id)
+		_plab(DialogueManager.greet(id))
+		var topics: Array = DialogueManager.topics(id)
 		if topics.size():
 			_plab("打听", 13)
 			var row := HBoxContainer.new()
@@ -1824,9 +1835,20 @@ func open_npc(id: String) -> void:
 				)
 				row.add_child(tb)
 			if _talk_pick != "":
-				var ans: String = TalkData.answer(id, _talk_pick)
+				var ans: String = DialogueManager.answer(id, _talk_pick)
 				if ans != "":
 					_plab(ans)
+				for t in topics:
+					if str(t.id) == _talk_pick and DialogueManager.has_branch(t):
+						for opt in DialogueManager.branch_of(t):
+							var od: Dictionary = opt
+							var ob := Button.new()
+							ob.text = str(od.get("label", "…"))
+							ob.pressed.connect(func():
+								_talk_pick = str(od.get("next", ""))
+								open_npc(id)
+							)
+							_panel_body.add_child(ob)
 	match id:
 		"selin":
 			if def.is_empty():
