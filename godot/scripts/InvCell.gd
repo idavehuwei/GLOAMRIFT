@@ -5,7 +5,7 @@ extends Button
 ##
 ## 拖拽落点由 Main._inv_drop(src, dst) 统一协调，复用既有 Game.equip_from_bag / unequip_slot。
 
-static var host = null   # 由 Main._ready 设为场景实例
+static var host: Variant = null   # 由 Main._ready 设为场景实例
 
 var cell_kind := "bag"      # bag | charm | equip
 var cell_idx := -1

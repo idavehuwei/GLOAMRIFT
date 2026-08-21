@@ -1545,7 +1545,7 @@ func _bag_grid(parent: Control) -> void:
 		tb.add_theme_font_size_override("font_size", 12)
 		tb.add_theme_stylebox_override("normal", UiKit.tab_on() if _bag_filter == c[0] else UiKit.tab())
 		tb.add_theme_color_override("font_color", UiKit.brass_hi() if _bag_filter == c[0] else UiKit.ash())
-		var cat := c[0]
+		var cat: String = c[0]
 		tb.pressed.connect(func():
 			if _bag_filter != cat:
 				_bag_filter = cat
@@ -1603,7 +1603,7 @@ func _swap_bag(i: int, j: int) -> void:
 	var b: Array = Game.P.bag
 	if i < 0 or j < 0 or i >= b.size() or j >= b.size() or i == j:
 		return
-	var t = b[i]
+	var t: Dictionary = b[i]
 	b[i] = b[j]
 	b[j] = t
 

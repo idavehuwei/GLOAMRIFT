@@ -42,7 +42,7 @@ func _on_notify(t: String, b: String, k: String) -> void:
 
 
 func _spawn(title: String, body: String, kind: String) -> void:
-	var col := KIND_COLOR.get(kind, KIND_COLOR["info"])
+	var col: Color = KIND_COLOR.get(kind, KIND_COLOR["info"])
 	var p := PanelContainer.new()
 	p.add_theme_stylebox_override("panel", UiKit.plate())
 	p.modulate.a = 0.0
