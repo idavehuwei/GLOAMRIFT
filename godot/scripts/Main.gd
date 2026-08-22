@@ -2564,13 +2564,13 @@ func _char_stats_grid(parent: Control) -> void:
 		col.add_child(sep)
 		return col
 
-	var col_core := make_col.call("概况")
+	var col_core: VBoxContainer = make_col.call("概况")
 	UiKit.stat_row(col_core, "生命", "%d / %d" % [int(Game.P.hp), int(Game.P.hpMax)])
 	UiKit.stat_row(col_core, "法力", "%d / %d" % [int(Game.P.mp), int(Game.P.mpMax)])
 	UiKit.stat_row(col_core, "经验", "%d / %d" % [int(Game.P.xp), int(Game.P.xpNext)])
 	UiKit.stat_row(col_core, "装等", str(Game.gear_power()))
 
-	var col_attr := make_col.call("属性")
+	var col_attr: VBoxContainer = make_col.call("属性")
 	UiKit.stat_row(col_attr, "力量", str(s.str))
 	UiKit.stat_row(col_attr, "敏捷", str(s.dex))
 	UiKit.stat_row(col_attr, "体魄", str(s.vit))
@@ -2585,13 +2585,13 @@ func _char_stats_grid(parent: Control) -> void:
 			pb.pressed.connect(Game.spend_stat.bind(k))
 			prow.add_child(pb)
 
-	var col_off := make_col.call("攻击")
+	var col_off: VBoxContainer = make_col.call("攻击")
 	UiKit.stat_row(col_off, "伤害", "%d–%d" % [int(s.dmgMin), int(s.dmgMax)])
 	UiKit.stat_row(col_off, "暴击", "%.0f%%" % s.crit)
 	UiKit.stat_row(col_off, "攻速加成", "%.0f" % s.asB)
 	UiKit.stat_row(col_off, "技能伤害", "%.0f" % s.skDmg)
 
-	var col_def := make_col.call("防御")
+	var col_def: VBoxContainer = make_col.call("防御")
 	UiKit.stat_row(col_def, "护甲", str(int(s.armor)))
 	UiKit.stat_row(col_def, "减伤", "%.0f%%" % s.dr)
 	UiKit.stat_row(col_def, "闪避", "%.0f" % s.dodge)
