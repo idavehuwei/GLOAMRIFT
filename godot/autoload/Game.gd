@@ -3186,19 +3186,26 @@ func roll_drop(e: Dictionary) -> void:
 	var su: bool = str(e.get("su", "")) != ""
 	var n: int = e.get("mods", []).size()
 	var hoard: bool = e.get("hoard") == true
+	var md: Dictionary = Data.MOB_DROP.get(str(e.get("type", "")), {})
+	var itemMul: float = float(md.get("itemMul", 1.0))
+	var charmMul: float = float(md.get("charmMul", 1.0))
+	var fopts: Array = md.get("force", [])
+	var fforce: String = ""
+	if fopts.size():
+		fforce = str(Cfg.pick(fopts))
 	var lm: float = maxf(2.2, rift_loot_mul() * 1.8) if hoard else rift_loot_mul()
 	if Cfg._rng.randf() < (1.0 if (e.get("boss") or su or hoard) else 0.55):
 		var amt := int(round(Cfg.rf(6, 20) * L * (6.0 if hoard else (3.4 if su else (2.2 if e.get("elite") else 1.0))) * (10.0 if e.get("boss") else 1.0) * (1.0 + 0.12 * n) * lm * gold_find_mul()))
 		WorldState.drop_gold(e.x + Cfg.rf(-0.5, 0.5), e.z + Cfg.rf(-0.5, 0.5), amt)
-	var ch := minf(1.0, (1.0 if (e.get("boss") or su or hoard) else (1.0 if n >= 3 else (0.88 if n >= 2 else (0.75 if e.get("elite") else 0.2)))) * lm)
+	var ch := minf(1.0, (1.0 if (e.get("boss") or su or hoard) else (1.0 if n >= 3 else (0.88 if n >= 2 else (0.75 if e.get("elite") else 0.32)))) * lm * itemMul)
 	if Cfg._rng.randf() < ch:
 		var it := maybe_set_item(L, e)
 		if it.is_empty():
-			it = roll_item(L, e.get("boss") or e.get("elite") or su or hoard or n >= 2)
+			it = roll_item(L, e.get("boss") or e.get("elite") or su or hoard or n >= 2, "", fforce)
 		if not it.get("set") and (su or hoard or (e.get("elite") and n >= 3)) and int(it.rarity) < 3:
 			it = maybe_set_item(L, e)
 			if it.is_empty():
-				it = roll_item(L, true)
+				it = roll_item(L, true, "", fforce)
 			if int(it.rarity) < 3:
 				it.rarity = 3
 				roll_affixes(it)
@@ -3206,19 +3213,23 @@ func roll_drop(e: Dictionary) -> void:
 		WorldState.drop_item(e.x + Cfg.rf(-0.8, 0.8), e.z + Cfg.rf(-0.8, 0.8), it)
 	if e.get("boss"):
 		for _i in 2:
-			WorldState.drop_item(e.x + Cfg.rf(-1.6, 1.6), e.z + Cfg.rf(-1.6, 1.6), roll_item(L, true))
+			WorldState.drop_item(e.x + Cfg.rf(-1.6, 1.6), e.z + Cfg.rf(-1.6, 1.6), roll_item(L, true, "", fforce))
 	if su:
-		WorldState.drop_item(e.x + Cfg.rf(-1.2, 1.2), e.z + Cfg.rf(-1.2, 1.2), roll_item(L, true))
+		WorldState.drop_item(e.x + Cfg.rf(-1.2, 1.2), e.z + Cfg.rf(-1.2, 1.2), roll_item(L, true, "", fforce))
 	if hoard:
-		WorldState.drop_item(e.x + Cfg.rf(-1.2, 1.2), e.z + Cfg.rf(-1.2, 1.2), roll_item(L, true))
+		WorldState.drop_item(e.x + Cfg.rf(-1.2, 1.2), e.z + Cfg.rf(-1.2, 1.2), roll_item(L, true, "", fforce))
 		WorldState.drop_item(e.x + Cfg.rf(-1.2, 1.2), e.z + Cfg.rf(-1.2, 1.2), roll_rune(2))
+	var mrunes: Array = md.get("runes", [])
+	if mrunes.size() and Cfg._rng.randf() < float(md.get("runeCh", 0)):
+		var rid: String = str(Cfg.pick(mrunes))
+		WorldState.drop_item(e.x + Cfg.rf(-1, 1), e.z + Cfg.rf(-1, 1), make_rune_item(rid, null, 1))
 	if Cfg._rng.randf() < (0.12 if e.get("boss") else (0.16 if su else (0.4 if hoard else 0.05))):
 		WorldState.drop_item(e.x + Cfg.rf(-1, 1), e.z + Cfg.rf(-1, 1), roll_rune(1))
 	if (e.get("elite") or e.get("boss")) and Cfg._rng.randf() < (0.62 if e.get("boss") else (0.48 if su else 0.2 + n * 0.06)):
 		WorldState.drop_item(e.x + Cfg.rf(-1, 1), e.z + Cfg.rf(-1, 1), roll_rune(3 if (e.get("boss") or su) and Cfg._rng.randf() < 0.4 else (2 if e.get("boss") or su else -1)))
 	if (e.get("elite") or e.get("boss") or su) and Cfg._rng.randf() < (0.4 if e.get("boss") else (0.32 if su else 0.12)):
 		WorldState.drop_item(e.x + Cfg.rf(-1, 1), e.z + Cfg.rf(-1, 1), roll_scrap())
-	var cch: float = 0.55 if e.get("boss") else (0.42 if su else (0.5 if hoard else (0.28 if e.get("elite") else 0.09)))
+	var cch: float = minf(1.0, (0.55 if e.get("boss") else (0.42 if su else (0.5 if hoard else (0.28 if e.get("elite") else 0.14)))) * charmMul)
 	if Cfg._rng.randf() < cch:
 		WorldState.drop_item(e.x + Cfg.rf(-1, 1), e.z + Cfg.rf(-1, 1), roll_charm(L))
 	if Cfg._rng.randf() < (0.38 if (su or hoard) else 0.22):

@@ -274,18 +274,18 @@ const SLOTDEF := [
 ]
 const BASES := {
 	"weapon": {
-		"warrior": [{n="短剑", g="🗡", d=[3,6], sp=1.0}, {n="阔剑", g="⚔", d=[5,10], sp=1.0}, {n="战斧", g="🪓", d=[7,14], sp=0.88}, {n="钉头锤", g="🔨", d=[6,12], sp=0.94}],
-		"mage": [{n="橡木杖", g="🪄", d=[3,7], sp=1.05}, {n="符文长杖", g="🔱", d=[5,11], sp=1.0}, {n="水晶权杖", g="💠", d=[7,13], sp=0.95}],
-		"archer": [{n="猎弓", g="🏹", d=[3,7], sp=1.15}, {n="复合弓", g="🎯", d=[5,11], sp=1.08}, {n="重弩", g="⚙", d=[8,15], sp=0.85}]
+		"warrior": [{n="短剑", g="🗡", d=[3,6], sp=1.0}, {n="阔剑", g="⚔", d=[5,10], sp=1.0}, {n="战斧", g="🪓", d=[7,14], sp=0.88}, {n="钉头锤", g="🔨", d=[6,12], sp=0.94}, {n="长柄", g="🔱", d=[9,17], sp=0.8}, {n="匕首", g="🔪", d=[4,8], sp=1.2}, {n="巨锤", g="⚒", d=[11,20], sp=0.78}],
+		"mage": [{n="橡木杖", g="🪄", d=[3,7], sp=1.05}, {n="符文长杖", g="📜", d=[5,11], sp=1.0}, {n="水晶权杖", g="💠", d=[7,13], sp=0.95}, {n="魔典", g="📕", d=[4,9], sp=1.0}, {n="骨杖", g="🦴", d=[6,12], sp=0.98}],
+		"archer": [{n="猎弓", g="🏹", d=[3,7], sp=1.15}, {n="复合弓", g="🎯", d=[5,11], sp=1.08}, {n="重弩", g="⚙", d=[8,15], sp=0.85}, {n="飞斧", g="🪓", d=[6,12], sp=1.0}, {n="长矛", g="🔱", d=[7,13], sp=1.05}]
 	},
-	"armor": [{n="皮甲", g="🥋", a=[6,12]}, {n="锁子甲", g="🛡", a=[12,22]}, {n="板甲", g="🦺", a=[20,34]}],
-	"helm": [{n="头巾", g="🎩", a=[3,6]}, {n="铁盔", g="⛑", a=[6,13]}, {n="角盔", g="👑", a=[10,19]}],
-	"offhand": [{n="木盾", g="🛡", a=[5,11]}, {n="塔盾", g="🔰", a=[12,24]}, {n="魔典", g="📖", a=[2,5]}, {n="箭袋", g="🎒", a=[2,5]}],
-	"belt": [{n="布带", g="🎗", a=[2,5]}, {n="镶钉腰带", g="🧶", a=[5,10]}],
-	"gloves": [{n="皮手套", g="🧤", a=[2,6]}, {n="钢手甲", g="✋", a=[6,12]}],
-	"boots": [{n="软靴", g="🥾", a=[2,6]}, {n="战靴", g="👢", a=[6,12]}],
-	"amulet": [{n="骨坠", g="📿", a=[0,2]}, {n="银徽", g="🔮", a=[1,4]}],
-	"ring": [{n="铜戒", g="💍", a=[0,2]}, {n="血石戒", g="💎", a=[1,4]}]
+	"armor": [{n="皮甲", g="🥋", a=[6,12]}, {n="锁子甲", g="🛡", a=[12,22]}, {n="板甲", g="🦺", a=[20,34]}, {n="鳞甲", g="🦎", a=[16,28]}, {n="布袍", g="👘", a=[3,7]}],
+	"helm": [{n="头巾", g="🎩", a=[3,6]}, {n="铁盔", g="⛑", a=[6,13]}, {n="角盔", g="👑", a=[10,19]}, {n="皮帽", g="🧢", a=[4,9]}, {n="兽盔", g="🐺", a=[8,16]}],
+	"offhand": [{n="木盾", g="🛡", a=[5,11]}, {n="塔盾", g="🔰", a=[12,24]}, {n="魔典", g="📖", a=[2,5]}, {n="箭袋", g="🎒", a=[2,5]}, {n="骨盾", g="🦴", a=[8,16]}, {n="符牌", g="🪧", a=[3,7]}],
+	"belt": [{n="布带", g="🎗", a=[2,5]}, {n="镶钉腰带", g="🧶", a=[5,10]}, {n="皮绳", g="🪢", a=[3,7]}, {n="铁扣", g="🔗", a=[6,12]}],
+	"gloves": [{n="皮手套", g="🧤", a=[2,6]}, {n="钢手甲", g="✋", a=[6,12]}, {n="皮护腕", g="🦾", a=[3,8]}, {n="锁甲手", g="🔗", a=[7,14]}],
+	"boots": [{n="软靴", g="🥾", a=[2,6]}, {n="战靴", g="👢", a=[6,12]}, {n="软鞋", g="👟", a=[3,7]}, {n="重靴", g="🥏", a=[7,14]}],
+	"amulet": [{n="骨坠", g="📿", a=[0,2]}, {n="银徽", g="🔮", a=[1,4]}, {n="兽牙坠", g="🦷", a=[1,3]}, {n="符石", g="🔶", a=[2,5]}],
+	"ring": [{n="铜戒", g="💍", a=[0,2]}, {n="血石戒", g="💎", a=[1,4]}, {n="骨戒", g="🦴", a=[1,3]}, {n="银环", g="⚪", a=[2,5]}]
 }
 const AFFIX := [
 	{n="力量", k="str", r=[2,7]}, {n="敏捷", k="dex", r=[2,7]}, {n="体魄", k="vit", r=[2,8]}, {n="精神", k="ene", r=[2,6]},
@@ -297,13 +297,25 @@ const AFFIX := [
 	{n="法力回复", k="mpre", r=[2,6]}, {n="金币发现%", k="gf", r=[8,28]}, {n="拾得%", k="mf", r=[6,22]},
 	{n="物理抗性%", k="resPhys", r=[4,12]}, {n="火焰抗性%", k="resFire", r=[4,12]},
 	{n="冰霜抗性%", k="resIce", r=[4,12]}, {n="暗影抗性%", k="resShadow", r=[4,12]},
-	{n="全抗性%", k="resAll", r=[3,8]}, {n="穿透%", k="pierce", r=[6,16]}
+	{n="全抗性%", k="resAll", r=[3,8]}, {n="穿透%", k="pierce", r=[6,16]},
+	{n="全属性", k="all", r=[4,10]}, {n="主属性", k="main", r=[5,12]},
+	{n="荆棘", k="thorns", r=[8,22]}, {n="击杀回血%", k="killhp", r=[2,5]},
+	{n="击杀回蓝%", k="killmp", r=[3,8]}, {n="精英伤害%", k="elitedmg", r=[8,20]},
+	{n="残血增伤%", k="lowhp", r=[8,20]}, {n="击杀爆裂%", k="killburst", r=[14,34]},
+	{n="击中减速%", k="chillhit", r=[8,20]}, {n="击中冻结%", k="freezehit", r=[4,10]},
+	{n="御火", k="resFire", r=[5,14]}, {n="御冰", k="resIce", r=[5,14]},
+	{n="御暗", k="resShadow", r=[5,14]}, {n="御物", k="resPhys", r=[5,14]},
+	{n="法力回复", k="mpre", r=[2,6]}, {n="生命回复", k="hpre", r=[2,7]}
 ]
 const FEEL_AFFIX := [
 	{n="击杀回血%", k="killhp", r=[2,5], feel=1}, {n="击杀回蓝%", k="killmp", r=[3,8], feel=1},
 	{n="受击回击%", k="thorns", r=[10,26], feel=1}, {n="击中减速%", k="chillhit", r=[10,24], feel=1},
 	{n="击中冻结%", k="freezehit", r=[4,11], feel=1}, {n="击杀爆裂%", k="killburst", r=[16,36], feel=1},
-	{n="残血增伤%", k="lowhp", r=[10,22], feel=1}, {n="精英伤害%", k="elitedmg", r=[10,24], feel=1}
+	{n="残血增伤%", k="lowhp", r=[10,22], feel=1}, 	{n="精英伤害%", k="elitedmg", r=[10,24], feel=1},
+	{n="受击溅血%", k="thorns", r=[12,28], feel=1}, {n="残血狂暴%", k="lowhp", r=[12,26], feel=1},
+	{n="斩首爆裂%", k="killburst", r=[20,42], feel=1}, {n="追击减速%", k="chillhit", r=[14,30], feel=1},
+	{n="冰封%", k="freezehit", r=[6,14], feel=1}, {n="猎杀回血%", k="killhp", r=[3,7], feel=1},
+	{n="猎杀回蓝%", k="killmp", r=[4,10], feel=1}, {n="屠魔伤害%", k="elitedmg", r=[12,28], feel=1}
 ]
 const RUNES := [
 	{id="rune_ember", n="余烬", g="🔥", k="dmg", v=[4,9], tier=1},
@@ -311,9 +323,44 @@ const RUNES := [
 	{id="rune_vita", n="命泉", g="❤", k="hp", v=[12,24], tier=1},
 	{id="rune_hawk", n="鹰羽", g="🪶", k="crit", v=[2,5], tier=2},
 	{id="rune_gale", n="疾风", g="💨", k="as", v=[4,8], tier=2},
-	{id="rune_leech", n="饥渴", g="🩸", k="leech", v=[1,3], tier=3}
+	{id="rune_leech", n="饥渴", g="🩸", k="leech", v=[1,3], tier=3},
+	{id="rune_oak", n="橡筋", g="🪵", k="as", v=[3,6], tier=1},
+	{id="rune_ward", n="护壁", g="🛡", k="dr", v=[3,7], tier=1},
+	{id="rune_fang", n="兽牙", g="🦷", k="vit", v=[3,7], tier=1},
+	{id="rune_bone", n="骨白", g="🦴", k="str", v=[3,7], tier=1},
+	{id="rune_tide", n="潮涌", g="🌊", k="mpre", v=[2,5], tier=2},
+	{id="rune_quake", n="震地", g="💥", k="critDmg", v=[6,14], tier=2},
+	{id="rune_aegis", n="圣壁", g="🛡", k="resAll", v=[3,8], tier=2},
+	{id="rune_blood", n="血怒", g="🩸", k="killhp", v=[2,5], tier=3},
+	{id="rune_storm", n="风暴", g="🌩", k="skDmg", v=[4,10], tier=3}
 ]
 const RUNE_GRADE := ["", "碎屑", "结晶", "完整"]
+const MOB_DROP := {
+	"wolf": {"itemMul":1.4, "force":["boots","gloves"], "runes":["rune_fang"], "runeCh":0.14, "charmMul":1.3},
+	"boar": {"itemMul":1.35, "force":["gloves","belt"], "runes":["rune_fang"], "runeCh":0.1, "charmMul":1.2},
+	"frostwolf": {"itemMul":1.4, "force":["boots","gloves"], "runes":["rune_fang"], "runeCh":0.14, "charmMul":1.3},
+	"brinewolf": {"itemMul":1.35, "force":["boots","gloves"], "runes":["rune_fang"], "runeCh":0.12},
+	"lavabeast": {"itemMul":1.3, "force":["gloves","belt"], "runes":["rune_fang"], "runeCh":0.12},
+	"treant": {"itemMul":1.25, "force":["helm","armor"], "runes":["rune_fang"], "runeCh":0.1},
+	"rat": {"itemMul":1.2, "force":["boots","gloves"], "runes":["rune_fang"], "runeCh":0.08},
+	"snake": {"itemMul":1.2, "force":["boots","gloves"], "runes":["rune_fang"], "runeCh":0.08},
+	"frog": {"itemMul":1.2, "force":["boots","gloves"], "runes":["rune_fang"], "runeCh":0.08},
+	"wasp": {"itemMul":1.2, "force":["boots","gloves"], "runes":["rune_fang"], "runeCh":0.08},
+	"spider": {"itemMul":1.25, "force":["boots","gloves"], "runes":["rune_fang"], "runeCh":0.1},
+	"icespider": {"itemMul":1.25, "force":["boots","gloves"], "runes":["rune_fang"], "runeCh":0.1},
+	"skeleton": {"itemMul":1.3, "force":["armor","helm"], "runes":["rune_bone"], "runeCh":0.14, "charmMul":1.2},
+	"ghoul": {"itemMul":1.25, "force":["armor","helm"], "runes":["rune_bone"], "runeCh":0.1},
+	"wraith": {"itemMul":1.25, "force":["amulet","ring"], "runes":["rune_bone"], "runeCh":0.1},
+	"drowned": {"itemMul":1.25, "force":["armor","boots"], "runes":["rune_bone"], "runeCh":0.1},
+	"imp": {"itemMul":1.25, "force":["offhand","ring"], "runes":["rune_leech"], "runeCh":0.12},
+	"ashmage": {"itemMul":1.25, "force":["offhand","ring"], "runes":["rune_quake"], "runeCh":0.12},
+	"rimeknight": {"itemMul":1.3, "force":["armor","helm"], "runes":["rune_aegis"], "runeCh":0.14},
+	"bandit": {"itemMul":1.25, "force":["weapon","belt"], "runes":["rune_blood"], "runeCh":0.1},
+	"banditbow": {"itemMul":1.2, "force":["weapon","ring"], "runes":["rune_blood"], "runeCh":0.1},
+	"brute": {"itemMul":1.3, "force":["weapon","armor"], "runes":["rune_bone"], "runeCh":0.12},
+	"wrecker": {"itemMul":1.25, "force":["weapon","belt"], "runes":["rune_bone"], "runeCh":0.1},
+	"golem": {"itemMul":1.2, "force":["helm","armor"], "runes":["rune_aegis"], "runeCh":0.12}
+}
 const PRE := ["幽影", "焦骨", "锈蚀", "狼首", "苍白", "烈焰", "远古", "无声", "裂隙", "血誓", "霜噬", "石桥"]
 const SUF := ["之约", "的余烬", "的低语", "之刃", "的守望", "的墓志", "之怒", "的黄昏"]
 const UNIQUE_NAMES := ["瓦拉克的枷锁", "塞克拉的指骨", "织母的丝腺", "执政官的遗诺", "第一次下潜", "桥下之物"]
