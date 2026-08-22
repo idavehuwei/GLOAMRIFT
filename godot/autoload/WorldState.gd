@@ -1245,7 +1245,7 @@ func spawn_enemy(type: String, x: float, z: float, lvl: int, elite: bool, force_
 		"ranged": t.get("ranged", false) == true, "xp": round(t.xp * mult * (2.6 if elite else 1.0)),
 		"atkCd": 0.0, "atkSpeed": float(t.atkCd), "dead": false, "dieT": 0.0,
 		"slow": 0.0, "stun": 0.0, "frozen": 0.0, "hitFlash": 0.0, "res": {}, "imm": "",
-		"skill": t.get("skill", ""), "seenIntro": false, "mods": [], "su": opt.get("su", ""),
+		"skill": t.get("skill", ""), "skills": t.get("skills", []), "skIdx": 0, "enrage": t.get("enrage", false) == true, "enrageAt": float(t.get("enrageAt", 0.5)), "enrageStrong": t.get("enrageStrong", false) == true, "enraged": false, "seenIntro": false, "mods": [], "su": opt.get("su", ""),
 		"shout": false, "shoutCd": 0.0, "countT": -1.0, "risen": false, "didSplit": false,
 		"skillCd": 2.4, "woke": 0.0, "riftDr": 0.0,
 		"anim": {"walk": 0.0, "atk": 0.0}
@@ -3315,7 +3315,20 @@ func tick_world(dt: float) -> void:
 		if d > 28 and float(e.get("woke", 0)) <= 0:
 			_sync_node(e)
 			continue
-		if e.get("boss") and str(e.get("skill", "")) != "" and float(e.get("skillCd", 0)) <= 0 and Game.P.alive and d < 22:
+		if e.get("enrage") and not e.get("enraged") and float(e.hp) <= float(e.hpMax) * float(e.get("enrageAt", 0.5)):
+			e.enraged = true
+			if e.get("enrageStrong"):
+				e.speed = float(e.speed) * 1.45
+				e.atkSpeed = maxf(0.6, float(e.atkSpeed) * 0.75)
+				e.dmg = [round(e.dmg[0] * 1.35), round(e.dmg[1] * 1.35)]
+			else:
+				e.speed = float(e.speed) * 1.3
+				e.atkSpeed = maxf(0.6, float(e.atkSpeed) * 0.85)
+				e.dmg = [round(e.dmg[0] * 1.2), round(e.dmg[1] * 1.2)]
+			Game.float_at(e.x, 5.0, e.z, "狂暴！", Color(1, 0.3, 0.2), 26)
+			Game.say(str(e.name) + " 狂暴了。")
+			Sfx.boom()
+		if e.get("boss") and float(e.get("skillCd", 0)) <= 0 and Game.P.alive and d < 22:
 			_boss_skill(e)
 		var choir := choir_src(e)
 		var spd_m := 1.26 if not choir.is_empty() else 1.0
@@ -3371,9 +3384,19 @@ func tick_world(dt: float) -> void:
 
 
 func _boss_skill(e: Dictionary) -> void:
-	var sk: String = str(e.get("skill", ""))
-	e.skillCd = 7.0 if sk == "slam" else 9.0
+	var skills: Array = e.get("skills", [])
+	var sk: String = ""
+	if skills.size() > 0:
+		var idx: int = int(e.get("skIdx", 0)) % skills.size()
+		sk = str(skills[idx])
+		e.skIdx = idx + 1
+	else:
+		sk = str(e.get("skill", ""))
+	if sk == "":
+		return
+	var cd: float = 9.0
 	if sk == "summon":
+		cd = 11.0
 		for _i in 3:
 			var ax: float = float(e.x) + Cfg.rf(-3.5, 3.5)
 			var az: float = float(e.z) + Cfg.rf(-3.5, 3.5)
@@ -3381,6 +3404,7 @@ func _boss_skill(e: Dictionary) -> void:
 				spawn_enemy("spider" if Cfg._rng.randf() < 0.5 else "ghoul", ax, az, maxi(1, int(e.lvl) - 2), false)
 		Game.float_at(e.x, 4.0, e.z, "召唤子嗣！", Color(1, 0.42, 0.35), 19)
 	elif sk == "nova":
+		cd = 9.0
 		Game.float_at(e.x, 4.0, e.z, "骨刺新星！", Color(1, 0.94, 0.63), 19)
 		Sfx.cast()
 		for i in 12:
@@ -3394,8 +3418,46 @@ func _boss_skill(e: Dictionary) -> void:
 			p.mesh = _proj_mesh(0xf0e0a0, false)
 			_proj.append(p)
 	elif sk == "slam":
+		cd = 7.0
 		e.slamAt = {"x": Game.P.x, "z": Game.P.z, "t": 1.1}
 		Game.float_at(e.x, 4.0, e.z, "跃击！", Color(1, 0.54, 0.35), 19)
+	elif sk == "volley":
+		cd = 8.0
+		Game.float_at(e.x, 4.0, e.z, "散射！", Color(1, 0.6, 0.4), 19)
+		Sfx.cast()
+		var base_a: float = atan2(Game.P.x - float(e.x), Game.P.z - float(e.z))
+		var N: int = 7
+		for i in N:
+			var a: float = base_a + (float(i) - (float(N) - 1.0) / 2.0) * 0.18
+			var p := {
+				"x": float(e.x) + cos(a), "z": float(e.z) + sin(a), "y": 1.3,
+				"dx": cos(a), "dz": sin(a), "spd": 9.0,
+				"dmg": Cfg.rf(e.dmg[0], e.dmg[1]) * 0.55, "from": "enemy", "life": 2.0,
+				"src": e
+			}
+			p.mesh = _proj_mesh(0xff7a3a, false)
+			_proj.append(p)
+	elif sk == "beam":
+		cd = 10.0
+		Game.float_at(e.x, 4.0, e.z, "射线！", Color(1, 0.4, 0.4), 19)
+		Sfx.cast()
+		var ba: float = atan2(Game.P.x - float(e.x), Game.P.z - float(e.z))
+		var bp := {
+			"x": float(e.x) + cos(ba), "z": float(e.z) + sin(ba), "y": 1.3,
+			"dx": cos(ba), "dz": sin(ba), "spd": 19.0,
+			"dmg": Cfg.rf(e.dmg[0], e.dmg[1]) * 1.35, "from": "enemy", "life": 2.6,
+			"src": e
+		}
+		bp.mesh = _proj_mesh(0xff3030, false)
+		_proj.append(bp)
+	elif sk == "curse":
+		cd = 12.0
+		Game.float_at(e.x, 4.0, e.z, "诅咒领域！", Color(0.7, 0.4, 1.0), 19)
+		Sfx.cast()
+		add_zone(Game.P.x, Game.P.z, 3.2, 4.0, Cfg.rf(e.dmg[0], e.dmg[1]) * 0.4, "player", {"tick": 0.5})
+	if e.get("enraged"):
+		cd *= 0.7
+	e.skillCd = cd
 
 
 func _tick_slam(e: Dictionary, dt: float) -> void:
