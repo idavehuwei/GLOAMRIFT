@@ -1911,7 +1911,7 @@ func open_npc(id: String, mode: String = "talk") -> void:
 		if str(d.id) == id:
 			def = d
 			break
-	if not def.is_empty() and str(def.get("kind", "")) == "" and id != "kaden" and id != "vaun":
+	if not def.is_empty() and str(def.get("kind", "")) == "" and id != "kaden" and id != "vaun" and id != "selin" and id != "mara":
 		_hd(str(def.get("n", id)))
 		_plab(str(def.get("t", "")), 12)
 		_plab(DialogueManager.greet(id))
@@ -1949,27 +1949,20 @@ func open_npc(id: String, mode: String = "talk") -> void:
 							_panel_body.add_child(ob)
 	match id:
 		"selin":
-			if def.is_empty():
-				_hd("执政官 塞琳")
-			for q in Data.QUESTS:
-				var st: String = Game.P.quests.get(q.id, {}).get("state", "locked")
-				if st == "open":
-					var line := "%s  %d/%d" % [q.n, Game.quest_prog(q), int(q.need)]
-					if Game.quest_done(q):
-						_btn("交付 · " + q.n, func():
-							Game.turn_in(q.id)
-							open_npc("selin")
-						)
-					else:
-						_plab(line + "\n" + q.d)
-			_btn("关掉", func(): _close_sheet())
+			if _npc_mode == "trade":
+				_selin_quest()
+			else:
+				_selin_talk()
 		"kaden":
 			if _npc_mode == "trade":
 				_kaden_trade()
 			else:
 				_kaden_talk()
 		"mara":
-			_open_mara()
+			if _npc_mode == "trade":
+				_mara_trade()
+			else:
+				_mara_talk()
 		"vaun":
 			if _npc_mode == "trade":
 				_vaun_trade()
@@ -2015,6 +2008,62 @@ func open_npc(id: String, mode: String = "talk") -> void:
 				_hd(id)
 				_plab("风从那边来。你知道该往哪走。")
 			_btn("关掉", func(): _close_sheet())
+
+
+func _selin_talk() -> void:
+	_hd("执政官 塞琳")
+	_plab(DialogueManager.greet("selin"))
+	var topics: Array = DialogueManager.topics("selin")
+	if topics.size():
+		_plab("打听", 13)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		_panel_body.add_child(row)
+		for t in topics:
+			var tid: String = str(t.id)
+			var tb := Button.new()
+			tb.text = str(t.q)
+			if _talk_pick == tid:
+				tb.modulate = Color(1.2, 1.05, 0.7)
+			tb.pressed.connect(func():
+				_talk_pick = tid
+				open_npc("selin", "talk")
+			)
+			row.add_child(tb)
+		if _talk_pick != "":
+			var ans: String = DialogueManager.answer("selin", _talk_pick)
+			if ans != "":
+				_plab(ans)
+			for t in topics:
+				if str(t.id) == _talk_pick and DialogueManager.has_branch(t):
+					for opt in DialogueManager.branch_of(t):
+						var od: Dictionary = opt
+						var ob := Button.new()
+						ob.text = str(od.get("label", "…"))
+						ob.pressed.connect(func():
+							_talk_pick = str(od.get("next", ""))
+							open_npc("selin", "talk")
+						)
+						_panel_body.add_child(ob)
+	_btn("查看委托", func(): open_npc("selin", "trade"))
+	_btn("关掉", func(): _close_sheet())
+
+
+func _selin_quest() -> void:
+	_hd("镇务委托")
+	_btn("← 返回对话", func(): open_npc("selin", "talk"))
+	for q in Data.QUESTS:
+		var st: String = Game.P.quests.get(q.id, {}).get("state", "locked")
+		if st == "open":
+			var line := "%s  %d/%d" % [q.n, Game.quest_prog(q), int(q.need)]
+			if Game.quest_done(q):
+				_btn("交付 · " + q.n, func():
+					Game.turn_in(q.id)
+					open_npc("selin", "trade")
+				)
+			else:
+				_plab(line + "\n" + q.d)
+	_btn("关掉", func(): _close_sheet())
 
 
 func _kaden_talk() -> void:
@@ -2378,9 +2427,49 @@ func _vaun_trade() -> void:
 			)
 	_btn("关掉", func(): _close_sheet())
 
-func _open_mara() -> void:
-	_plab("药剂商 玛拉", 20)
+func _mara_talk() -> void:
+	_hd("药剂商 玛拉")
 	_plab("想不起来的东西拿来。我替你记。")
+	_plab("金币 %d · 行囊 %d/%d" % [Game.P.gold, Game.P.bag.size(), Cfg.BAG], 12)
+	var topics: Array = DialogueManager.topics("mara")
+	if topics.size():
+		_plab("打听", 13)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		_panel_body.add_child(row)
+		for t in topics:
+			var tid: String = str(t.id)
+			var tb := Button.new()
+			tb.text = str(t.q)
+			if _talk_pick == tid:
+				tb.modulate = Color(1.2, 1.05, 0.7)
+			tb.pressed.connect(func():
+				_talk_pick = tid
+				open_npc("mara", "talk")
+			)
+			row.add_child(tb)
+		if _talk_pick != "":
+			var ans: String = DialogueManager.answer("mara", _talk_pick)
+			if ans != "":
+				_plab(ans)
+			for t in topics:
+				if str(t.id) == _talk_pick and DialogueManager.has_branch(t):
+					for opt in DialogueManager.branch_of(t):
+						var od: Dictionary = opt
+						var ob := Button.new()
+						ob.text = str(od.get("label", "…"))
+						ob.pressed.connect(func():
+							_talk_pick = str(od.get("next", ""))
+							open_npc("mara", "talk")
+						)
+						_panel_body.add_child(ob)
+	_btn("逛铺子（药水 · 补给）", func(): open_npc("mara", "trade"))
+	_btn("关掉", func(): _close_sheet())
+
+
+func _mara_trade() -> void:
+	_hd("药剂铺")
+	_btn("← 返回对话", func(): open_npc("mara", "talk"))
 	var unk := Game.count_unknown()
 	_plab("回想（想不起来的东西 %d 件 · 纸条 %d 张）" % [unk, int(Game.P.get("recallNotes", 0))])
 	var rec := _shop_grid(2)
@@ -2391,30 +2480,30 @@ func _open_mara() -> void:
 			return
 		Sfx.loot()
 		Game.say("玛拉替你想起了 %d 件东西。" % n)
-		open_npc("mara")
+		open_npc("mara", "trade")
 	, unk == 0)
 	_sitem(rec, "📜", "回想的纸条 ×1", "%d 金" % Game.shop_price(60), Color(0.96, 0.77, 0.32), "急的话拿去地下自己用", func():
 		Game.buy_potion("note")
-		open_npc("mara")
+		open_npc("mara", "trade")
 	)
 	_plab("补给（金币 %d）" % Game.P.gold)
 	var pp := Game.shop_price(Game.pot_price())
 	var pots := _shop_grid(2)
 	_sitem(pots, "🧪", "治疗药水 ×1", "%d 金" % pp, Color(0.75, 0.25, 0.19), "当前 %d 瓶" % Game.P.potHp, func():
 		Game.buy_potion("hp")
-		open_npc("mara")
+		open_npc("mara", "trade")
 	)
 	_sitem(pots, "🔵", "法力药水 ×1", "%d 金" % pp, Color(0.35, 0.55, 0.9), "当前 %d 瓶" % Game.P.potMp, func():
 		Game.buy_potion("mp")
-		open_npc("mara")
+		open_npc("mara", "trade")
 	)
 	_sitem(pots, "🧰", "治疗药水 ×5", "%d 金" % Game.shop_price(Game.pot_price() * 5), Color(0.75, 0.25, 0.19), "", func():
 		Game.buy_potion("hp5")
-		open_npc("mara")
+		open_npc("mara", "trade")
 	)
 	_sitem(pots, "🧰", "法力药水 ×5", "%d 金" % Game.shop_price(Game.pot_price() * 5), Color(0.35, 0.55, 0.9), "", func():
 		Game.buy_potion("mp5")
-		open_npc("mara")
+		open_npc("mara", "trade")
 	)
 	_btn("关掉", func(): _close_sheet())
 
