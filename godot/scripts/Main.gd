@@ -469,10 +469,13 @@ func _build_hud() -> void:
 	pad.add_theme_constant_override("margin_top", 8)
 	pad.add_theme_constant_override("margin_bottom", 16)
 	scroll.add_child(pad)
+	var frame_inner := PanelContainer.new()
+	frame_inner.add_theme_stylebox_override("panel", UiKit.plate_inner())
+	pad.add_child(frame_inner)
 	_panel_body = VBoxContainer.new()
 	_panel_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_panel_body.add_theme_constant_override("separation", 10)
-	pad.add_child(_panel_body)
+	frame_inner.add_child(_panel_body)
 	_tip = PanelContainer.new()
 	_tip.visible = false
 	_tip.mouse_filter = Control.MOUSE_FILTER_IGNORE

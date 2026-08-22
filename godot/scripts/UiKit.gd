@@ -173,19 +173,29 @@ func _flat(bg: Color, border: Color, bw: int, pad: int, radius: int = 2) -> Styl
 
 
 func plate() -> StyleBoxFlat:
-	var sb := _flat(Color(0.063, 0.051, 0.039, 0.97), Color(0.42, 0.341, 0.192), 1, 16, 3)
-	sb.shadow_size = 18
-	sb.expand_margin_left = 1
-	sb.expand_margin_right = 1
-	sb.expand_margin_top = 1
-	sb.expand_margin_bottom = 1
+	var sb := _flat(Color(0.063, 0.051, 0.039, 0.98), brass(), 2, 18, 4)
+	sb.shadow_color = Color(0, 0, 0, 0.72)
+	sb.shadow_size = 24
+	sb.shadow_offset = Vector2(0, 6)
+	sb.expand_margin_left = 2
+	sb.expand_margin_right = 2
+	sb.expand_margin_top = 2
+	sb.expand_margin_bottom = 2
 	return sb
 
 
 func plate_inner() -> StyleBoxFlat:
-	var sb := _flat(Color(0, 0, 0, 0), Color(0.69, 0.55, 0.31, 0.22), 1, 8, 2)
+	var sb := _flat(Color(0, 0, 0, 0), Color(0.886, 0.769, 0.498, 0.5), 1, 10, 3)
 	sb.shadow_size = 0
 	sb.draw_center = false
+	return sb
+
+
+func recess() -> StyleBoxFlat:
+	var sb := _flat(Color(0.039, 0.031, 0.024), Color(0.227, 0.184, 0.122), 1, 6, 3)
+	sb.shadow_color = Color(0, 0, 0, 0.6)
+	sb.shadow_size = 4
+	sb.shadow_offset = Vector2(0, 1)
 	return sb
 
 
@@ -212,7 +222,11 @@ func cell_hover(hex: int = 0xb08d4f) -> StyleBoxFlat:
 
 
 func slot() -> StyleBoxFlat:
-	return _flat(Color(0.086, 0.067, 0.047), Color(0.353, 0.275, 0.157), 1, 4, 4)
+	var sb := _flat(Color(0.035, 0.027, 0.02), brass(), 1, 4, 4)
+	sb.shadow_color = Color(0, 0, 0, 0.55)
+	sb.shadow_size = 3
+	sb.shadow_offset = Vector2(0, 1)
+	return sb
 
 
 func slot_hover() -> StyleBoxFlat:
@@ -285,7 +299,10 @@ func tip() -> StyleBoxFlat:
 
 
 func gcard() -> StyleBoxFlat:
-	return _flat(Color(0.059, 0.047, 0.039), Color(0.165, 0.129, 0.094), 1, 12, 3)
+	var sb := _flat(Color(0.071, 0.058, 0.047), Color(0.42, 0.341, 0.192), 1, 12, 4)
+	sb.shadow_color = Color(0, 0, 0, 0.5)
+	sb.shadow_size = 8
+	return sb
 
 
 func orb_ring() -> StyleBoxFlat:
@@ -393,15 +410,26 @@ func buff_name(k: String) -> String:
 func header(parent: Control, title: String) -> void:
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 14)
+	row.add_theme_constant_override("separation", 10)
 	parent.add_child(row)
 	row.add_child(_orn(false))
+	var plaque := PanelContainer.new()
+	plaque.add_theme_stylebox_override("panel", recess())
+	var pl := MarginContainer.new()
+	pl.add_theme_constant_override("margin_left", 16)
+	pl.add_theme_constant_override("margin_right", 16)
+	pl.add_theme_constant_override("margin_top", 3)
+	pl.add_theme_constant_override("margin_bottom", 3)
+	plaque.add_child(pl)
 	var l := Label.new()
 	l.text = title
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.add_theme_font_size_override("font_size", 15)
 	l.add_theme_color_override("font_color", brass_hi())
-	row.add_child(l)
+	l.add_theme_constant_override("outline_size", 1)
+	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
+	pl.add_child(l)
+	row.add_child(plaque)
 	row.add_child(_orn(true))
 
 
@@ -425,9 +453,19 @@ func _orn(rev: bool) -> ColorRect:
 	return c
 
 
+func _stat_row_bg() -> StyleBoxFlat:
+	var sb := _flat(Color(0.078, 0.067, 0.051, 0.45), Color(0, 0, 0, 0), 0, 5, 2)
+	sb.shadow_size = 0
+	return sb
+
+
 func stat_row(parent: Control, key: String, val: String) -> void:
+	var pc := PanelContainer.new()
+	pc.add_theme_stylebox_override("panel", _stat_row_bg())
+	parent.add_child(pc)
 	var row := HBoxContainer.new()
-	parent.add_child(row)
+	row.add_theme_constant_override("separation", 6)
+	pc.add_child(row)
 	var k := Label.new()
 	k.text = key
 	k.add_theme_font_size_override("font_size", 13)
