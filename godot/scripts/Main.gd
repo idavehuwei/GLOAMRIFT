@@ -60,8 +60,6 @@ var _boss_name: Label
 var _boss_hp: ProgressBar
 var _buffs: HBoxContainer
 var _cast: ProgressBar
-var _hp_lab: Label
-var _mp_lab: Label
 var _xp_strip: ColorRect
 var _xp_fill: ColorRect
 var _pot_hp: Button
@@ -242,8 +240,8 @@ func _build_hud() -> void:
 	_track.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	_track.offset_left = -236
 	_track.offset_right = -14
-	_track.offset_top = 204
-	_track.offset_bottom = 300
+	_track.offset_top = 224
+	_track.offset_bottom = 320
 	_track.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_track.mouse_filter = Control.MOUSE_FILTER_STOP
 	_track.gui_input.connect(func(ev):
@@ -268,41 +266,30 @@ func _build_hud() -> void:
 	_log.fit_content = false
 	_log.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_log)
-	# ===== 暗黑破坏神2 风格底座：生命/法力宝珠分居底部左右两端，技能条居中与之一行 =====
+	# ===== 生命/法力宝珠：紧贴技能栏左右两侧（与技能条同底边、对称展翅） =====
+	const SK_W_HALF := 330          # 技能条半宽，与下方 skplate 一致
+	const ORB_GAP := 12             # 宝珠与技能条间距
+	const ORB_SZ := 108             # 宝珠尺寸
 	# 生命宝珠（红）
 	_hp = _orb(root, Color(0.85, 0.27, 0.19))
 	var hp_wrap := _hp.get_parent() as PanelContainer
-	hp_wrap.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	hp_wrap.offset_left = 14
-	hp_wrap.offset_right = 122
-	hp_wrap.offset_top = -122
-	hp_wrap.offset_bottom = -14
-	# 法力宝珠（蓝），固定右下角（与生命宝珠分居底部两端，暗黑2 一行布局）
+	hp_wrap.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	hp_wrap.offset_left = -(SK_W_HALF + ORB_GAP + ORB_SZ)
+	hp_wrap.offset_right = -(SK_W_HALF + ORB_GAP)
+	hp_wrap.offset_top = -(ORB_SZ + 34)
+	hp_wrap.offset_bottom = -34
+	# 法力宝珠（蓝）
 	_mp = _orb(root, Color(0.22, 0.47, 0.85))
 	var mp_wrap := _mp.get_parent() as PanelContainer
-	mp_wrap.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	mp_wrap.offset_left = -238
-	mp_wrap.offset_right = -130
-	mp_wrap.offset_top = -122
-	mp_wrap.offset_bottom = -14
+	mp_wrap.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	mp_wrap.offset_left = SK_W_HALF + ORB_GAP
+	mp_wrap.offset_right = SK_W_HALF + ORB_GAP + ORB_SZ
+	mp_wrap.offset_top = -(ORB_SZ + 34)
+	mp_wrap.offset_bottom = -34
 	# 等级徽章（沿用 _level_badge，挂在宝珠容器下）
 	_lvl_badge = _level_badge(hp_wrap)
 	_lvl_badge_mp = _level_badge(mp_wrap)
-	# 数值标签：覆盖在宝珠中央（红蓝数字显示在球内，暗黑2 风格）
-	_hp_lab = Label.new()
-	_hp_lab.add_theme_font_size_override("font_size", 11)
-	_hp_lab.add_theme_color_override("font_color", UiKit.bone())
-	_hp_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hp_lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_hp.add_child(_hp_lab)
-	_hp_lab.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_mp_lab = Label.new()
-	_mp_lab.add_theme_font_size_override("font_size", 11)
-	_mp_lab.add_theme_color_override("font_color", UiKit.bone())
-	_mp_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_mp_lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_mp.add_child(_mp_lab)
-	_mp_lab.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# 宝珠内不再显示数值（避免黑色/杂乱数字），仅保留百分比填充
 	_pots = _lab(root, Vector2(0, 0), 12, Color(0.7, 0.66, 0.58))
 	_pots.visible = false
 	_target = _lab(root, Vector2(0, 0), 14, UiKit.brass())
@@ -827,11 +814,12 @@ func _level_badge(host: Control) -> Label:
 	var b := PanelContainer.new()
 	b.add_theme_stylebox_override("panel", UiKit.orb_ring())
 	b.custom_minimum_size = Vector2(32, 32)
-	b.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	# 徽章放在宝珠顶部，避免与技能条/屏幕底边重叠
+	b.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	b.offset_left = -16
 	b.offset_right = 16
-	b.offset_top = 38
-	b.offset_bottom = 70
+	b.offset_top = -34
+	b.offset_bottom = -2
 	b.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	host.add_child(b)
 	var lab := Label.new()
@@ -1514,8 +1502,6 @@ func _refresh_bars(dt := 0.0) -> void:
 	_mp_disp = lerp(_mp_disp, float(Game.P.mp), k)
 	_hp.value = _hp_disp
 	_mp.value = _mp_disp
-	_hp_lab.text = "%d / %d" % [int(Game.P.hp), int(Game.P.hpMax)]
-	_mp_lab.text = "%d / %d" % [int(Game.P.mp), int(Game.P.mpMax)]
 	if _lvl_badge:
 		_lvl_badge.text = str(Game.P.lvl)
 		_lvl_badge_mp.text = str(Game.P.lvl)

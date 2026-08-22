@@ -3,7 +3,6 @@ extends Node
 
 var _ui_font: Font = null
 var _serif: Font = null
-var _frame_tex: Texture2D = null
 var _socket_tex: Texture2D = null
 var _tex := {}
 
@@ -51,17 +50,20 @@ func serif_font() -> Font:
 	return _serif
 
 
-func _frame_texture() -> Texture2D:
-	if _frame_tex != null:
-		return _frame_tex
-	_frame_tex = load("res://textures/frame.png") as Texture2D
-	return _frame_tex
-
-
 func frame_plate() -> StyleBox:
-	var sb := StyleBoxTexture.new()
-	sb.texture = _frame_texture()
-	sb.set_margin_all(24)
+	# 干净的暗金边框面板：替代原有低清岩石纹理 frame.png，
+	# 使用矢量化的 StyleBoxFlat，任意分辨率下保持锐利。
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.035, 0.027, 0.022, 0.96)
+	sb.border_color = Color(0.58, 0.46, 0.26, 0.95)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(8)
+	sb.set_content_margin_all(24)
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.72)
+	sb.shadow_size = 16
+	sb.shadow_offset = Vector2(0, 6)
+	sb.anti_aliasing = true
+	sb.border_blend = true
 	return sb
 
 
@@ -75,7 +77,7 @@ func _socket_texture() -> Texture2D:
 func socket_style() -> StyleBox:
 	var sb := StyleBoxTexture.new()
 	sb.texture = _socket_texture()
-	sb.set_margin_all(8)
+	sb.set_content_margin_all(8)
 	return sb
 
 
