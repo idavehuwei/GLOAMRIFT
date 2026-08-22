@@ -1938,8 +1938,13 @@ func gain_xp(n: int) -> void:
 
 
 func roll_item(lvl: int, force_rare: bool = false, cls_hint: String = "", force_type: String = "", crate: bool = false) -> Dictionary:
-	var types := ["weapon", "armor", "helm", "offhand", "belt", "gloves", "boots", "amulet", "ring"]
-	var type: String = force_type if (force_type == "weapon" or Data.BASES.has(force_type)) else str(Cfg.pick(types))
+	var type: String
+	if force_type == "weapon" or Data.BASES.has(force_type):
+		type = force_type
+	else:
+		# 饰品/戒指更稀有：普通部位权重 3，amulet/ring 权重 1
+		var _pool := ["weapon","weapon","weapon","armor","armor","armor","helm","helm","helm","offhand","offhand","offhand","belt","belt","belt","gloves","gloves","gloves","boots","boots","boots","amulet","ring"]
+		type = str(Cfg.pick(_pool))
 	var cls: String = cls_hint if cls_hint != "" else str(P.cls)
 	var base: Dictionary
 	if type == "weapon":
@@ -1955,7 +1960,8 @@ func roll_item(lvl: int, force_rare: bool = false, cls_hint: String = "", force_
 	elif crate:
 		r = 0 if roll < 0.32 else (1 if roll < 0.62 else (2 if roll < 0.88 else (3 if roll < 0.975 else 4)))
 	else:
-		r = 0 if roll < 0.46 else (1 if roll < 0.78 else (2 if roll < 0.945 else (3 if roll < 0.99 else 4)))
+		# 高品质装备更稀有：白62/魔26/稀9/史2.5/传0.5（boss/elite/su/hoard 走 force_rare，不受影响）
+		r = 0 if roll < 0.62 else (1 if roll < 0.88 else (2 if roll < 0.97 else (3 if roll < 0.995 else 4)))
 	if D.id == "hell" and r < 4 and Cfg._rng.randf() < 0.12:
 		r += 1
 	if D.id == "nightmare" and r < 4 and Cfg._rng.randf() < 0.22:
@@ -3197,7 +3203,7 @@ func roll_drop(e: Dictionary) -> void:
 	if Cfg._rng.randf() < (1.0 if (e.get("boss") or su or hoard) else 0.55):
 		var amt := int(round(Cfg.rf(6, 20) * L * (6.0 if hoard else (3.4 if su else (2.2 if e.get("elite") else 1.0))) * (10.0 if e.get("boss") else 1.0) * (1.0 + 0.12 * n) * lm * gold_find_mul()))
 		WorldState.drop_gold(e.x + Cfg.rf(-0.5, 0.5), e.z + Cfg.rf(-0.5, 0.5), amt)
-	var ch := minf(1.0, (1.0 if (e.get("boss") or su or hoard) else (1.0 if n >= 3 else (0.88 if n >= 2 else (0.75 if e.get("elite") else 0.32)))) * lm * itemMul)
+	var ch := minf(1.0, (1.0 if (e.get("boss") or su or hoard) else (1.0 if n >= 3 else (0.88 if n >= 2 else (0.75 if e.get("elite") else 0.2)))) * lm * itemMul)
 	if Cfg._rng.randf() < ch:
 		var it := maybe_set_item(L, e)
 		if it.is_empty():
