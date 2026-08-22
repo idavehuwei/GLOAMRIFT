@@ -19,7 +19,6 @@ var _log: RichTextLabel
 var _hint: Label
 var _hp: ProgressBar
 var _mp: ProgressBar
-var _xp: ProgressBar
 var _zone: Label
 var _zone_sub: Label
 var _pname: Label
@@ -87,7 +86,6 @@ var _last_lvl := 1
 var _last_bag_n := 0
 var _hp_disp := -1.0              # 平滑血条显示值（<0 表示未初始化）
 var _mp_disp := -1.0
-var _xp_disp := -1.0
 var _lvl_badge: Label
 var _lvl_badge_mp: Label
 var _micro_btns: Array = []
@@ -1372,14 +1370,12 @@ func _on_cine(kind: String, meta: Dictionary) -> void:
 func _refresh_bars(dt := 0.0) -> void:
 	_hp.max_value = Game.P.hpMax
 	_mp.max_value = Game.P.mpMax
-	_xp.max_value = Game.P.xpNext
 	# 平滑过渡：显示值向真实值收敛，避免硬跳变（HUD 最佳实践）
 	var k := clampf(dt * 14.0, 0.0, 1.0)
 	if _hp_disp < 0.0:
-		_hp_disp = float(Game.P.hp); _mp_disp = float(Game.P.mp); _xp_disp = float(Game.P.xp)
+		_hp_disp = float(Game.P.hp); _mp_disp = float(Game.P.mp)
 	_hp_disp = lerp(_hp_disp, float(Game.P.hp), k)
 	_mp_disp = lerp(_mp_disp, float(Game.P.mp), k)
-	_xp_disp = lerp(_xp_disp, float(Game.P.xp), k)
 	_hp.value = _hp_disp
 	_mp.value = _mp_disp
 	_hp_lab.text = "%d / %d" % [int(Game.P.hp), int(Game.P.hpMax)]
