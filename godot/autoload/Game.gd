@@ -1536,7 +1536,7 @@ func deal_to_enemy(e: Dictionary, amount: float, crit: bool = false, color: Colo
 	e.hp -= amount
 	e.hitFlash = 0.14
 	WorldState._show_bar(e, true)
-	float_at(e.x, 2.3, e.z, ("✦" if crit else "") + str(int(round(amount))), Color(1, 0.82, 0.34) if crit else color, 23 if crit else 17)
+	float_at(e.x, 2.3, e.z, ("✦ " if crit else "") + str(int(round(amount))), Color(1.0, 0.66, 0.18) if crit else color, 27 if crit else 17)
 	Sfx.hit()
 	if not _soft and WorldState.has_mod(e, "frost") and P.alive:
 		P.chill = maxf(float(P.chill), 2.2)
@@ -2813,6 +2813,13 @@ func unequip_slot(key: String) -> void:
 		return
 	P.bag.append(it)
 	P.equip[key] = null
+	if key == "weapon":
+		var _pn = WorldState.player_node()
+		if _pn != null:
+			var _prev = _pn.get_meta("wpn_attach", null)
+			if _prev != null and _prev is Node:
+				_prev.queue_free()
+				_pn.remove_meta("wpn_attach")
 	refresh_max(false)
 	ui_refresh.emit()
 	save_soon()
@@ -3286,6 +3293,8 @@ func equip_from_bag(i: int) -> void:
 	refresh_max(false)
 	Sfx.loot()
 	say("装备 %s" % it.name)
+	if key == "weapon":
+		WorldState._refresh_player_weapon()
 	ui_refresh.emit()
 	save_soon()
 

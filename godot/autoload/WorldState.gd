@@ -1234,6 +1234,13 @@ func spawn_enemy(type: String, x: float, z: float, lvl: int, elite: bool, force_
 	if actors_root:
 		actors_root.add_child(node)
 	node.position = Vector3(x, 0, z)
+	# 持武：按 wkind 取同系形状随机挂上，染怪物武器色（无 wkind 的野兽不挂）
+	var wk := str(t.get("wkind", ""))
+	if wk != "":
+		var _pool: Array = Data.wpn_pool_for_wkind(wk)
+		if not _pool.is_empty():
+			var _shp: String = _pool[Cfg.ri(0, _pool.size() - 1)]
+			Assets.equip_weapon(node, Data.wpn_id(_shp), int(t.get("weapon", -1)), _shp)
 	var mult := 1.0 + (lvl - 1) * 0.34
 	var e := {
 		"id": ent_seq, "type": type, "name": ("精英 " if elite else "") + str(t.n),
@@ -1731,14 +1738,45 @@ func _loot_mesh(obj: Dictionary) -> Node3D:
 		if g and str(obj.get("pot", "")) != "hp":
 			Assets.tint(g, 0x3A7FE0)
 	else:
-		g = Assets.spawn("fx_loot_item")
-		var hex: int = 0xC8C0AD
-		if obj.kind == "item" and obj.get("item"):
-			hex = LootData.item_hex(obj.item)
-		elif obj.kind == "relic":
-			hex = 0xC8A24A
-		if g:
-			Assets.tint(g, hex, 0.35)
+		var it: Dictionary = obj.get("item", {})
+		var is_weapon: bool = (obj.kind == "item" and typeof(it) == TYPE_DICTIONARY and str(it.get("type", "")) == "weapon")
+		if is_weapon:
+			# 武器掉落：直接显示真实武器模型（按名取形状），带稀有度染色与灯光
+			g = Assets.spawn(Data.wpn_id(Data.wpn_shape_for_name(str(it.get("name", "")))))
+			if g:
+				g.scale = Vector3.ONE * 0.6
+				var r: int = int(it.get("rarity", 0))
+				var hex: int = LootData.item_hex(it)
+				if it.get("unique") or it.get("set") or r >= 2:
+					var ll := OmniLight3D.new()
+					ll.light_energy = 0.9
+					ll.omni_range = 3.2
+					ll.position = Vector3(0.0, 0.5, 0.0)
+					g.add_child(ll)
+					Assets.tint(g, hex, 1.2)
+				else:
+					Assets.tint(g, hex, 0.35)
+		else:
+			g = Assets.spawn("fx_loot_item")
+			var hex: int = 0xC8C0AD
+			var emit: float = 0.35
+			if obj.kind == "item" and obj.get("item"):
+				hex = LootData.item_hex(it)
+				var r: int = int(it.get("rarity", 0))
+				if it.get("unique") or it.get("set") or r >= 4:
+					emit = 1.5
+				elif r >= 2:
+					emit = 0.85
+				if (it.get("unique") or it.get("set") or r >= 2) and g != null:
+					var ll := OmniLight3D.new()
+					ll.light_energy = 0.9
+					ll.omni_range = 3.2
+					ll.position = Vector3(0.0, 0.5, 0.0)
+					g.add_child(ll)
+			elif obj.kind == "relic":
+				hex = 0xC8A24A
+			if g:
+				Assets.tint(g, hex, emit)
 	if g == null:
 		g = Node3D.new()
 	return g
@@ -1957,6 +1995,22 @@ func _spawn_player_view() -> void:
 	actors_root.add_child(node)
 	node.position = Vector3(Game.P.x, 0, Game.P.z)
 	W.player_node = node
+	_refresh_player_weapon(node)
+
+
+func _refresh_player_weapon(node: Node3D = null) -> void:
+	if node == null:
+		node = W.get("player_node")
+	if node == null:
+		return
+	var it = Game.P.equip.get("weapon", {})
+	if typeof(it) != TYPE_DICTIONARY:
+		return
+	var nm: String = str(it.get("name", ""))
+	if nm == "":
+		return
+	var shp: String = Data.wpn_shape_for_name(nm)
+	Assets.equip_weapon(node, Data.wpn_id(shp), -1, shp)
 
 
 func player_node() -> Node3D:

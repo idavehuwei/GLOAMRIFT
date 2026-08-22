@@ -314,3 +314,55 @@ func _tint(n: Node, c: Color, emit: float) -> void:
 		(n as OmniLight3D).light_color = c
 	for ch in n.get_children():
 		_tint(ch, c, emit)
+
+
+# ---- 武器挂载（角色手持 / 怪物持武） ----
+# actor: 由 make_actor 返回的含 Skeleton3D 的节点
+# glb_id: 武器模型 id（如 "wpn_sword"）；tint_hex<0 不染色；shape 用于握把微调
+func equip_weapon(actor: Node3D, glb_id: String, tint_hex := -1, shape := "") -> void:
+	if actor == null or glb_id == "":
+		return
+	var prev = actor.get_meta("wpn_attach", null)
+	if prev != null and prev is Node:
+		prev.queue_free()
+	actor.remove_meta("wpn_attach")
+	var skel: Skeleton3D = _find_skel(actor)
+	if skel == null:
+		return
+	var bone := _hand_bone(skel)
+	if bone == "":
+		return
+	var att := BoneAttachment3D.new()
+	att.bone_name = bone
+	skel.add_child(att)
+	var wpn := spawn(glb_id)
+	if wpn == null:
+		att.queue_free()
+		return
+	att.add_child(wpn)
+	var sh := shape if shape != "" else glb_id.replace("wpn_", "")
+	var g := Data.WPN_GRIP.get(sh, {"pos":[0.0,0.0,0.0], "rot":[0.0,0.0,0.0], "scl":0.7})
+	wpn.position = Vector3(float(g.pos[0]), float(g.pos[1]), float(g.pos[2]))
+	wpn.rotation_degrees = Vector3(float(g.rot[0]), float(g.rot[1]), float(g.rot[2]))
+	wpn.scale = Vector3.ONE * float(g.scl)
+	if tint_hex >= 0:
+		tint(wpn, tint_hex, -1.0)
+	actor.set_meta("wpn_attach", att)
+
+
+func _find_skel(n: Node) -> Skeleton3D:
+	if n is Skeleton3D:
+		return n as Skeleton3D
+	for ch in n.get_children():
+		var f: Skeleton3D = _find_skel(ch)
+		if f != null:
+			return f
+	return null
+
+
+func _hand_bone(skel: Skeleton3D) -> String:
+	var names := ["handslot.r", "hand.r", "RightHand", "hand_R", "wrist.r", "handr", "mixamorigRightHand", "RightHandMiddle1"]
+	for nm in names:
+		if skel.find_bone(nm) != -1:
+			return nm
+	return ""
