@@ -1719,7 +1719,7 @@ func _keybind_lines() -> Array:
 			if ev is InputEventKey and ev.keycode != 0:
 				keys.append(OS.get_keycode_string(ev.keycode))
 		if keys.size() > 0:
-			out.append("%s：%s" % [names[act], PackedStringArray(keys).join(" / ")])
+			out.append("%s：%s" % [names[act], " / ".join(keys)])
 	return out
 
 func _btn(t: String, cb: Callable) -> void:

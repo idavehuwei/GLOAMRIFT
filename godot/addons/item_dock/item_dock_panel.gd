@@ -280,7 +280,7 @@ func _build_import_dialog() -> void:
 	import_text.custom_minimum_size = Vector2(560, 320)
 	import_text.placeholder_text = '[{"id":"hp_pot","name":"治疗药水","type":"scrap","rarity":"common","qty":1,"desc":"回血","stats":{"hp":10}}]'
 	import_dialog.add_child(import_text)
-	import_dialog.accepted.connect(_on_import_confirmed)
+	import_dialog.confirmed.connect(_on_import_confirmed)
 	add_child(import_dialog)
 
 
