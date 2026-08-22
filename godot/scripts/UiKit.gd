@@ -60,7 +60,7 @@ func _frame_texture() -> Texture2D:
 func frame_plate() -> StyleBox:
 	var sb := StyleBoxTexture.new()
 	sb.texture = _frame_texture()
-	sb.set_margin_all(36)
+	sb.set_margin_all(24)
 	return sb
 
 
@@ -348,6 +348,15 @@ func gcard() -> StyleBoxFlat:
 	return sb
 
 
+func gcard_hi() -> StyleBoxFlat:
+	var sb := gcard()
+	sb.border_color = brass_hi()
+	sb.bg_color = Color(0.102, 0.086, 0.071)
+	sb.shadow_color = Color(0.69, 0.55, 0.31, 0.22)
+	sb.shadow_size = 12
+	return sb
+
+
 func orb_ring() -> StyleBoxFlat:
 	var sb := _flat(Color(0.043, 0.035, 0.031), Color(0.42, 0.341, 0.192), 3, 0, 54)
 	sb.shadow_size = 16
@@ -468,7 +477,7 @@ func header(parent: Control, title: String) -> void:
 	l.text = title
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.add_theme_font_override("font", serif_font())
-	l.add_theme_font_size_override("font_size", 16)
+	l.add_theme_font_size_override("font_size", 18)
 	l.add_theme_color_override("font_color", brass_hi())
 	l.add_theme_constant_override("outline_size", 1)
 	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))

@@ -49,6 +49,9 @@ var _tip_box: HBoxContainer
 var _tip_icon: TextureRect
 var _tip_sep: VSeparator
 var _target: Label
+var _boss_bar: PanelContainer
+var _boss_name: Label
+var _boss_hp: ProgressBar
 var _buffs: HBoxContainer
 var _cast: ProgressBar
 var _hp_lab: Label
@@ -291,6 +294,40 @@ func _build_hud() -> void:
 	_target.offset_top = 16
 	_target.offset_bottom = 86
 	_target.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_bar = PanelContainer.new()
+	_boss_bar.visible = false
+	_boss_bar.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_boss_bar.offset_left = -280
+	_boss_bar.offset_right = 280
+	_boss_bar.offset_top = 12
+	_boss_bar.offset_bottom = 76
+	_boss_bar.add_theme_stylebox_override("panel", UiKit.frame_plate())
+	root.add_child(_boss_bar)
+	var boss_pad := MarginContainer.new()
+	boss_pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	boss_pad.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	boss_pad.add_theme_constant_override("margin_left", 28)
+	boss_pad.add_theme_constant_override("margin_right", 28)
+	boss_pad.add_theme_constant_override("margin_top", 8)
+	boss_pad.add_theme_constant_override("margin_bottom", 8)
+	_boss_bar.add_child(boss_pad)
+	var boss_col := VBoxContainer.new()
+	boss_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	boss_col.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	boss_col.add_theme_constant_override("separation", 4)
+	boss_pad.add_child(boss_col)
+	_boss_name = Label.new()
+	_boss_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_name.add_theme_font_override("font", UiKit.serif_font())
+	_boss_name.add_theme_font_size_override("font_size", 18)
+	_boss_name.add_theme_color_override("font_color", UiKit.brass_hi())
+	boss_col.add_child(_boss_name)
+	_boss_hp = ProgressBar.new()
+	_boss_hp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_boss_hp.custom_minimum_size = Vector2(0, 14)
+	_boss_hp.add_theme_stylebox_override("background", UiKit.bar_bg())
+	_boss_hp.add_theme_stylebox_override("fill", UiKit.bar_fill(Color(0.78, 0.18, 0.14)))
+	boss_col.add_child(_boss_hp)
 	_evt = _lab(root, Vector2(0, 0), 13, Color(0.89, 0.77, 0.5))
 	_evt.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_evt.offset_left = -220
@@ -471,7 +508,7 @@ func _build_hud() -> void:
 	_panel_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_panel_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_panel_title.add_theme_font_override("font", UiKit.serif_font())
-	_panel_title.add_theme_font_size_override("font_size", 18)
+	_panel_title.add_theme_font_size_override("font_size", 22)
 	_panel_title.add_theme_color_override("font_color", UiKit.brass_hi())
 	_panel_title.add_theme_constant_override("outline_size", 1)
 	_panel_title.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
@@ -973,11 +1010,14 @@ func _shop_grid(cols: int = 3) -> GridContainer:
 
 func _sitem(parent: Control, glyph: String, title: String, price: String, col: Color, tip: String, cb: Callable, off: bool = false) -> void:
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(168, 52)
-	b.add_theme_stylebox_override("normal", UiKit.cell())
+	b.custom_minimum_size = Vector2(168, 54)
+	b.add_theme_stylebox_override("normal", UiKit.gcard())
+	b.add_theme_stylebox_override("hover", UiKit.gcard_hi())
+	b.add_theme_stylebox_override("pressed", UiKit.gcard())
+	b.add_theme_stylebox_override("focus", UiKit.gcard_hi())
 	b.disabled = off
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	UiKit.stamp_btn(b, UiKit.icon_for_glyph(glyph), "%s\n%s" % [title, price], 28, true)
+	UiKit.stamp_btn(b, UiKit.icon_for_glyph(glyph), "%s\n%s" % [title, price], 30, true)
 	b.add_theme_color_override("font_color", col)
 	b.add_theme_font_size_override("font_size", 12)
 	if tip != "":
@@ -1122,15 +1162,29 @@ func _item_btn(label: String, it: Dictionary, left: Callable, right: Callable = 
 
 
 func _refresh_combat_hud() -> void:
-	if Game.P.target != null and not Game.P.target.get("dead", true):
-		var t: Dictionary = Game.P.target
-		_target.text = "%s  %d 级\n%d / %d" % [t.get("name", ""), int(t.get("lvl", 1)), int(t.hp), int(t.hpMax)]
-		var mods := Game.target_mods(t)
-		if mods != "":
-			_target.text += "\n" + mods
-		_target.visible = true
-	else:
+	var boss: Dictionary = {}
+	if Game.cine_boss.size() > 0:
+		boss = Game.cine_boss.e
+	elif Game.P.target != null and not Game.P.target.get("dead", true) and Game.P.target.get("boss", false):
+		boss = Game.P.target
+	if not boss.is_empty():
 		_target.visible = false
+		_boss_bar.visible = true
+		_boss_name.text = "%s  Lv %d" % [boss.get("name", "?"), int(boss.get("lvl", 1))]
+		_boss_hp.max_value = float(boss.hpMax)
+		_boss_hp.value = float(boss.hp)
+		_boss_hp.tooltip_text = "%d / %d" % [int(boss.hp), int(boss.hpMax)]
+	else:
+		_boss_bar.visible = false
+		if Game.P.target != null and not Game.P.target.get("dead", true):
+			var t: Dictionary = Game.P.target
+			_target.text = "%s  %d 级\n%d / %d" % [t.get("name", ""), int(t.get("lvl", 1)), int(t.hp), int(t.hpMax)]
+			var mods := Game.target_mods(t)
+			if mods != "":
+				_target.text += "\n" + mods
+			_target.visible = true
+		else:
+			_target.visible = false
 	for c in _buffs.get_children():
 		c.queue_free()
 	for k in Game.P.buffs:
@@ -1567,7 +1621,23 @@ func _btn(t: String, cb: Callable) -> void:
 	var b := Button.new()
 	b.text = t
 	b.pressed.connect(cb)
+	b.add_theme_stylebox_override("normal", UiKit.gcard())
+	b.add_theme_stylebox_override("hover", UiKit.gcard_hi())
+	b.add_theme_stylebox_override("pressed", UiKit.gcard())
+	b.add_theme_stylebox_override("focus", UiKit.gcard_hi())
 	_panel_body.add_child(b)
+
+
+func _topic_btn(t: String, cb: Callable, active: bool = false) -> Button:
+	var b := Button.new()
+	b.text = t
+	b.pressed.connect(cb)
+	var sty := UiKit.gcard_hi() if active else UiKit.gcard()
+	b.add_theme_stylebox_override("normal", sty)
+	b.add_theme_stylebox_override("hover", UiKit.gcard_hi())
+	b.add_theme_stylebox_override("pressed", UiKit.gcard())
+	b.add_theme_stylebox_override("focus", UiKit.gcard_hi())
+	return b
 
 
 func _plab(t: String, sz: int = 14) -> void:
@@ -1790,14 +1860,10 @@ func open_npc(id: String, mode: String = "talk") -> void:
 			_panel_body.add_child(row)
 			for t in topics:
 				var tid: String = str(t.id)
-				var tb := Button.new()
-				tb.text = str(t.q)
-				if _talk_pick == tid:
-					tb.modulate = Color(1.2, 1.05, 0.7)
-				tb.pressed.connect(func():
+				var tb := _topic_btn(str(t.q), func():
 					_talk_pick = tid
 					open_npc(id)
-				)
+				, _talk_pick == tid)
 				row.add_child(tb)
 			if _talk_pick != "":
 				var ans: String = DialogueManager.answer(id, _talk_pick)
@@ -1807,9 +1873,7 @@ func open_npc(id: String, mode: String = "talk") -> void:
 					if str(t.id) == _talk_pick and DialogueManager.has_branch(t):
 						for opt in DialogueManager.branch_of(t):
 							var od: Dictionary = opt
-							var ob := Button.new()
-							ob.text = str(od.get("label", "…"))
-							ob.pressed.connect(func():
+							var ob := _topic_btn(str(od.get("label", "…")), func():
 								_talk_pick = str(od.get("next", ""))
 								open_npc(id)
 							)
@@ -1888,14 +1952,10 @@ func _selin_talk() -> void:
 		_panel_body.add_child(row)
 		for t in topics:
 			var tid: String = str(t.id)
-			var tb := Button.new()
-			tb.text = str(t.q)
-			if _talk_pick == tid:
-				tb.modulate = Color(1.2, 1.05, 0.7)
-			tb.pressed.connect(func():
+			var tb := _topic_btn(str(t.q), func():
 				_talk_pick = tid
 				open_npc("selin", "talk")
-			)
+			, _talk_pick == tid)
 			row.add_child(tb)
 		if _talk_pick != "":
 			var ans: String = DialogueManager.answer("selin", _talk_pick)
@@ -1905,9 +1965,7 @@ func _selin_talk() -> void:
 				if str(t.id) == _talk_pick and DialogueManager.has_branch(t):
 					for opt in DialogueManager.branch_of(t):
 						var od: Dictionary = opt
-						var ob := Button.new()
-						ob.text = str(od.get("label", "…"))
-						ob.pressed.connect(func():
+						var ob := _topic_btn(str(od.get("label", "…")), func():
 							_talk_pick = str(od.get("next", ""))
 							open_npc("selin", "talk")
 						)
@@ -1945,14 +2003,10 @@ func _kaden_talk() -> void:
 		_panel_body.add_child(row)
 		for t in topics:
 			var tid: String = str(t.id)
-			var tb := Button.new()
-			tb.text = str(t.q)
-			if _talk_pick == tid:
-				tb.modulate = Color(1.2, 1.05, 0.7)
-			tb.pressed.connect(func():
+			var tb := _topic_btn(str(t.q), func():
 				_talk_pick = tid
 				open_npc("kaden", "talk")
-			)
+			, _talk_pick == tid)
 			row.add_child(tb)
 		if _talk_pick != "":
 			var ans: String = DialogueManager.answer("kaden", _talk_pick)
@@ -1962,9 +2016,7 @@ func _kaden_talk() -> void:
 				if str(t.id) == _talk_pick and DialogueManager.has_branch(t):
 					for opt in DialogueManager.branch_of(t):
 						var od: Dictionary = opt
-						var ob := Button.new()
-						ob.text = str(od.get("label", "…"))
-						ob.pressed.connect(func():
+						var ob := _topic_btn(str(od.get("label", "…")), func():
 							_talk_pick = str(od.get("next", ""))
 							open_npc("kaden", "talk")
 						)
@@ -1981,15 +2033,11 @@ func _kaden_trade() -> void:
 	_panel_body.add_child(tabs)
 	for pair in [["shop", "制式"], ["crate", "箱子"], ["reforge", "重铸"], ["socket", "镶嵌"], ["craft", "合成"], ["phrase", "一句话"], ["redeem", "兑换"]]:
 		var id: String = pair[0]
-		var b := Button.new()
-		b.text = pair[1]
-		if _smith_tab == id:
-			b.modulate = Color(1.2, 1.05, 0.7)
-		b.pressed.connect(func():
+		var b := _topic_btn(pair[1], func():
 			_smith_tab = id
 			_socket_pick = null
 			open_npc("kaden", "trade")
-		)
+		, _smith_tab == id)
 		tabs.add_child(b)
 	match _smith_tab:
 		"shop":
@@ -2195,14 +2243,10 @@ func _vaun_talk() -> void:
 		_panel_body.add_child(row)
 		for t in topics:
 			var tid: String = str(t.id)
-			var tb := Button.new()
-			tb.text = str(t.q)
-			if _talk_pick == tid:
-				tb.modulate = Color(1.2, 1.05, 0.7)
-			tb.pressed.connect(func():
+			var tb := _topic_btn(str(t.q), func():
 				_talk_pick = tid
 				open_npc("vaun", "talk")
-			)
+			, _talk_pick == tid)
 			row.add_child(tb)
 		if _talk_pick != "":
 			var ans: String = DialogueManager.answer("vaun", _talk_pick)
@@ -2212,9 +2256,7 @@ func _vaun_talk() -> void:
 				if str(t.id) == _talk_pick and DialogueManager.has_branch(t):
 					for opt in DialogueManager.branch_of(t):
 						var od: Dictionary = opt
-						var ob := Button.new()
-						ob.text = str(od.get("label", "…"))
-						ob.pressed.connect(func():
+						var ob := _topic_btn(str(od.get("label", "…")), func():
 							_talk_pick = str(od.get("next", ""))
 							open_npc("vaun", "talk")
 						)
@@ -2259,24 +2301,16 @@ func _vaun_trade() -> void:
 	_panel_body.add_child(stakes)
 	for pair in [[1, "小注"], [2, "中注"], [4, "豪注"]]:
 		var mul: int = pair[0]
-		var sb := Button.new()
-		sb.text = "%s %d 金" % [pair[1], Game.gamble_cost(mul)]
-		if Game.gamble_stake == mul:
-			sb.modulate = Color(1.2, 1.05, 0.7)
-		sb.pressed.connect(func():
+		var sb := _topic_btn("%s %d 金" % [pair[1], Game.gamble_cost(mul)], func():
 			Game.gamble_stake = mul
 			open_npc("vaun", "trade")
-		)
+		, Game.gamble_stake == mul)
 		stakes.add_child(sb)
 	var bets := HBoxContainer.new()
 	_panel_body.add_child(bets)
-	var sm := Button.new()
-	sm.text = "押小"
-	sm.pressed.connect(func(): _start_gamble("small"))
+	var sm := _topic_btn("押小", func(): _start_gamble("small"))
 	bets.add_child(sm)
-	var bg := Button.new()
-	bg.text = "押大"
-	bg.pressed.connect(func(): _start_gamble("big"))
+	var bg := _topic_btn("押大", func(): _start_gamble("big"))
 	bets.add_child(bg)
 	_plab("今夜赌货（金币 %d）" % Game.P.gold, 13)
 	if Game.shop_stock.is_empty():
@@ -2306,14 +2340,10 @@ func _mara_talk() -> void:
 		_panel_body.add_child(row)
 		for t in topics:
 			var tid: String = str(t.id)
-			var tb := Button.new()
-			tb.text = str(t.q)
-			if _talk_pick == tid:
-				tb.modulate = Color(1.2, 1.05, 0.7)
-			tb.pressed.connect(func():
+			var tb := _topic_btn(str(t.q), func():
 				_talk_pick = tid
 				open_npc("mara", "talk")
-			)
+			, _talk_pick == tid)
 			row.add_child(tb)
 		if _talk_pick != "":
 			var ans: String = DialogueManager.answer("mara", _talk_pick)
@@ -2323,9 +2353,7 @@ func _mara_talk() -> void:
 				if str(t.id) == _talk_pick and DialogueManager.has_branch(t):
 					for opt in DialogueManager.branch_of(t):
 						var od: Dictionary = opt
-						var ob := Button.new()
-						ob.text = str(od.get("label", "…"))
-						ob.pressed.connect(func():
+						var ob := _topic_btn(str(od.get("label", "…")), func():
 							_talk_pick = str(od.get("next", ""))
 							open_npc("mara", "talk")
 						)
@@ -2523,7 +2551,7 @@ func _char_header() -> HBoxContainer:
 	var name_l := Label.new()
 	name_l.text = Game.displayed_name()
 	name_l.add_theme_font_override("font", UiKit.serif_font())
-	name_l.add_theme_font_size_override("font_size", 16)
+	name_l.add_theme_font_size_override("font_size", 18)
 	name_l.add_theme_color_override("font_color", UiKit.brass_hi())
 	info_row.add_child(name_l)
 	var lvl := Label.new()
@@ -2531,7 +2559,7 @@ func _char_header() -> HBoxContainer:
 	lvl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lvl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	lvl.add_theme_font_override("font", UiKit.serif_font())
-	lvl.add_theme_font_size_override("font_size", 18)
+	lvl.add_theme_font_size_override("font_size", 20)
 	lvl.add_theme_color_override("font_color", UiKit.gold())
 	info_row.add_child(lvl)
 
@@ -2552,7 +2580,7 @@ func _char_header() -> HBoxContainer:
 	pwv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	pwv.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	pwv.add_theme_font_override("font", UiKit.serif_font())
-	pwv.add_theme_font_size_override("font_size", 20)
+	pwv.add_theme_font_size_override("font_size", 22)
 	pwv.add_theme_color_override("font_color", UiKit.gold())
 	power_row.add_child(pwv)
 
@@ -2565,13 +2593,13 @@ func _char_header() -> HBoxContainer:
 	gold.add_child(gold_row)
 	var gc := Label.new()
 	gc.text = "🪙"
-	gc.add_theme_font_size_override("font_size", 18)
+	gc.add_theme_font_size_override("font_size", 20)
 	gold_row.add_child(gc)
 	var gvl := Label.new()
 	gvl.text = "%d" % Game.P.gold
 	gvl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	gvl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	gvl.add_theme_font_size_override("font_size", 15)
+	gvl.add_theme_font_size_override("font_size", 16)
 	gvl.add_theme_color_override("font_color", UiKit.gold())
 	gold_row.add_child(gvl)
 
