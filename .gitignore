@@ -8,3 +8,10 @@ godot/export/
 
 # 本地密钥文件，绝不提交（含真实 API Key）
 key.md
+
+# hy-3d 中间产物（大模型源 ~68MB，已拷贝进 godot/models/src，不提交）
+tools/hy3d_out/
+
+# Python 缓存
+__pycache__/
+*.pyc

@@ -480,14 +480,15 @@ const SHRINE_PICKS := [
 	{id="plenty", n="丰饶", g="🌾", d="再涌出一批怪。掉落品质抬一档。"}
 ]
 const ENEMY_ASSET := {
-	"skeleton": "mob_skeleton", "ghoul": "mob_zombie", "imp": "mob_goblin",
+	"skeleton": "mob_skeleton", "ghoul": "mob_ghoul", "imp": "mob_goblin",
 	"bandit": "mob_bandit", "banditbow": "npc_rogue", "brute": "mob_bandit",
 	"ashmage": "mob_wizard", "rimeknight": "mob_knight", "drowned": "mob_drowned", "wrecker": "mob_bandit",
 	"boneking": "boss_sekhra", "lord": "boss_warrok", "seven": "mob_ninja", "gray": "mob_bandit", "kor": "boss_undead",
 	"osser": "mob_wizard", "singer": "mob_wizard", "tideguide": "mob_wizard", "voice": "boss_caster",
 	"wolf": "mob_wolf", "boar": "mob_boar", "frostwolf": "mob_husky", "brinewolf": "mob_fox", "lavabeast": "mob_boar", "grom": "mob_stag",
 	"spider": "mob_spider", "icespider": "mob_spider", "broodmother": "mob_spider",
-	"rat": "mob_rat", "snake": "mob_snake", "frog": "mob_frog", "wasp": "mob_wasp"
+	"rat": "mob_rat", "snake": "mob_snake", "frog": "mob_frog", "wasp": "mob_wasp",
+	"golem": "mob_golem", "treant": "mob_treant", "wraith": "mob_wraith"
 }
 const CLASS_ASSET := {"warrior": "char_warrior", "mage": "char_mage", "archer": "char_archer"}
 
@@ -634,6 +635,53 @@ func rune_val(def: Dictionary, g: int) -> int:
 	if g == 2:
 		return hi
 	return int(round(hi * 1.55))
+
+
+# ---- 武器 GLB 体系（角色手持 + 掉落表现） ----
+const WPN_SHAPES := {
+	"sword": "wpn_sword", "axe": "wpn_axe", "mace": "wpn_mace",
+	"spear": "wpn_spear", "dagger": "wpn_dagger", "staff": "wpn_staff",
+	"bow": "wpn_bow", "crossbow": "wpn_crossbow", "book": "wpn_book", "wand": "wpn_wand",
+}
+const WPN_NAME_SHAPE := {
+	"短剑": "sword", "阔剑": "sword", "战斧": "axe", "钉头锤": "mace",
+	"长柄": "spear", "匕首": "dagger", "巨锤": "mace", "橡木杖": "staff",
+	"符文长杖": "staff", "水晶权杖": "wand", "魔典": "book", "骨杖": "staff",
+	"猎弓": "bow", "复合弓": "bow", "重弩": "crossbow", "飞斧": "axe", "长矛": "spear",
+}
+const WPN_WKIND_POOL := {
+	"sword": ["sword", "axe", "mace", "spear", "dagger"],
+	"staff": ["staff", "wand"],
+	"bow": ["bow", "crossbow"],
+}
+const WPN_GRIP := {
+	"sword": {"pos":[0.0,0.0,0.0], "rot":[0.0,0.0,0.0], "scl":0.7},
+	"axe": {"pos":[0.0,0.0,0.0], "rot":[0.0,0.0,0.0], "scl":0.7},
+	"mace": {"pos":[0.0,0.0,0.0], "rot":[0.0,0.0,0.0], "scl":0.7},
+	"spear": {"pos":[0.0,0.0,0.0], "rot":[0.0,0.0,0.0], "scl":0.62},
+	"dagger": {"pos":[0.0,0.0,0.0], "rot":[0.0,0.0,0.0], "scl":0.8},
+	"staff": {"pos":[0.0,0.0,0.0], "rot":[0.0,0.0,0.0], "scl":0.72},
+	"bow": {"pos":[0.0,0.0,0.0], "rot":[90.0,0.0,0.0], "scl":1.0},
+	"crossbow": {"pos":[0.0,0.0,0.0], "rot":[90.0,0.0,0.0], "scl":1.0},
+	"book": {"pos":[0.0,0.0,0.0], "rot":[0.0,0.0,0.0], "scl":1.0},
+	"wand": {"pos":[0.0,0.0,0.0], "rot":[0.0,0.0,0.0], "scl":0.85},
+}
+func wpn_id(shape: String) -> String:
+	return WPN_SHAPES.get(shape, "")
+func wpn_shape_for_name(nm: String) -> String:
+	var s := str(nm)
+	for pre in ["磨损的", "精制的", "古老的", "上等的", "完美的", "传说的", "破碎的", "染血的", "锈蚀的"]:
+		if s.begins_with(pre):
+			s = s.substr(pre.length())
+			break
+	if WPN_NAME_SHAPE.has(s):
+		return WPN_NAME_SHAPE[s]
+	for k in WPN_NAME_SHAPE.keys():
+		if s.contains(k):
+			return WPN_NAME_SHAPE[k]
+	return "sword"
+func wpn_pool_for_wkind(wk: String) -> Array:
+	return WPN_WKIND_POOL.get(wk, [])
 '''
 
 def main():
