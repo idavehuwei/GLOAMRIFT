@@ -42,6 +42,7 @@ var _sheet := ""
 var _stat_tab := "core"
 var _talk_id := ""
 var _talk_pick := ""
+var _npc_mode := "talk"          # NPC 交互视图：talk=对话视图 / trade=交易视图
 var _quest_sel := ""
 var _sk_assign := ""
 var _tip: PanelContainer
@@ -928,7 +929,7 @@ func _tick_die(dt: float) -> void:
 	_die_side = ""
 	Game.play_gamble(side)
 	if _sheet == "npc":
-		open_npc("vaun")
+		open_npc("vaun", "trade")
 
 
 func _shop_grid(cols: int = 3) -> GridContainer:
@@ -1898,9 +1899,10 @@ func _stat_panel(parent: Control) -> void:
 			parent.add_child(cl)
 
 
-func open_npc(id: String) -> void:
+func open_npc(id: String, mode: String = "talk") -> void:
 	_sheet = "npc"
 	_talk_id = id
+	_npc_mode = mode
 	DialogueManager.open(id)
 	_clear_panel()
 	_show_panel()
@@ -1909,7 +1911,7 @@ func open_npc(id: String) -> void:
 		if str(d.id) == id:
 			def = d
 			break
-	if not def.is_empty() and str(def.get("kind", "")) == "":
+	if not def.is_empty() and str(def.get("kind", "")) == "" and id != "kaden" and id != "vaun":
 		_hd(str(def.get("n", id)))
 		_plab(str(def.get("t", "")), 12)
 		_plab(DialogueManager.greet(id))
@@ -1962,79 +1964,17 @@ func open_npc(id: String) -> void:
 						_plab(line + "\n" + q.d)
 			_btn("关掉", func(): _close_sheet())
 		"kaden":
-			_open_kaden()
+			if _npc_mode == "trade":
+				_kaden_trade()
+			else:
+				_kaden_talk()
 		"mara":
 			_open_mara()
 		"vaun":
-			if def.is_empty():
-				_hd("赌徒 沃恩")
-			_plab("猜大小 · 金币 %d" % Game.P.gold, 13)
-			var diebox := VBoxContainer.new()
-			diebox.alignment = BoxContainer.ALIGNMENT_CENTER
-			_panel_body.add_child(diebox)
-			_die_lab = Label.new()
-			_die_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			_die_lab.add_theme_font_size_override("font_size", 42)
-			var lg: Dictionary = Game.last_gamble
-			if _die_spin > 0.0:
-				_die_lab.text = "?"
-				_die_lab.add_theme_color_override("font_color", UiKit.brass())
-			elif lg.is_empty():
-				_die_lab.text = "?"
-				_die_lab.add_theme_color_override("font_color", UiKit.brass())
+			if _npc_mode == "trade":
+				_vaun_trade()
 			else:
-				_die_lab.text = str(lg.get("die", "?"))
-				if lg.get("win"):
-					_die_lab.add_theme_color_override("font_color", Color(0.49, 0.78, 0.49))
-				else:
-					_die_lab.add_theme_color_override("font_color", Color(0.75, 0.35, 0.29))
-			diebox.add_child(_die_lab)
-			var res := Label.new()
-			res.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			res.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			if lg.is_empty():
-				res.text = "1–3 小 · 4–6 大。先选注码，再押大小。"
-			else:
-				res.text = str(lg.get("text", ""))
-			diebox.add_child(res)
-			var stakes := HBoxContainer.new()
-			_panel_body.add_child(stakes)
-			for pair in [[1, "小注"], [2, "中注"], [4, "豪注"]]:
-				var mul: int = pair[0]
-				var sb := Button.new()
-				sb.text = "%s %d 金" % [pair[1], Game.gamble_cost(mul)]
-				if Game.gamble_stake == mul:
-					sb.modulate = Color(1.2, 1.05, 0.7)
-				sb.pressed.connect(func():
-					Game.gamble_stake = mul
-					open_npc("vaun")
-				)
-				stakes.add_child(sb)
-			var bets := HBoxContainer.new()
-			_panel_body.add_child(bets)
-			var sm := Button.new()
-			sm.text = "押小"
-			sm.pressed.connect(func(): _start_gamble("small"))
-			bets.add_child(sm)
-			var bg := Button.new()
-			bg.text = "押大"
-			bg.pressed.connect(func(): _start_gamble("big"))
-			bets.add_child(bg)
-			_plab("今夜赌货（金币 %d）" % Game.P.gold, 13)
-			if Game.shop_stock.is_empty():
-				_plab("今夜的货被掏空了。掷骰子还能再开。", 12)
-			else:
-				var grid := _shop_grid(2)
-				var si := 0
-				for it in Game.shop_stock:
-					var idx := si
-					si += 1
-					var cost := Game.shop_price(Game.buy_price(it))
-					_sitem(grid, str(it.glyph), str(it.name), "%d 金" % cost, UiKit.rarity_color(it), Game.item_tip(it, true), func():
-						Game.buy_stock(idx)
-						open_npc("vaun")
-					)
-			_btn("关掉", func(): _close_sheet())
+				_vaun_talk()
 		"bridge":
 			_btn("念名", func():
 				Game.recites_name()
@@ -2077,9 +2017,49 @@ func open_npc(id: String) -> void:
 			_btn("关掉", func(): _close_sheet())
 
 
-func _open_kaden() -> void:
-	_plab("铁匠 卡登", 20)
+func _kaden_talk() -> void:
+	_hd("铁匠 卡登")
 	_plab("制式 · 重铸 · 箱子。黑铁放下。词缀打歪了拿来重铸。稀有的能开孔。")
+	_plab("金币 %d · 行囊 %d/%d" % [Game.P.gold, Game.P.bag.size(), Cfg.BAG], 12)
+	var topics: Array = DialogueManager.topics("kaden")
+	if topics.size():
+		_plab("打听", 13)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		_panel_body.add_child(row)
+		for t in topics:
+			var tid: String = str(t.id)
+			var tb := Button.new()
+			tb.text = str(t.q)
+			if _talk_pick == tid:
+				tb.modulate = Color(1.2, 1.05, 0.7)
+			tb.pressed.connect(func():
+				_talk_pick = tid
+				open_npc("kaden", "talk")
+			)
+			row.add_child(tb)
+		if _talk_pick != "":
+			var ans: String = DialogueManager.answer("kaden", _talk_pick)
+			if ans != "":
+				_plab(ans)
+			for t in topics:
+				if str(t.id) == _talk_pick and DialogueManager.has_branch(t):
+					for opt in DialogueManager.branch_of(t):
+						var od: Dictionary = opt
+						var ob := Button.new()
+						ob.text = str(od.get("label", "…"))
+						ob.pressed.connect(func():
+							_talk_pick = str(od.get("next", ""))
+							open_npc("kaden", "talk")
+						)
+						_panel_body.add_child(ob)
+	_btn("进入铁匠铺", func(): open_npc("kaden", "trade"))
+	_btn("关掉", func(): _close_sheet())
+
+
+func _kaden_trade() -> void:
+	_hd("铁匠铺")
+	_btn("← 返回对话", func(): open_npc("kaden", "talk"))
 	_plab("金币 %d · 行囊 %d/%d" % [Game.P.gold, Game.P.bag.size(), Cfg.BAG], 12)
 	var tabs := HBoxContainer.new()
 	_panel_body.add_child(tabs)
@@ -2092,7 +2072,7 @@ func _open_kaden() -> void:
 		b.pressed.connect(func():
 			_smith_tab = id
 			_socket_pick = null
-			open_npc("kaden")
+			open_npc("kaden", "trade")
 		)
 		tabs.add_child(b)
 	match _smith_tab:
@@ -2106,7 +2086,7 @@ func _open_kaden() -> void:
 				var typ: String = type
 				_sitem(stock, str(sample.glyph), str(sample.name), "%d 金" % cost, UiKit.rarity_color(sample), Game.item_tip(sample, true), func():
 					Game.buy_basic(typ)
-					open_npc("kaden")
+					open_npc("kaden", "trade")
 				)
 			_plab("卖出行囊")
 			if Game.P.bag.is_empty():
@@ -2122,7 +2102,7 @@ func _open_kaden() -> void:
 					var gl := "❔" if unk else str(it.glyph)
 					_sitem(sell, gl, nm, "+%d 金" % Game.sell_price(it), UiKit.rarity_color(it), Game.item_tip(it), func():
 						Game.sell_bag(idx)
-						open_npc("kaden")
+						open_npc("kaden", "trade")
 					)
 		"crate":
 			_plab("来路不明的箱子。买下后要想起来才知道是什么。")
@@ -2132,7 +2112,7 @@ func _open_kaden() -> void:
 				var typ: String = type
 				_sitem(crates, "❔", Data.slot_name_of(type), "%d 金" % cost, Color(0.6, 0.56, 0.48), "不知道是什么。也不问从哪来。\n%d 金 · 买下后要想起来才知道是什么" % cost, func():
 					Game.buy_crate(typ)
-					open_npc("kaden")
+					open_npc("kaden", "trade")
 				)
 		"reforge":
 			var list: Array = []
@@ -2150,14 +2130,14 @@ func _open_kaden() -> void:
 				var loc: String = g.loc
 				_btn("重铸全部 · %d 金" % Game.reforge_cost(it), func():
 					if Game.do_reforge(loc):
-						open_npc("kaden")
+						open_npc("kaden", "trade")
 				)
 				var ai := 0
 				for a in it.get("affixes", []):
 					var aidx := ai
 					_btn("改「%s」 · %d 金" % [a.n, Game.nudge_cost(it)], func():
 						if Game.do_nudge(loc, aidx):
-							open_npc("kaden")
+							open_npc("kaden", "trade")
 					)
 					ai += 1
 		"socket":
@@ -2169,7 +2149,7 @@ func _open_kaden() -> void:
 					_plab("把碎屑镶进「%s」的第 %d 孔。" % [host.name, int(_socket_pick.idx) + 1])
 					_btn("取消", func():
 						_socket_pick = null
-						open_npc("kaden")
+						open_npc("kaden", "trade")
 					)
 					var any := false
 					var bi := 0
@@ -2180,7 +2160,7 @@ func _open_kaden() -> void:
 							_btn("%s  +%d %s" % [it.name, it.v, Data.affix_by_k(str(it.k)).get("n", it.k)], func():
 								if Game.do_socket_in(str(_socket_pick.loc), int(_socket_pick.idx), bag_i):
 									_socket_pick = null
-									open_npc("kaden")
+									open_npc("kaden", "trade")
 							)
 						bi += 1
 					if not any:
@@ -2209,7 +2189,7 @@ func _open_kaden() -> void:
 					if have < mx:
 						_btn("打孔 %d 金" % Game.punch_cost(it), func():
 							if Game.do_punch(loc):
-								open_npc("kaden")
+								open_npc("kaden", "trade")
 						)
 					var si := 0
 					for s in it.get("sockets", []):
@@ -2217,7 +2197,7 @@ func _open_kaden() -> void:
 							var sidx := si
 							_btn("镶入第 %d 孔" % (sidx + 1), func():
 								_socket_pick = {"loc": loc, "idx": sidx}
-								open_npc("kaden")
+								open_npc("kaden", "trade")
 							)
 						si += 1
 					if not it.get("phrase"):
@@ -2229,7 +2209,7 @@ func _open_kaden() -> void:
 						if filled:
 							_btn("取出碎屑", func():
 								if Game.do_socket_out(loc):
-									open_npc("kaden")
+									open_npc("kaden", "trade")
 							)
 		"craft":
 			var groups := {}
@@ -2251,7 +2231,7 @@ func _open_kaden() -> void:
 				elif int(r.n) >= 3:
 					_btn(line + "  ·  合成 %d 金" % (30 * int(r.g)), func():
 						Game.combine_rune(str(r.id), int(r.g))
-						open_npc("kaden")
+						open_npc("kaden", "trade")
 					)
 				else:
 					_plab(line + "  ·  还差 %d 枚" % need)
@@ -2281,12 +2261,122 @@ func _open_kaden() -> void:
 					for u in pool:
 						_btn("兑换 %s" % u.n, func():
 							Game.redeem_unique(str(u.id))
-							open_npc("kaden")
+							open_npc("kaden", "trade")
 						)
 				else:
 					_plab("还差 %d 枚" % maxi(0, 40 - n), 12)
 	_btn("关掉", func(): _close_sheet())
 
+
+func _vaun_talk() -> void:
+	_hd("赌徒 沃恩")
+	_plab("猜大小 · 金币 %d" % Game.P.gold, 13)
+	var topics: Array = DialogueManager.topics("vaun")
+	if topics.size():
+		_plab("打听", 13)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		_panel_body.add_child(row)
+		for t in topics:
+			var tid: String = str(t.id)
+			var tb := Button.new()
+			tb.text = str(t.q)
+			if _talk_pick == tid:
+				tb.modulate = Color(1.2, 1.05, 0.7)
+			tb.pressed.connect(func():
+				_talk_pick = tid
+				open_npc("vaun", "talk")
+			)
+			row.add_child(tb)
+		if _talk_pick != "":
+			var ans: String = DialogueManager.answer("vaun", _talk_pick)
+			if ans != "":
+				_plab(ans)
+			for t in topics:
+				if str(t.id) == _talk_pick and DialogueManager.has_branch(t):
+					for opt in DialogueManager.branch_of(t):
+						var od: Dictionary = opt
+						var ob := Button.new()
+						ob.text = str(od.get("label", "…"))
+						ob.pressed.connect(func():
+							_talk_pick = str(od.get("next", ""))
+							open_npc("vaun", "talk")
+						)
+						_panel_body.add_child(ob)
+	_btn("坐庄（骰子 + 商店）", func(): open_npc("vaun", "trade"))
+	_btn("关掉", func(): _close_sheet())
+
+
+func _vaun_trade() -> void:
+	_hd("赌徒 沃恩")
+	_btn("← 返回对话", func(): open_npc("vaun", "talk"))
+	_plab("猜大小 · 金币 %d" % Game.P.gold, 13)
+	var diebox := VBoxContainer.new()
+	diebox.alignment = BoxContainer.ALIGNMENT_CENTER
+	_panel_body.add_child(diebox)
+	_die_lab = Label.new()
+	_die_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_die_lab.add_theme_font_size_override("font_size", 42)
+	var lg: Dictionary = Game.last_gamble
+	if _die_spin > 0.0:
+		_die_lab.text = "?"
+		_die_lab.add_theme_color_override("font_color", UiKit.brass())
+	elif lg.is_empty():
+		_die_lab.text = "?"
+		_die_lab.add_theme_color_override("font_color", UiKit.brass())
+	else:
+		_die_lab.text = str(lg.get("die", "?"))
+		if lg.get("win"):
+			_die_lab.add_theme_color_override("font_color", Color(0.49, 0.78, 0.49))
+		else:
+			_die_lab.add_theme_color_override("font_color", Color(0.75, 0.35, 0.29))
+	diebox.add_child(_die_lab)
+	var res := Label.new()
+	res.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	res.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if lg.is_empty():
+		res.text = "1–3 小 · 4–6 大。先选注码，再押大小。"
+	else:
+		res.text = str(lg.get("text", ""))
+	diebox.add_child(res)
+	var stakes := HBoxContainer.new()
+	_panel_body.add_child(stakes)
+	for pair in [[1, "小注"], [2, "中注"], [4, "豪注"]]:
+		var mul: int = pair[0]
+		var sb := Button.new()
+		sb.text = "%s %d 金" % [pair[1], Game.gamble_cost(mul)]
+		if Game.gamble_stake == mul:
+			sb.modulate = Color(1.2, 1.05, 0.7)
+		sb.pressed.connect(func():
+			Game.gamble_stake = mul
+			open_npc("vaun", "trade")
+		)
+		stakes.add_child(sb)
+	var bets := HBoxContainer.new()
+	_panel_body.add_child(bets)
+	var sm := Button.new()
+	sm.text = "押小"
+	sm.pressed.connect(func(): _start_gamble("small"))
+	bets.add_child(sm)
+	var bg := Button.new()
+	bg.text = "押大"
+	bg.pressed.connect(func(): _start_gamble("big"))
+	bets.add_child(bg)
+	_plab("今夜赌货（金币 %d）" % Game.P.gold, 13)
+	if Game.shop_stock.is_empty():
+		_plab("今夜的货被掏空了。掷骰子还能再开。", 12)
+	else:
+		var grid := _shop_grid(2)
+		var si := 0
+		for it in Game.shop_stock:
+			var idx := si
+			si += 1
+			var cost := Game.shop_price(Game.buy_price(it))
+			_sitem(grid, str(it.glyph), str(it.name), "%d 金" % cost, UiKit.rarity_color(it), Game.item_tip(it, true), func():
+				Game.buy_stock(idx)
+				open_npc("vaun", "trade")
+			)
+	_btn("关掉", func(): _close_sheet())
 
 func _open_mara() -> void:
 	_plab("药剂商 玛拉", 20)
