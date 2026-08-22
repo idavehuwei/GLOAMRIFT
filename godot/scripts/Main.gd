@@ -248,7 +248,7 @@ func _build_hud() -> void:
 	_log.fit_content = false
 	_log.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_log)
-	# ===== 暗黑破坏神2 风格底座：生命/法力宝珠固定左下角 =====
+	# ===== 暗黑破坏神2 风格底座：生命/法力宝珠分居底部左右两端，技能条居中与之一行 =====
 	# 生命宝珠（红）
 	_hp = _orb(root, Color(0.85, 0.27, 0.19))
 	var hp_wrap := _hp.get_parent() as PanelContainer
@@ -257,12 +257,12 @@ func _build_hud() -> void:
 	hp_wrap.offset_right = 122
 	hp_wrap.offset_top = -122
 	hp_wrap.offset_bottom = -14
-	# 法力宝珠（蓝），紧邻生命宝珠右侧
+	# 法力宝珠（蓝），固定右下角（与生命宝珠分居底部两端，暗黑2 一行布局）
 	_mp = _orb(root, Color(0.22, 0.47, 0.85))
 	var mp_wrap := _mp.get_parent() as PanelContainer
-	mp_wrap.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	mp_wrap.offset_left = 130
-	mp_wrap.offset_right = 238
+	mp_wrap.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	mp_wrap.offset_left = -238
+	mp_wrap.offset_right = -130
 	mp_wrap.offset_top = -122
 	mp_wrap.offset_bottom = -14
 	# 等级徽章（沿用 _level_badge，挂在宝珠容器下）
@@ -344,8 +344,8 @@ func _build_hud() -> void:
 	var skplate := PanelContainer.new()
 	skplate.add_theme_stylebox_override("panel", UiKit.plate())
 	skplate.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	skplate.offset_left = -391
-	skplate.offset_right = 269
+	skplate.offset_left = -330
+	skplate.offset_right = 330
 	skplate.offset_top = -118
 	skplate.offset_bottom = -34
 	skplate.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -393,8 +393,8 @@ func _build_hud() -> void:
 	micro.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	micro.offset_left = -360
 	micro.offset_right = -12
-	micro.offset_top = -44
-	micro.offset_bottom = -12
+	micro.offset_top = -158
+	micro.offset_bottom = -126
 	micro.alignment = BoxContainer.ALIGNMENT_CENTER
 	micro.add_theme_constant_override("separation", 4)
 	micro.mouse_filter = Control.MOUSE_FILTER_STOP
