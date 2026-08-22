@@ -341,7 +341,7 @@ func equip_weapon(actor: Node3D, glb_id: String, tint_hex := -1, shape := "") ->
 		return
 	att.add_child(wpn)
 	var sh := shape if shape != "" else glb_id.replace("wpn_", "")
-	var g := Data.WPN_GRIP.get(sh, {"pos":[0.0,0.0,0.0], "rot":[0.0,0.0,0.0], "scl":0.7})
+	var g: Dictionary = Data.WPN_GRIP.get(sh, {"pos":[0.0,0.0,0.0], "rot":[0.0,0.0,0.0], "scl":0.7})
 	wpn.position = Vector3(float(g.pos[0]), float(g.pos[1]), float(g.pos[2]))
 	wpn.rotation_degrees = Vector3(float(g.rot[0]), float(g.rot[1]), float(g.rot[2]))
 	wpn.scale = Vector3.ONE * float(g.scl)

@@ -1039,7 +1039,7 @@ func enter_area(id: String, arrive: String = "") -> void:
 
 
 func enter_dungeon(id: String, floor: int = 1) -> void:
-	var d := Data.dun_by_id(id)
+	var d: Dictionary = Data.dun_by_id(id)
 	if d.is_empty():
 		return
 	Game.clear_rift_mods()
@@ -1375,15 +1375,15 @@ func elite_mod_cap() -> int:
 func mods_conflict(a: String, b: String) -> bool:
 	if a == "" or b == "" or a == b:
 		return true
-	var da := Data.elite_mod_by_id(a)
-	var db := Data.elite_mod_by_id(b)
+	var da: Dictionary = Data.elite_mod_by_id(a)
+	var db: Dictionary = Data.elite_mod_by_id(b)
 	return (da.get("mute", []) as Array).has(b) or (db.get("mute", []) as Array).has(a)
 
 
 func can_add_mod(e: Dictionary, id: String) -> bool:
 	if id == "" or has_mod(e, id):
 		return false
-	var def := Data.elite_mod_by_id(id)
+	var def: Dictionary = Data.elite_mod_by_id(id)
 	if def.is_empty():
 		return false
 	for m in def.get("mute", []):
@@ -1432,10 +1432,10 @@ func roll_elite_combo(cap: int) -> Array:
 
 func stamp_elite_mods(e: Dictionary) -> void:
 	var t: Dictionary = Data.ETYPES[e.type]
-	var named := Data.named_combo(e.get("mods", []))
+	var named: Dictionary = Data.named_combo(e.get("mods", []))
 	var ph: PackedStringArray = []
 	for id in e.get("mods", []):
-		var m := Data.elite_mod_by_id(str(id))
+		var m: Dictionary = Data.elite_mod_by_id(str(id))
 		if not m.is_empty():
 			ph.append(str(m.n))
 	if not e.get("su"):
@@ -2404,6 +2404,16 @@ func _build_field_landmarks(area: Dictionary, tiles: Array) -> void:
 			scene = "world_landmark_shaft"
 	if scene != "":
 		Assets.place(scene, world_root, Vector3(Cfg.wx(t.x), 0, Cfg.wx(t.y)))
+	# hy-3d 建筑作为副地标接入：按区域主题放置 tower / shrine（与主地标错开 tile）
+	var sub := ""
+	match str(area.get("id", "")):
+		"waste", "ash", "sinkf", "shaft":
+			sub = "world_tower"
+		"wood", "frost", "shore":
+			sub = "world_shrine"
+	if sub != "" and tiles.size() > 1:
+		var st: Vector2i = tiles[tiles.size() >> 1]
+		Assets.place(sub, world_root, Vector3(Cfg.wx(st.x), 0, Cfg.wx(st.y)))
 
 
 func _service_prop(kind: String) -> Node3D:

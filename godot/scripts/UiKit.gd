@@ -44,8 +44,9 @@ func serif_font() -> Font:
 	var f = load("res://fonts/NotoSerifSC-Black.ttf")
 	if f is FontFile:
 		var ff := f as FontFile
-		if ff.has_method("set_variation_coordinates"):
-			ff.set_variation_coordinates({"wght": 900})
+		# 4.7 API 变更：set_variation_coordinates 改为 (cache_index, coords)，轴语义变化；
+		# 粗体变体暂以默认字重替代（视觉细节，不影响功能与启动），待确认 FontVariation 用法后恢复
+		pass
 	_serif = f
 	return _serif
 

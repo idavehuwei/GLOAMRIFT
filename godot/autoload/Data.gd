@@ -59,28 +59,27 @@ const AREA := {
 			{kind="dungeon", to="nail", label="钉底", x=4.0, z=-22.0}]},
 }
 
-const DUNGEONS := [
-	{id="crypt", n="哭嚎墓窖", lvl=6, floors=2, boss="boneking", mobs=["skeleton","ghoul","rat"], from="waste",
-		desc="石桥镇的旧墓地。棺材是空的，里面还有声音。"},
-	{id="nest", n="腐丝蛛巢", lvl=12, floors=2, boss="broodmother", mobs=["spider","ghoul","wraith"], from="wood",
-		desc="林子最深处的一张大网。"},
-	{id="fort", n="熔火要塞", lvl=20, floors=3, boss="lord", mobs=["imp","brute","wraith"], from="ash",
-		desc="裂隙第一批仆从的老巢，门从里面锁着。"},
-	{id="abbey", n="断桥修道院", lvl=27, floors=3, boss="osser", mobs=["rimeknight","icespider","wraith"], from="frost",
-		desc="里面还在唱。主祭没停过。", pal="ice"},
-	{id="belfry", n="湖底钟窖", lvl=32, floors=2, boss="singer", mobs=["icespider","wraith","rimeknight"], from="frost",
-		desc="钟沉在湖底。", pal="ice"},
-	{id="tide", n="潮下墓场", lvl=38, floors=2, boss="tideguide", mobs=["drowned","wrecker","ghoul"], from="shore",
+const DUN_EL_CRYPT := {id="crypt", n="哭嚎墓窖", lvl=6, floors=2, boss="boneking", mobs=["skeleton","ghoul","rat"], from="waste",
+		desc="石桥镇的旧墓地。棺材是空的，里面还有声音。"}
+const DUN_EL_NEST := {id="nest", n="腐丝蛛巢", lvl=12, floors=2, boss="broodmother", mobs=["spider","ghoul","wraith"], from="wood",
+		desc="林子最深处的一张大网。"}
+const DUN_EL_FORT := {id="fort", n="熔火要塞", lvl=20, floors=3, boss="lord", mobs=["imp","brute","wraith"], from="ash",
+		desc="裂隙第一批仆从的老巢，门从里面锁着。"}
+const DUN_EL_ABBEY := {id="abbey", n="断桥修道院", lvl=27, floors=3, boss="osser", mobs=["rimeknight","icespider","wraith"], from="frost",
+		desc="里面还在唱。主祭没停过。", pal="ice"}
+const DUN_EL_BELFRY := {id="belfry", n="湖底钟窖", lvl=32, floors=2, boss="singer", mobs=["icespider","wraith","rimeknight"], from="frost",
+		desc="钟沉在湖底。", pal="ice"}
+const DUN_EL_TIDE := {id="tide", n="潮下墓场", lvl=38, floors=2, boss="tideguide", mobs=["drowned","wrecker","ghoul"], from="shore",
 		desc="退潮才看得见的沟。旗在前面晃，别跟着。", pal="sea"}
-	{id="hull", n="朽舟腹", lvl=45, floors=2, boss="gray", mobs=["drowned","wrecker","brinewolf"], from="shore",
-		desc="最大那条船的肚子。有人还在凿。", pal="sea"},
-	{id="ledger", n="账房", lvl=55, floors=2, boss="seven", mobs=["wraith","imp","brute"], from="sinkf",
-		desc="七本账同时翻开。影子不会排队。", pal="deep"},
-	{id="chorus", n="众议厅", lvl=62, floors=2, boss="voice", mobs=["wraith","imp","ghoul"], from="sinkf",
-		desc="大厅里有人在表决。把会搅散。", pal="deep"},
-	{id="nail", n="钉底", lvl=70, floors=1, boss="kor", mobs=["brute","wraith","golem"], from="shaft",
+const DUN_EL_HULL := {id="hull", n="朽舟腹", lvl=45, floors=2, boss="gray", mobs=["drowned","wrecker","brinewolf"], from="shore",
+		desc="最大那条船的肚子。有人还在凿。", pal="sea"}
+const DUN_EL_LEDGER := {id="ledger", n="账房", lvl=55, floors=2, boss="seven", mobs=["wraith","imp","brute"], from="sinkf",
+		desc="七本账同时翻开。影子不会排队。", pal="deep"}
+const DUN_EL_CHORUS := {id="chorus", n="众议厅", lvl=62, floors=2, boss="voice", mobs=["wraith","imp","ghoul"], from="sinkf",
+		desc="大厅里有人在表决。把会搅散。", pal="deep"}
+const DUN_EL_NAIL := {id="nail", n="钉底", lvl=70, floors=1, boss="kor", mobs=["brute","wraith","golem"], from="shaft",
 		desc="最早被钉住的那个要挣出来。按回去。", pal="nail"}
-]
+const DUNGEONS := [DUN_EL_CRYPT, DUN_EL_NEST, DUN_EL_FORT, DUN_EL_ABBEY, DUN_EL_BELFRY, DUN_EL_TIDE, DUN_EL_HULL, DUN_EL_LEDGER, DUN_EL_CHORUS, DUN_EL_NAIL]
 
 const RIFT_PAL := {floor=Vector3(0.32,0.30,0.26), fog=0x06050a, sky=0x06050a, amb=0.55, sun=0.3, sunc=0x6a7ab0, dens=0.026}
 const DUN_PAL := {

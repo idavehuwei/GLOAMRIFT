@@ -321,7 +321,7 @@ func set_diff(id: String) -> bool:
 func area_ch(id: String) -> int:
 	if Data.AREA.has(id):
 		return int(Data.AREA[id].get("ch", 1))
-	var d := Data.dun_by_id(id)
+	var d: Dictionary = Data.dun_by_id(id)
 	if not d.is_empty() and Data.AREA.has(d.from):
 		return int(Data.AREA[d.from].get("ch", 1))
 	return 1
@@ -506,7 +506,7 @@ func unlock_phrase(id: String) -> bool:
 	if known_phrase(id):
 		return false
 	P.knownPhrases[id] = 1
-	var p := Data.phrase_by_id(id)
+	var p: Dictionary = Data.phrase_by_id(id)
 	if not p.is_empty():
 		say("想起来一句：「%s」" % p.n)
 		hint("念法 「%s」" % p.n)
@@ -681,7 +681,7 @@ func rift_loot_of(ids) -> int:
 	if typeof(ids) != TYPE_ARRAY:
 		return 0
 	for id in ids:
-		var a := Data.rift_affix_by_id(str(id))
+		var a: Dictionary = Data.rift_affix_by_id(str(id))
 		s += int(a.get("loot", 0))
 	return s
 
@@ -973,7 +973,7 @@ func apply_enemy_res(e: Dictionary, amount: float, elem: String) -> float:
 
 
 func skill_elem(id: String) -> String:
-	var sk := Data.sk_by_id(id)
+	var sk: Dictionary = Data.sk_by_id(id)
 	if not sk.is_empty() and sk.has("elem"):
 		return sk.elem
 	return "shadow" if P.cls == "mage" else "phys"
@@ -1402,7 +1402,7 @@ func target_mods(e: Dictionary) -> String:
 		bits.append(combo)
 	else:
 		for id in e.get("mods", []):
-			var m := Data.elite_mod_by_id(str(id))
+			var m: Dictionary = Data.elite_mod_by_id(str(id))
 			if not m.is_empty():
 				bits.append(str(m.n))
 	return " · ".join(bits)
@@ -1610,7 +1610,7 @@ func kill_enemy(e: Dictionary) -> void:
 		P.eliteKills += 1
 	if e.get("su"):
 		P.suKills = int(P.get("suKills", 0)) + 1
-		var su := Data.su_by_id(str(e.su))
+		var su: Dictionary = Data.su_by_id(str(e.su))
 		if not su.is_empty() and su.get("last"):
 			say("%s：「%s」" % [e.name, su.last])
 		_on_su_kill(e, su)
@@ -1744,7 +1744,7 @@ func hurt_player(amount: float, src: Dictionary = {}, aoe: bool = false) -> void
 		P.up.ticketCd = float(tic.get("cd", 20))
 		float_at(P.x, 2.5, P.z, "弃权", Color(0.78, 0.75, 1), 15)
 		return
-	var elem := Data.type_elem(str(src.get("type", ""))) if not src.is_empty() else "phys"
+	var elem: String = Data.type_elem(str(src.get("type", ""))) if not src.is_empty() else "phys"
 	var pr := float(s.get(res_key(elem), 0))
 	amount *= (1.0 - pr / 100.0)
 	var dmg := maxf(1.0, round(amount * (100.0 / (100.0 + s.armor))))
@@ -2408,7 +2408,7 @@ func gold_find_mul() -> float:
 
 
 func make_rune_item(id: String, v = null, grade: int = 1) -> Dictionary:
-	var def := Data.rune_by_id(id)
+	var def: Dictionary = Data.rune_by_id(id)
 	if def.is_empty():
 		def = Data.RUNES[0]
 	var g := clampi(grade, 1, 3)
@@ -2478,7 +2478,7 @@ func combine_rune(rune_id: String, grade: int) -> void:
 
 
 func make_scrap(pid: String) -> Dictionary:
-	var p := Data.phrase_by_id(pid)
+	var p: Dictionary = Data.phrase_by_id(pid)
 	if p.is_empty():
 		p = Data.PHRASES[0]
 	var hide := Cfg._rng.randi_range(0, p.runes.size() - 1)
@@ -2779,7 +2779,7 @@ func _compare_lines(it: Dictionary) -> PackedStringArray:
 	for k in keys:
 		var nv := int(nm.get(k, 0))
 		var ov := int(om.get(k, 0))
-		var def := Data.affix_by_k(str(k))
+		var def: Dictionary = Data.affix_by_k(str(k))
 		var n: String = str(def.get("n", k))
 		out.append("+%d %s  %s" % [nv, n, _diff_tag(nv - ov)])
 	var df := item_score(it) - item_score(cur)
@@ -3352,7 +3352,7 @@ func spend_stat(k: String) -> void:
 
 
 func learn_skill(id: String) -> void:
-	var sk := Data.sk_by_id(id)
+	var sk: Dictionary = Data.sk_by_id(id)
 	if sk.is_empty() or int(P.skPts) <= 0:
 		return
 	if P.lvl < int(sk.req):
@@ -3484,7 +3484,7 @@ func cast_skill_id(id: String) -> void:
 		return
 	if id == "":
 		return
-	var sk := Data.sk_by_id(id)
+	var sk: Dictionary = Data.sk_by_id(id)
 	if sk.is_empty():
 		return
 	var r := int(P.ranks.get(id, 1))
@@ -3928,7 +3928,7 @@ func maybe_door_cine(id: String) -> void:
 		return
 	seen[id] = 1
 	P.flags.seenDoor = seen
-	var d := Data.dun_by_id(id)
+	var d: Dictionary = Data.dun_by_id(id)
 	play_story("door", {"k": "进门" if diff_id() == "normal" else diff_now().n, "n": d.n, "d": Data.DOOR_LINE.get(id, d.desc)})
 
 
@@ -3950,7 +3950,7 @@ func maybe_chapter_cine(dun_id: String) -> void:
 			play_story("chboss", {"k": key.k, "n": key.title, "d": key.d})
 		save_soon()
 		return
-	var d := Data.dun_by_id(dun_id)
+	var d: Dictionary = Data.dun_by_id(dun_id)
 	if d.is_empty():
 		return
 	var flag2 := "duncine_%s_%s" % [diff_id(), dun_id]
