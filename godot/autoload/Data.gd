@@ -112,7 +112,7 @@ const DOOR_LINE := {
 const END_CINE := {
 	"normal": {k="五章", n="按回去了", d="柯尔按回去了。钉子还在，裂口没合上。镇子还在，只是灯少了几盏。同一条裂口，再走一遍。", unlock="hell"},
 	"hell": {k="地狱", n="你回来了", d="这一遍是你自己留下的。名字开始往下掉。最底下还有一层。", unlock="nightmare"},
-	"nightmare": {k="够了吗", n="三百年了", d="三百年了，没人应他。你站在最底下，钉子还在。你可以上去了。", final=1}
+	"nightmare": {k="够了吗", n="够了吗", d="没人回答他。你站在最底下，钉子还在。你可以上去了。", final=1}
 }
 
 const CLASSES := {
@@ -480,7 +480,7 @@ const ENEMY_ASSET := {
 const CLASS_ASSET := {"warrior": "char_warrior", "mage": "char_mage", "archer": "char_archer"}
 
 const PHRASES := [
-	{id="enough", n="够了吗", flavor="三百年了，没人应他。", types=["weapon"], need=3, runes=["rune_ember","rune_frost","rune_hawk"], pw="击杀后 2 秒内伤害 +40%，可叠三层。"},
+	{id="enough", n="够了吗", flavor="没人回答他。你站在最底下。钉子还在。", types=["weapon"], need=3, runes=["rune_ember","rune_frost","rune_hawk"], pw="击杀后 2 秒内伤害 +40%，可叠三层。"},
 	{id="godown", n="我下去", flavor="第四年，他站到裂口边说：我下去。", types=["armor"], need=2, runes=["rune_leech","rune_leech"], pw="生命低于 35% 时，获得等同已损失生命 30% 的护盾（12 秒一次）。"},
 	{id="notyou", n="不得替", flavor="开口的那个人走那条缝，别人不行。", types=["weapon","armor"], need=4, runes=["rune_frost","rune_hawk","rune_ember","rune_leech"], pw="技能无法被打断。治疗最多把你补到 80%。"},
 	{id="unsung", n="还没唱完", flavor="他们唱到一半沉了。", types=["helm"], need=2, runes=["rune_hawk","rune_ember"], pw="每 4 秒的第 4 秒，下一次技能不耗蓝。"},

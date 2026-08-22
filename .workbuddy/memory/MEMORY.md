@@ -31,3 +31,9 @@
 - 分支：`main`（原 `dev` 改名）；默认分支即 `main`。
 - **已成功推送**：2026-08-21 通过代理 `http://127.0.0.1:29290` 完成 `git push -u origin main`，共 **31 个提交** 已上 GitHub（`idavehuwei/GLOAMRIFT`，public），远程 `main` 已建立（`db699b4`），`key.md` 确认不在任何提交/索引中。注：WorkBuddy 默认代理 49844 对 github 返回 502，需改用 29290 代理方可连通。
 - 已落地：`README.md`（项目/运行/许可摘要）+ 自定义 `LICENSE`（源码免费可学习再分发需署名；游戏资源保留全权利、商用需购买授权；商用联系 idavehuwei）。
+
+## 叙事/文案写作口径（用户长期偏好）
+- **「简单粗暴、直白」是本项目文案硬要求**：NPC 对话、任务描述、过场、物品 flavor、docs 剧本一律短句、狠动词、直接告诉玩家「去哪、杀谁」，**禁止玄乎意象/深奥背景**（如原「伤口自己会说话」「一声声赞成在砸人」「裂口爱偷名字」「三百年了没人回答他」均要改写）。
+- 唯一保留的怪设定是「裂口会弄乱名字」= 桥头念名存档机制，写法用「弄乱」而非「偷」这类玄乎词。
+- 文案集中位置：`godot/scripts/TalkData.gd`(对话)、`godot/autoload/Data.gd`(CH_KEYS.d/END_CINE.d/DOOR_LINE/DUNGEONS.desc/SUPER_UNIQUES.last+codex/PHRASES.flavor/QUESTS.d)、`godot/data/loot.json`(物品 flavor)、`docs/*-script.html`+`boss-loot-design.html`(剧本/设计)。改游戏文案须同步对齐 docs 引用，避免不一致。
+- loot.json 批量改 flavor 用 `tools/simplify_loot_flavor.py`（json indent=2 + ensure_ascii=False，只动 flavor 字段）。
