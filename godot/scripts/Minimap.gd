@@ -3,6 +3,8 @@ extends Control
 
 const S := 168
 const R := 28
+var _lx := 0.0
+var _lz := 0.0
 
 
 func _ready() -> void:
@@ -118,7 +120,29 @@ func _draw() -> void:
 		elif e.get("elite"):
 			ec = Color(1, 0.627, 0.188)
 		_dot(e.x, e.z, px, pz, cell, ec, esz)
-	draw_circle(Vector2(S * 0.5, S * 0.5), 3.4, Color(0.941, 0.878, 0.722))
+	draw_rect(Rect2(1.5, 1.5, S - 3, S - 3), Color(0.69, 0.55, 0.31, 0.5), false, 1.5)
+	var pcx := Cfg.tx(Game.P.x)
+	var pcz := Cfg.tz(Game.P.z)
+	var dir := Vector2(pcx - _lx, pcz - _lz)
+	if _lx == 0.0 and _lz == 0.0:
+		_lx = pcx
+		_lz = pcz
+		dir = Vector2(0, -1)
+	elif dir.length_squared() > 0.02:
+		dir = dir.normalized()
+	else:
+		dir = Vector2(0, -1)
+	_lx = pcx
+	_lz = pcz
+	var ctr := Vector2(S * 0.5, S * 0.5)
+	var tip := ctr + dir * 9.0
+	var lft := ctr + dir.rotated(2.4) * 4.5
+	var rgt := ctr + dir.rotated(-2.4) * 4.5
+	var pts := PackedVector2Array([tip, lft, rgt])
+	var col := Color(0.97, 0.9, 0.74, 1)
+	var cols := PackedColorArray([col, col, col])
+	draw_polygon(pts, cols)
+	draw_circle(ctr, 3.4, Color(0.941, 0.878, 0.722))
 	draw_line(Vector2(S * 0.5, 0), Vector2(S * 0.5, S), Color(0.69, 0.55, 0.31, 0.18), 1.0)
 	draw_line(Vector2(0, S * 0.5), Vector2(S, S * 0.5), Color(0.69, 0.55, 0.31, 0.18), 1.0)
 

@@ -81,6 +81,9 @@ var _die_side := ""
 var _combo: Label
 var _evt: Label
 var _beat: ColorRect
+var _vignette: TextureRect
+var _last_combo := 0
+var _settings := {"glow": true, "vol": 0.8}
 var _sheet_veil: ColorRect
 var _panel_title: Label
 var _studs: Array = []            # 面板四角黄铜铆钉
@@ -205,6 +208,15 @@ func _build_hud() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.theme = UiKit.hud_theme()
 	hud.add_child(root)
+	# 低血暗角：全屏径向红罩（贴图中心透明、边缘不透明），低血时脉冲显现，置于 HUD 最底层（在世界之上、其它 HUD 元素之下）
+	_vignette = TextureRect.new()
+	_vignette.texture = preload("res://textures/vignette.png")
+	_vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_vignette.stretch_mode = TextureRect.STRETCH_SCALE
+	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_vignette.modulate = Color(1.0, 0.22, 0.18)
+	_vignette.visible = false
+	root.add_child(_vignette)
 	_floats = Node2D.new()
 	root.add_child(_floats)
 	var tl := PanelContainer.new()
@@ -683,6 +695,13 @@ func _build_hud() -> void:
 		Game.hint("普通掉落名开" if on else "普通掉落名关（Alt 仍可看）")
 	)
 	pv.add_child(whiteb)
+	var setb := Button.new()
+	setb.text = "设置"
+	setb.pressed.connect(func():
+		_pause.visible = false
+		_open_settings()
+	)
+	pv.add_child(setb)
 	var titleb := Button.new()
 	titleb.text = "保存并回标题"
 	titleb.pressed.connect(func():
@@ -1215,9 +1234,26 @@ func _refresh_combat_hud() -> void:
 		var n := int(Game.feel.get("combo", 0))
 		_combo.visible = n >= 2
 		_combo.text = str(n)
+		if n > _last_combo and n >= 2:
+			_combo.pivot_offset = _combo.size * 0.5
+			_combo.scale = Vector2(1.4, 1.4)
+			var twc := create_tween()
+			twc.tween_property(_combo, "scale", Vector2(1.0, 1.0), 0.22).set_ease(Tween.EASE_OUT)
+		_last_combo = n
 	if _beat:
 		var on: bool = typeof(Game.P.get("up")) == TYPE_DICTIONARY and Game.P.up.get("beatOn") == true
 		_beat.color = Color(0.89, 0.77, 0.5, 0.55 if on else 0.0)
+	if _vignette:
+		var hpFrac := 1.0
+		if Game.P.hpMax > 0:
+			hpFrac = float(Game.P.hp) / float(Game.P.hpMax)
+		if Game.P.alive and hpFrac < 0.35:
+			_vignette.visible = true
+			var pulse := 0.4 + 0.45 * (0.5 + 0.5 * sin(Time.get_ticks_msec() / 230.0))
+			var intensity := clampf((0.35 - hpFrac) / 0.35, 0.0, 1.0)
+			_vignette.modulate.a = clampf(pulse * intensity, 0.0, 1.0)
+		else:
+			_vignette.visible = false
 
 
 func _process(dt: float) -> void:
@@ -1452,6 +1488,13 @@ func _on_cine(kind: String, meta: Dictionary) -> void:
 	_cine_k.text = str(meta.get("k", ""))
 	_cine_n.text = str(meta.get("n", ""))
 	_cine_d.text = str(meta.get("d", ""))
+	for lbl in [_cine_k, _cine_n, _cine_d]:
+		lbl.pivot_offset = lbl.size * 0.5
+		lbl.modulate.a = 0.0
+		lbl.scale = Vector2(1.14, 1.14)
+		var tw := create_tween()
+		tw.tween_property(lbl, "modulate:a", 1.0, 0.55).set_delay(0.12)
+		tw.tween_property(lbl, "scale", Vector2(1.0, 1.0), 0.6).set_ease(Tween.EASE_OUT).set_delay(0.12)
 
 
 func _refresh_bars(dt := 0.0) -> void:
@@ -1613,9 +1656,71 @@ func _show_panel() -> void:
 		s.visible = true
 	if _sheet_veil:
 		_sheet_veil.visible = true
+	var tw := create_tween()
+	_panel.modulate.a = 0.0
+	tw.tween_property(_panel, "modulate:a", 1.0, 0.2).set_ease(Tween.EASE_OUT)
 
 
 
+
+func _open_settings() -> void:
+	_sheet = "settings"
+	_clear_panel()
+	UiKit.header(_panel_body, "设置")
+	UiKit.group(_panel_body, "画质")
+	var glowb := CheckBox.new()
+	glowb.text = "辉光特效 (Bloom)"
+	glowb.button_pressed = _settings.glow
+	glowb.toggled.connect(func(v): _settings.glow = v; _apply_settings())
+	_panel_body.add_child(glowb)
+	UiKit.group(_panel_body, "音量")
+	var vol := HSlider.new()
+	vol.min_value = 0.0
+	vol.max_value = 1.0
+	vol.value = _settings.vol
+	vol.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_panel_body.add_child(vol)
+	var volt := Label.new()
+	volt.text = "音量 %.0f%%" % (_settings.vol * 100.0)
+	volt.add_theme_color_override("font_color", UiKit.bone())
+	vol.value_changed.connect(func(v): _settings.vol = v; volt.text = "音量 %.0f%%" % (v * 100.0); _apply_settings())
+	_panel_body.add_child(volt)
+	UiKit.group(_panel_body, "键位")
+	for line in _keybind_lines():
+		var kl := Label.new()
+		kl.text = line
+		kl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		kl.add_theme_font_size_override("font_size", 13)
+		kl.add_theme_color_override("font_color", UiKit.bone())
+		_panel_body.add_child(kl)
+	_show_panel()
+
+func _apply_settings() -> void:
+	var env = get_node_or_null("WorldEnvironment")
+	if env != null and env is WorldEnvironment and env.environment != null:
+		env.environment.glow_enabled = _settings.glow
+	AudioServer.set_bus_mute(0, _settings.vol <= 0.001)
+	AudioServer.set_bus_volume_db(0, linear_to_db(_settings.vol))
+
+func _keybind_lines() -> Array:
+	var out := []
+	var names := {
+		"move_up": "移动上", "move_down": "移动下", "move_left": "移动左", "move_right": "移动右",
+		"attack": "攻击", "skill1": "技能 1", "skill2": "技能 2", "potion_hp": "血药",
+		"potion_mp": "蓝药", "dash": "翻滚", "interact": "交互",
+		"inventory": "背包", "char": "角色", "map": "地图", "pause": "暂停"
+	}
+	for act in names:
+		if not InputMap.has_action(act):
+			continue
+		var evs := InputMap.action_get_events(act)
+		var keys := []
+		for ev in evs:
+			if ev is InputEventKey and ev.keycode != 0:
+				keys.append(OS.get_keycode_string(ev.keycode))
+		if keys.size() > 0:
+			out.append("%s：%s" % [names[act], PackedStringArray(keys).join(" / ")])
+	return out
 
 func _btn(t: String, cb: Callable) -> void:
 	var b := Button.new()
@@ -1625,7 +1730,18 @@ func _btn(t: String, cb: Callable) -> void:
 	b.add_theme_stylebox_override("hover", UiKit.gcard_hi())
 	b.add_theme_stylebox_override("pressed", UiKit.gcard())
 	b.add_theme_stylebox_override("focus", UiKit.gcard_hi())
+	b.mouse_entered.connect(func(): _hover_in(b))
+	b.mouse_exited.connect(func(): _hover_out(b))
 	_panel_body.add_child(b)
+
+func _hover_in(b: Button) -> void:
+	b.pivot_offset = b.size * 0.5
+	var tw := create_tween()
+	tw.tween_property(b, "scale", Vector2(1.06, 1.06), 0.12).set_ease(Tween.EASE_OUT)
+
+func _hover_out(b: Button) -> void:
+	var tw := create_tween()
+	tw.tween_property(b, "scale", Vector2(1.0, 1.0), 0.14).set_ease(Tween.EASE_OUT)
 
 
 func _topic_btn(t: String, cb: Callable, active: bool = false) -> Button:
@@ -1637,6 +1753,8 @@ func _topic_btn(t: String, cb: Callable, active: bool = false) -> Button:
 	b.add_theme_stylebox_override("hover", UiKit.gcard_hi())
 	b.add_theme_stylebox_override("pressed", UiKit.gcard())
 	b.add_theme_stylebox_override("focus", UiKit.gcard_hi())
+	b.mouse_entered.connect(func(): _hover_in(b))
+	b.mouse_exited.connect(func(): _hover_out(b))
 	return b
 
 

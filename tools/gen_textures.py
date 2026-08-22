@@ -97,6 +97,27 @@ def gen_socket(out_path, size=128):
     print("Saved", out_path)
 
 
+def gen_vignette(out_path, size=256):
+    """低血暗角：白色径向 alpha 蒙版（中心透明、边缘不透明），运行时用 modulate 染红。"""
+    img = Image.new("RGBA", (size, size), (255, 255, 255, 0))
+    c = size / 2.0
+    inner = c * 0.50
+    outer = c
+    for y in range(size):
+        for x in range(size):
+            d = ((x - c) ** 2 + (y - c) ** 2) ** 0.5
+            if d <= inner:
+                a = 0
+            else:
+                t = min(1.0, (d - inner) / (outer - inner))
+                a = int(t * 255)
+            img.putpixel((x, y), (255, 255, 255, a))
+    img = img.filter(ImageFilter.GaussianBlur(radius=max(1, size // 48)))
+    img.save(out_path, "PNG")
+    print("Saved", out_path, "vignette")
+
+
 if __name__ == "__main__":
     gen_frame(os.path.join(TEX_DIR, "frame.png"), margin=24)
     gen_socket(os.path.join(TEX_DIR, "socket.png"))
+    gen_vignette(os.path.join(TEX_DIR, "vignette.png"))
