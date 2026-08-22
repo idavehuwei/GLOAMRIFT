@@ -1,8 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="PackedScene" path="res://models/src/mob_lord.glb" id="1_src"]
-
-[node name="mob_lord" type="Node3D"]
-
-[node name="Model" parent="." instance=ExtResource("1_src")]
-transform = Transform3D(1.00000, 0, 0, 0, 1.00000, 0, 0, 0, 1.00000, 0.00000, 0.00000, 0.00000)
