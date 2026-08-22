@@ -39,7 +39,6 @@ var _track: Label
 var _smith_tab := "shop"
 var _socket_pick = null
 var _sheet := ""
-var _stat_tab := "core"
 var _talk_id := ""
 var _talk_pick := ""
 var _npc_mode := "talk"          # NPC 交互视图：talk=对话视图 / trade=交易视图
@@ -1576,19 +1575,6 @@ func _equip_slot(k: String) -> Button:
 		b.add_theme_stylebox_override("disabled", UiKit.cell_empty())
 		b.disabled = true
 	return b
-
-
-func _slot_pad() -> Control:
-	var c := Control.new()
-	c.custom_minimum_size = Vector2(64, 64)
-	return c
-
-
-func _pick_stat_tab(tab: String) -> void:
-	_stat_tab = tab
-	_reload_gear()
-
-
 func _pick_skill_id(sid: String) -> void:
 	_sk_sel = sid
 	open_skills()
@@ -1749,178 +1735,6 @@ func _charm_grid(parent: Control) -> void:
 	var free_n := Cfg.CHARM - Game.charm_used()
 	for _k in free_n:
 		grid.add_child(_item_cell(null, 0, "charm"))
-
-
-func _paper_doll() -> Control:
-	var root := HBoxContainer.new()
-	root.add_theme_constant_override("separation", 7)
-	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 7)
-	var mid := VBoxContainer.new()
-	mid.add_theme_constant_override("separation", 7)
-	var right := VBoxContainer.new()
-	right.add_theme_constant_override("separation", 7)
-	root.add_child(left)
-	root.add_child(mid)
-	root.add_child(right)
-	left.add_child(_slot_pad())
-	left.add_child(_equip_slot("weapon"))
-	left.add_child(_equip_slot("gloves"))
-	left.add_child(_equip_slot("belt"))
-	left.add_child(_equip_slot("ring1"))
-	mid.add_child(_equip_slot("helm"))
-	var doll_wrap := PanelContainer.new()
-	doll_wrap.custom_minimum_size = Vector2(250, 280)
-	doll_wrap.add_theme_stylebox_override("panel", UiKit.cell_empty())
-	var doll := TextureRect.new()
-	doll.custom_minimum_size = Vector2(250, 280)
-	doll.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	doll.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	doll.texture = _doll_vp.get_texture()
-	doll.gui_input.connect(_on_doll_input)
-	doll_wrap.add_child(doll)
-	mid.add_child(doll_wrap)
-	mid.add_child(_slot_pad())
-	right.add_child(_equip_slot("amulet"))
-	right.add_child(_equip_slot("offhand"))
-	right.add_child(_equip_slot("armor"))
-	right.add_child(_equip_slot("boots"))
-	right.add_child(_equip_slot("ring2"))
-	return root
-
-
-func _stat_panel(parent: Control) -> void:
-	var s := Game.p_stats()
-	var name_l := Label.new()
-	name_l.text = Game.displayed_name()
-	name_l.add_theme_font_size_override("font_size", 22)
-	name_l.add_theme_color_override("font_color", UiKit.brass_hi())
-	parent.add_child(name_l)
-	var cls_l := Label.new()
-	cls_l.text = "%s  ·  %d 级" % [Data.CLASSES[Game.P.cls].n, Game.P.lvl]
-	cls_l.add_theme_font_size_override("font_size", 12)
-	cls_l.add_theme_color_override("font_color", UiKit.ash())
-	parent.add_child(cls_l)
-	var pw := PanelContainer.new()
-	pw.add_theme_stylebox_override("panel", UiKit.gcard())
-	parent.add_child(pw)
-	var pwh := HBoxContainer.new()
-	pw.add_child(pwh)
-	var pwk := Label.new()
-	pwk.text = "装等"
-	pwk.add_theme_font_size_override("font_size", 11)
-	pwk.add_theme_color_override("font_color", UiKit.ash())
-	pwh.add_child(pwk)
-	var pwv := Label.new()
-	pwv.text = str(Game.gear_power())
-	pwv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	pwv.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	pwv.add_theme_font_size_override("font_size", 26)
-	pwv.add_theme_color_override("font_color", UiKit.gold())
-	pwh.add_child(pwv)
-	var xp := ProgressBar.new()
-	xp.show_percentage = false
-	xp.custom_minimum_size = Vector2(0, 8)
-	xp.max_value = Game.P.xpNext
-	xp.value = Game.P.xp
-	xp.add_theme_stylebox_override("background", UiKit.bar_bg())
-	xp.add_theme_stylebox_override("fill", UiKit.bar_fill(UiKit.brass()))
-	parent.add_child(xp)
-	var xpl := Label.new()
-	xpl.text = "经验  %d / %d" % [int(Game.P.xp), int(Game.P.xpNext)]
-	xpl.add_theme_font_size_override("font_size", 11)
-	xpl.add_theme_color_override("font_color", UiKit.ash())
-	parent.add_child(xpl)
-	var tabs := HBoxContainer.new()
-	tabs.add_theme_constant_override("separation", 0)
-	parent.add_child(tabs)
-	for pair in [["core", "属性"], ["off", "攻击"], ["def", "防御"], ["util", "辅助"]]:
-		var tb := Button.new()
-		tb.text = pair[1]
-		tb.add_theme_stylebox_override("normal", UiKit.tab_on() if _stat_tab == pair[0] else UiKit.tab())
-		tb.add_theme_stylebox_override("hover", UiKit.tab_on())
-		tb.add_theme_color_override("font_color", UiKit.brass_hi() if _stat_tab == pair[0] else UiKit.ash())
-		tb.pressed.connect(_pick_stat_tab.bind(str(pair[0])))
-		tabs.add_child(tb)
-	match _stat_tab:
-		"off":
-			UiKit.stat_row(parent, "伤害", "%d–%d" % [s.dmgMin, s.dmgMax])
-			UiKit.stat_row(parent, "暴击", "%.0f%%" % s.crit)
-			UiKit.stat_row(parent, "攻速加成", "%.0f" % s.asB)
-			UiKit.stat_row(parent, "技能伤害", "%.0f" % s.skDmg)
-		"def":
-			UiKit.stat_row(parent, "护甲", str(s.armor))
-			UiKit.stat_row(parent, "减伤", "%.0f%%" % s.dr)
-			UiKit.stat_row(parent, "闪避", "%.0f" % s.dodge)
-			UiKit.stat_row(parent, "物抗", "%.0f" % s.resPhys)
-			UiKit.stat_row(parent, "火抗", "%.0f" % s.resFire)
-			UiKit.stat_row(parent, "冰抗", "%.0f" % s.resIce)
-			UiKit.stat_row(parent, "暗抗", "%.0f" % s.resShadow)
-			UiKit.stat_row(parent, "抗性上限", "%.0f" % s.resCap)
-		"util":
-			UiKit.stat_row(parent, "移速", "%.0f" % s.speed)
-			UiKit.stat_row(parent, "冷却缩减", "%.0f" % s.cdr)
-			UiKit.stat_row(parent, "金运", "%.0f" % s.gf)
-			UiKit.stat_row(parent, "魔运", "%.0f" % s.mf)
-			UiKit.stat_row(parent, "汲取", "%.0f" % s.leech)
-		_:
-			UiKit.stat_row(parent, "力量", str(s.str))
-			UiKit.stat_row(parent, "敏捷", str(s.dex))
-			UiKit.stat_row(parent, "体魄", str(s.vit))
-			UiKit.stat_row(parent, "精神", str(s.ene))
-			UiKit.stat_row(parent, "未分配", str(Game.P.pts))
-			UiKit.stat_row(parent, "生命", str(int(Game.P.hpMax)))
-			UiKit.stat_row(parent, "法力", str(int(Game.P.mpMax)))
-			if Game.P.pts > 0:
-				var prow := HBoxContainer.new()
-				parent.add_child(prow)
-				for k in ["str", "dex", "vit", "ene"]:
-					var pb := Button.new()
-					pb.text = "+ " + k
-					pb.pressed.connect(Game.spend_stat.bind(k))
-					prow.add_child(pb)
-	Game.rebuild_powers()
-	var worn: Dictionary = Game.P.get("sets", {})
-	if typeof(worn) == TYPE_DICTIONARY and worn.size():
-		UiKit.group(parent, "套装")
-		for sid in worn.keys():
-			var def := LootData.set_by_id(str(sid))
-			if def.is_empty():
-				continue
-			var n: int = int(worn[sid])
-			var sl := Label.new()
-			sl.text = "%s（%d / %d）" % [def.n, n, def.pieces.size()]
-			sl.add_theme_font_size_override("font_size", 13)
-			parent.add_child(sl)
-			for bns in def.get("bonuses", []):
-				var bl := Label.new()
-				bl.text = "(%d) %s" % [int(bns.need), bns.t]
-				bl.add_theme_font_size_override("font_size", 12)
-				bl.add_theme_color_override("font_color", UiKit.ash())
-				parent.add_child(bl)
-	var relics: Array = Game.P.get("relics", [])
-	var codex: Array = Game.P.get("codex", [])
-	if relics.size() or codex.size():
-		UiKit.group(parent, "残句与遗物")
-		for r in relics:
-			var row := HBoxContainer.new()
-			row.add_theme_constant_override("separation", 8)
-			parent.add_child(row)
-			row.add_child(UiKit.icon_rect(UiKit.icon_for_glyph(str(r.get("icon", "🕯"))), 22))
-			var rl := Label.new()
-			rl.text = "%s  %s" % [r.get("n", ""), r.get("d", "")]
-			rl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			rl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			rl.add_theme_font_size_override("font_size", 12)
-			row.add_child(rl)
-		for c in codex:
-			var cl := Label.new()
-			cl.text = "▍ %s  %s" % [c.get("n", ""), c.get("text", "")]
-			cl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			cl.add_theme_font_size_override("font_size", 12)
-			parent.add_child(cl)
-
-
 func open_npc(id: String, mode: String = "talk") -> void:
 	_sheet = "npc"
 	_talk_id = id
@@ -2934,46 +2748,66 @@ func open_char() -> void:
 
 func open_bag() -> void:
 	_sheet = "bag"
-	_open_gear()
-
-
-func _open_gear() -> void:
 	_clear_panel()
 	_show_panel()
 	_rebuild_doll()
-	_hd("%s  ·  %s  %d 级" % [Game.displayed_name(), Data.CLASSES[Game.P.cls].n, Game.P.lvl])
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 18)
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_panel_body.add_child(row)
-	var doll_col := VBoxContainer.new()
-	doll_col.add_child(_paper_doll())
-	row.add_child(doll_col)
-	var stats := VBoxContainer.new()
-	stats.custom_minimum_size = Vector2(300, 0)
-	stats.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(stats)
-	_stat_panel(stats)
-	var rule := ColorRect.new()
-	rule.color = Color(0.69, 0.55, 0.31, 0.22)
-	rule.custom_minimum_size = Vector2(1, 420)
-	row.add_child(rule)
-	var inv := VBoxContainer.new()
-	inv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	inv.add_theme_constant_override("separation", 8)
-	row.add_child(inv)
+	_hd("行囊")
+
+	# 顶部信息条（与角色面板一致：姓名/等级 · 装等 · 金币）
+	_panel_body.add_child(_char_header())
+
+	# 主体：左装备槽 | 中央角色模型 | 右装备槽（与角色面板一致）
+	var main := HBoxContainer.new()
+	main.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	main.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	main.add_theme_constant_override("separation", 18)
+	_panel_body.add_child(main)
+
+	var left := VBoxContainer.new()
+	left.add_theme_constant_override("separation", 8)
+	left.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	main.add_child(left)
+	for slot in ["weapon", "gloves", "belt", "ring1", "offhand"]:
+		left.add_child(_equip_slot(slot))
+
+	var doll_wrap := PanelContainer.new()
+	doll_wrap.custom_minimum_size = Vector2(260, 320)
+	doll_wrap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	doll_wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	doll_wrap.add_theme_stylebox_override("panel", UiKit.cell_empty())
+	main.add_child(doll_wrap)
+	var doll := TextureRect.new()
+	doll.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	doll.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	doll.texture = _doll_vp.get_texture()
+	doll.gui_input.connect(_on_doll_input)
+	doll_wrap.add_child(doll)
+
+	var right := VBoxContainer.new()
+	right.add_theme_constant_override("separation", 8)
+	right.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	main.add_child(right)
+	for slot in ["helm", "armor", "boots", "ring2", "amulet"]:
+		right.add_child(_equip_slot(slot))
+
+	# 操作提示
 	var hint := Label.new()
 	hint.text = "左键装备或鉴定  ·  右键丢弃"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", 11)
 	hint.add_theme_color_override("font_color", UiKit.ash())
-	inv.add_child(hint)
-	UiKit.group(inv, "遗物袋  %d / %d  ·  纸条 %d" % [Game.charm_used(), Cfg.CHARM, int(Game.P.get("recallNotes", 0))])
-	_charm_grid(inv)
-	UiKit.group(inv, "行囊")
-	_bag_grid(inv)
+	_panel_body.add_child(hint)
+
+	# 遗物袋（护符）
+	UiKit.group(_panel_body, "遗物袋  %d / %d  ·  纸条 %d" % [Game.charm_used(), Cfg.CHARM, int(Game.P.get("recallNotes", 0))])
+	_charm_grid(_panel_body)
+
+	# 行囊网格
+	UiKit.group(_panel_body, "行囊  %d / %d" % [Game.P.bag.size(), Cfg.BAG])
+	_bag_grid(_panel_body)
+
 	var foot := HBoxContainer.new()
-	inv.add_child(foot)
+	_panel_body.add_child(foot)
 	var gold := Label.new()
 	gold.text = "金币  %d" % Game.P.gold
 	gold.add_theme_font_size_override("font_size", 16)
