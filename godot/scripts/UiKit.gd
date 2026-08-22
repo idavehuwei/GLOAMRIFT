@@ -2,6 +2,9 @@ extends Node
 ## 暗金 MMO 面板：对齐网页 plate / 格子，并参考 RPGUI framed-golden、常见背包凹槽。
 
 var _ui_font: Font = null
+var _serif: Font = null
+var _frame_tex: Texture2D = null
+var _socket_tex: Texture2D = null
 var _tex := {}
 
 const GLYPH_ICON := {
@@ -33,6 +36,46 @@ func ui_font() -> Font:
 	var f = load("res://fonts/NotoSansSC-Regular.ttf")
 	_ui_font = f
 	return _ui_font
+
+
+func serif_font() -> Font:
+	if _serif != null:
+		return _serif
+	var f = load("res://fonts/NotoSerifSC-Black.ttf")
+	if f is FontFile:
+		var ff := f as FontFile
+		if ff.has_method("set_variation_coordinates"):
+			ff.set_variation_coordinates({"wght": 900})
+	_serif = f
+	return _serif
+
+
+func _frame_texture() -> Texture2D:
+	if _frame_tex != null:
+		return _frame_tex
+	_frame_tex = load("res://textures/frame.png") as Texture2D
+	return _frame_tex
+
+
+func frame_plate() -> StyleBox:
+	var sb := StyleBoxTexture.new()
+	sb.texture = _frame_texture()
+	sb.set_margin_all(36)
+	return sb
+
+
+func _socket_texture() -> Texture2D:
+	if _socket_tex != null:
+		return _socket_tex
+	_socket_tex = load("res://textures/socket.png") as Texture2D
+	return _socket_tex
+
+
+func socket_style() -> StyleBox:
+	var sb := StyleBoxTexture.new()
+	sb.texture = _socket_texture()
+	sb.set_margin_all(8)
+	return sb
 
 
 func tex(id: String) -> Texture2D:
@@ -424,7 +467,8 @@ func header(parent: Control, title: String) -> void:
 	var l := Label.new()
 	l.text = title
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.add_theme_font_size_override("font_size", 15)
+	l.add_theme_font_override("font", serif_font())
+	l.add_theme_font_size_override("font_size", 16)
 	l.add_theme_color_override("font_color", brass_hi())
 	l.add_theme_constant_override("outline_size", 1)
 	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))

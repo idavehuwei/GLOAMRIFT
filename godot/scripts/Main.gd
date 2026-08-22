@@ -80,6 +80,7 @@ var _evt: Label
 var _beat: ColorRect
 var _sheet_veil: ColorRect
 var _panel_title: Label
+var _studs: Array = []            # 面板四角黄铜铆钉
 var _sk_sel := ""
 var _bag_filter := "all"          # 背包分类：all/weapon/gear/rune/charm/scrap
 var _last_lvl := 1
@@ -419,13 +420,39 @@ func _build_hud() -> void:
 	root.add_child(_sheet_veil)
 	_panel = SheetFrame.new()
 	_panel.visible = false
-	_panel.add_theme_stylebox_override("panel", UiKit.plate())
+	_panel.add_theme_stylebox_override("panel", UiKit.frame_plate())
 	_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_panel.offset_left = 108
 	_panel.offset_right = -28
 	_panel.offset_top = 28
 	_panel.offset_bottom = -168
 	root.add_child(_panel)
+	# 面板四角黄铜铆钉（暗黑角色面板标志性细节）
+	for corner in ["tl", "tr", "bl", "br"]:
+		var stud := ColorRect.new()
+		stud.custom_minimum_size = Vector2(9, 9)
+		stud.color = UiKit.brass_hi()
+		stud.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		stud.visible = false
+		match corner:
+			"tl":
+				stud.set_anchors_preset(Control.PRESET_TOP_LEFT)
+				stud.offset_left = 108 + 12
+				stud.offset_top = 28 + 12
+			"tr":
+				stud.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+				stud.offset_right = -28 - 12
+				stud.offset_top = 28 + 12
+			"bl":
+				stud.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+				stud.offset_left = 108 + 12
+				stud.offset_bottom = -168 - 12
+			"br":
+				stud.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+				stud.offset_right = -28 - 12
+				stud.offset_bottom = -168 - 12
+		root.add_child(stud)
+		_studs.append(stud)
 	var chrome := VBoxContainer.new()
 	chrome.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	chrome.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -443,8 +470,11 @@ func _build_hud() -> void:
 	_panel_title = Label.new()
 	_panel_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_panel_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_panel_title.add_theme_font_size_override("font_size", 16)
+	_panel_title.add_theme_font_override("font", UiKit.serif_font())
+	_panel_title.add_theme_font_size_override("font_size", 18)
 	_panel_title.add_theme_color_override("font_color", UiKit.brass_hi())
+	_panel_title.add_theme_constant_override("outline_size", 1)
+	_panel_title.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
 	hdrow.add_child(_panel_title)
 	var orn_r := ColorRect.new()
 	orn_r.custom_minimum_size = Vector2(72, 1)
@@ -1525,6 +1555,8 @@ func _clear_panel() -> void:
 
 func _show_panel() -> void:
 	_panel.visible = true
+	for s in _studs:
+		s.visible = true
 	if _sheet_veil:
 		_sheet_veil.visible = true
 
@@ -1559,8 +1591,8 @@ func _equip_slot(k: String) -> Button:
 	if it != null and typeof(it) == TYPE_DICTIONARY and not it.is_empty():
 		UiKit.stamp_btn(b, UiKit.icon_for_item(it), str(it.name).substr(0, 4), 32)
 		b.add_theme_color_override("font_color", UiKit.rarity_color(it))
-		b.add_theme_stylebox_override("normal", UiKit.cell(LootData.item_hex(it)))
-		b.add_theme_stylebox_override("hover", UiKit.cell_hover(LootData.item_hex(it)))
+		b.add_theme_stylebox_override("normal", UiKit.socket_style())
+		b.add_theme_stylebox_override("hover", UiKit.socket_style())
 		_wire_tip(b, Game.item_tip(it), UiKit.tex(UiKit.icon_for_item(it)), LootData.item_hex(it))
 		var slot := k
 		b.pressed.connect(func():
@@ -1570,8 +1602,8 @@ func _equip_slot(k: String) -> Button:
 	else:
 		UiKit.stamp_btn(b, UiKit.icon_for_slot(k), UiKit.slot_name(k), 28)
 		b.add_theme_color_override("font_color", UiKit.ash())
-		b.add_theme_stylebox_override("normal", UiKit.cell_empty())
-		b.add_theme_stylebox_override("disabled", UiKit.cell_empty())
+		b.add_theme_stylebox_override("normal", UiKit.socket_style())
+		b.add_theme_stylebox_override("disabled", UiKit.socket_style())
 		b.disabled = true
 	return b
 func _pick_skill_id(sid: String) -> void:
@@ -2463,6 +2495,8 @@ func open_waystone() -> void:
 
 func _close_sheet() -> void:
 	_panel.visible = false
+	for s in _studs:
+		s.visible = false
 	if _sheet_veil:
 		_sheet_veil.visible = false
 	_sheet = ""
@@ -2488,13 +2522,15 @@ func _char_header() -> HBoxContainer:
 	info_row.add_child(cls_icon)
 	var name_l := Label.new()
 	name_l.text = Game.displayed_name()
-	name_l.add_theme_font_size_override("font_size", 15)
+	name_l.add_theme_font_override("font", UiKit.serif_font())
+	name_l.add_theme_font_size_override("font_size", 16)
 	name_l.add_theme_color_override("font_color", UiKit.brass_hi())
 	info_row.add_child(name_l)
 	var lvl := Label.new()
 	lvl.text = "Lv %d" % Game.P.lvl
 	lvl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lvl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	lvl.add_theme_font_override("font", UiKit.serif_font())
 	lvl.add_theme_font_size_override("font_size", 18)
 	lvl.add_theme_color_override("font_color", UiKit.gold())
 	info_row.add_child(lvl)
@@ -2515,6 +2551,7 @@ func _char_header() -> HBoxContainer:
 	pwv.text = str(Game.gear_power())
 	pwv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	pwv.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	pwv.add_theme_font_override("font", UiKit.serif_font())
 	pwv.add_theme_font_size_override("font_size", 20)
 	pwv.add_theme_color_override("font_color", UiKit.gold())
 	power_row.add_child(pwv)
