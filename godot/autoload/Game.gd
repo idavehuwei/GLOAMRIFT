@@ -1,5 +1,13 @@
 extends Node
 ## 玩家、战斗、物品、任务、存档。数值对齐网页版。
+##
+## ── 模块化边界索引（P3 #93 阶段0·零行为变更）──
+## 本文件为单体编排层。建议按以下职责拆分为独立 autoload（执行见 docs/refactor_plan_modularize.md，需编辑器实机回归门禁）：
+##   [玩家档案]  P 状态 / reset_blank / 存档 save/load              → Profile.gd
+##   [战斗伤害]  hurt_player / aoe_player / 伤害结算               → Combat.gd
+##   [物品掉落]  roll_item / add_to_charms / cpwr / 词缀符文护符   → Items.gd
+##   [任务系统]  任务流转相关函数                                 → Quests.gd
+##   [UI 信号]   hint / say / log / floats 等信号发射             → 保留或并入 UiKit
 
 signal log_line(text: String)
 signal hint_line(text: String)

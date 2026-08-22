@@ -1,5 +1,15 @@
 extends Node
 ## 地图生成、寻路、敌人、投射物。网格与网页版相同，不迁就建筑改碰撞。
+##
+## ── 模块化边界索引（P3 #93 阶段0·零行为变更）──
+## 本文件为单体编排层。建议按以下职责拆分为独立 autoload（执行见 docs/refactor_plan_modularize.md，需编辑器实机回归门禁）：
+##   [世界网格]  W 网格状态 / walk / can_stand / paint / reveal     → WorldGrid.gd
+##   [寻路]      find_path / find_path_async / los_free / path_to_world / walk_to → Pathfind.gd
+##   [城镇生成]  gen_town / protect_marks / carve_road / punch_holes → WorldGen.gd
+##   [地牢生成]  gen_field / gen_rooms / _corr / 特殊房间标记      → WorldGen.gd
+##   [房间装饰]  decorate_room / _place_prop / _fill_vault/_shrine/_cage/_trap → WorldGen.gd
+##   [实体移动]  move_entity / place_player / wall_block / entity  → 保留或 Entity.gd
+##   [投射区域]  _proj / add_zone / _tick_zones                     → 保留或 Combat.gd
 
 var W: Dictionary = {}
 var world_root: Node3D

@@ -1,5 +1,11 @@
 extends Node3D
 ## 主场景：相机、点击寻路、HUD、NPC 面板。
+##
+## ── 模块化边界索引（P3 #93 阶段0·零行为变更）──
+## 本文件为场景粘合层。建议按以下职责拆分为独立脚本（执行见 docs/refactor_plan_modularize.md，需编辑器实机回归门禁）：
+##   [输入寻路]  _input / 点击寻路 / 相机控制          → 保留或 InputController.gd
+##   [HUD]      血条/技能/背包/任务提示 UI 刷新          → Hud.gd
+##   [NPC 面板] NPC 对话与交互面板                      → NpcPanel.gd
 
 const SheetFrame := preload("res://scripts/SheetFrame.gd")
 
