@@ -61,23 +61,23 @@ const AREA := {
 
 const DUNGEONS := [
 	{id="crypt", n="哭嚎墓窖", lvl=6, floors=2, boss="boneking", mobs=["skeleton","ghoul","rat"], from="waste",
-		desc="石桥镇的旧墓地。棺材是空的，声音却没停过。"},
+		desc="石桥镇的旧墓地。棺材是空的，里面还有声音。"},
 	{id="nest", n="腐丝蛛巢", lvl=12, floors=2, boss="broodmother", mobs=["spider","ghoul","wraith"], from="wood",
-		desc="林子最深处的一张网，大到能兜住一整支商队。"},
+		desc="林子最深处的一张大网。"},
 	{id="fort", n="熔火要塞", lvl=20, floors=3, boss="lord", mobs=["imp","brute","wraith"], from="ash",
-		desc="裂隙的第一批仆从在这里筑巢，也把门锁在了里面。"},
+		desc="裂隙第一批仆从的老巢，门从里面锁着。"},
 	{id="abbey", n="断桥修道院", lvl=27, floors=3, boss="osser", mobs=["rimeknight","icespider","wraith"], from="frost",
-		desc="唱起来就不能停。主祭还在唱。", pal="ice"},
+		desc="里面还在唱。主祭没停过。", pal="ice"},
 	{id="belfry", n="湖底钟窖", lvl=32, floors=2, boss="singer", mobs=["icespider","wraith","rimeknight"], from="frost",
-		desc="钟在湖底。声音从冰里往上爬。", pal="ice"},
+		desc="钟沉在湖底。", pal="ice"},
 	{id="tide", n="潮下墓场", lvl=38, floors=2, boss="tideguide", mobs=["drowned","wrecker","ghoul"], from="shore",
-		desc="退潮才看得见的沟。旗在前面晃，别跟着。", pal="sea"},
+		desc="退潮才看得见的沟。旗在前面晃，别跟着。", pal="sea"}
 	{id="hull", n="朽舟腹", lvl=45, floors=2, boss="gray", mobs=["drowned","wrecker","brinewolf"], from="shore",
 		desc="最大那条船的肚子。有人还在凿。", pal="sea"},
 	{id="ledger", n="账房", lvl=55, floors=2, boss="seven", mobs=["wraith","imp","brute"], from="sinkf",
 		desc="七本账同时翻开。影子不会排队。", pal="deep"},
 	{id="chorus", n="众议厅", lvl=62, floors=2, boss="voice", mobs=["wraith","imp","ghoul"], from="sinkf",
-		desc="没有身体，只有一声声赞成。把会开停。", pal="deep"},
+		desc="大厅里有人在表决。把会搅散。", pal="deep"},
 	{id="nail", n="钉底", lvl=70, floors=1, boss="kor", mobs=["brute","wraith","golem"], from="shaft",
 		desc="最早被钉住的那个要挣出来。按回去。", pal="nail"}
 ]
@@ -97,22 +97,22 @@ const DIFF := {
 }
 const DIFF_ORDER := ["normal", "hell", "nightmare"]
 const CH_KEYS := [
-	{ch=1, dun="fort", n="瓦拉克", k="第一章", title="门从里面开了", d="恐惧领主倒下。北面开始冻。白喉隘口的风先到。"},
-	{ch=2, dun="belfry", n="无名唱者", k="第二章", title="钟停了", d="唱到一半沉了下去。东边十一条船。别跟着数。"},
-	{ch=3, dun="hull", n="格雷", k="第三章", title="凿子停了", d="一条一条凿完的。裂口更深的门开了。从沉降残镇下去。"},
-	{ch=4, dun="chorus", n="众议之声", k="第四章", title="会开停了", d="赞成停了。伤口还在。最底下那个要挣出来。去桥墩井口。"},
-	{ch=5, dun="nail", n="柯尔", k="第五章", title="按回去了", d="钉子还在。裂口没合上。"}
+	{ch=1, dun="fort", n="瓦拉克", k="第一章", title="门从里面开了", d="恐惧领主瓦拉克倒下。北面开始结冰，去白喉隘口。"},
+	{ch=2, dun="belfry", n="无名唱者", k="第二章", title="钟停了", d="无名唱者沉了。东边十一条沉船。别跟着数。"},
+	{ch=3, dun="hull", n="格雷", k="第三章", title="凿子停了", d="凿船者格雷死了。裂口更深的门开了，从沉降残镇下去。"},
+	{ch=4, dun="chorus", n="众议之声", k="第四章", title="会开停了", d="众议厅的表决停了。最底下那个要挣出来，去桥墩井口。"},
+	{ch=5, dun="nail", n="柯尔", k="第五章", title="按回去了", d="柯尔按回去了。钉子还在，裂口没合上。"}
 ]
 const DOOR_LINE := {
-	"crypt": "棺材是空的。声音没停。", "nest": "网是给孩子留的。", "fort": "门从里面锁着。",
-	"abbey": "唱起来就不能停。", "belfry": "钟在湖底。",
-	"tide": "旗在前面晃。别跟着。", "hull": "有人还在凿。",
-	"ledger": "七本账同时翻开。", "chorus": "伤口自己会说话。", "nail": "最早被钉住的那个要挣出来。"
+	"crypt": "棺材是空的，里面还有声音。", "nest": "网是给孩子留的。", "fort": "门从里面锁着。",
+	"abbey": "里面还在唱。", "belfry": "钟在湖底。",
+	"tide": "旗在前面晃，别跟着。", "hull": "里面还有人在凿。",
+	"ledger": "七本账同时翻开。", "chorus": "大厅里有人在表决。", "nail": "最底下那个要挣出来。"
 }
 const END_CINE := {
-	"normal": {k="五章", n="按回去了", d="钉子还在。裂口没合上。你回来的时候，镇子还在，灯少了几盏。同一条裂口，再走一遍。", unlock="hell"},
-	"hell": {k="地狱", n="你回来了", d="这一遍，是你留下的。名字开始往下掉。最底下还有一层。", unlock="nightmare"},
-	"nightmare": {k="够了吗", n="三百年了", d="没人回答他。你站在最底下。钉子还在。你可以上去。", final=1}
+	"normal": {k="五章", n="按回去了", d="柯尔按回去了。钉子还在，裂口没合上。镇子还在，只是灯少了几盏。同一条裂口，再走一遍。", unlock="hell"},
+	"hell": {k="地狱", n="你回来了", d="这一遍是你自己留下的。名字开始往下掉。最底下还有一层。", unlock="nightmare"},
+	"nightmare": {k="够了吗", n="三百年了", d="三百年了，没人应他。你站在最底下，钉子还在。你可以上去了。", final=1}
 }
 
 const CLASSES := {
@@ -353,24 +353,24 @@ const ELITE_COMBOS := [
 const SUPER_UNIQUES := [
 	{id="who", area="waste", n="厉啸 · 谁来着", type="bandit", mods=["wake"], callName="谁来着",
 		pack=4, hp=1.45, x=8.0, z=6.0, hint="荒原上有人在喊名字",
-		last="……我叫什么来着。", last2="你……你替我记着行吗。就一下。", relic="halfpaper"},
+		last="……我名字呢。", last2="你帮我记一下，就一下。", relic="halfpaper"},
 	{id="weaver", area="wood", n="还在织的", type="spider", mods=["child", "guard"],
-		pack=3, hp=1.5, x=-12.0, z=2.0, hint="林子里有一张不肯收的网", last="丝还没断。",
-		codex={n="还在织的", text="林子深处一张网。她说是留给孩子的。"}},
+		pack=3, hp=1.5, x=-12.0, z=2.0, hint="林子里有一张不肯收的网", last="网还没破。",
+		codex={n="还在织的", text="林子深处一张网，说是留给孩子的。"}},
 	{id="ember", area="ash", n="不肯灭的", type="lavabeast", mods=["burn", "rise"],
-		pack=3, hp=1.55, x=8.0, z=8.0, hint="峡谷里有一团还在烧的东西", last="还亮着。",
-		codex={n="不肯灭的", text="灰烬峡谷里，有一团火怎么踩都不灭。"}},
+		pack=3, hp=1.55, x=8.0, z=8.0, hint="峡谷里有一团还在烧的东西", last="还在烧。",
+		codex={n="不肯灭的", text="灰烬峡谷里一团火，怎么踩都不灭。"}},
 	{id="hum", area="frost", n="还在哼的", type="rimeknight", mods=["count", "frost"],
-		pack=3, hp=1.5, x=-8.0, z=-8.0, hint="冰上有人在数拍子", last="……走调了。",
-		codex={n="还在哼的", text="冰湖上有人在数拍子。拍子是从修道院漏出来的。"}},
+		pack=3, hp=1.5, x=-8.0, z=-8.0, hint="冰上有人在数拍子", last="……跑调了。",
+		codex={n="还在哼的", text="冰湖上有人数拍子，拍子是从修道院漏出来的。"}},
 	{id="tidewait", area="shore", n="还在等潮的", type="drowned", mods=["wake", "guard"],
-		pack=4, hp=1.5, x=12.0, z=-4.0, hint="岸边有人在等潮", last="退了再走。",
-		codex={n="还在等潮的", text="岸边站着一个溺尸。潮不来，他不走。"}},
+		pack=4, hp=1.5, x=12.0, z=-4.0, hint="岸边有人在等潮", last="退潮再走。",
+		codex={n="还在等潮的", text="岸边一个溺尸，潮不来他不走。"}},
 	{id="clerk", area="sinkf", n="还在记账的", type="wraith", mods=["grudge", "frost"],
-		pack=3, hp=1.5, x=-6.0, z=8.0, hint="沉降区里有人在记账", last="账没写完。",
-		codex={n="还在记账的", text="沉降区里有人划名字。划到你为止。"}},
+		pack=3, hp=1.5, x=-6.0, z=8.0, hint="沉降区里有人在记账", last="账没记完。",
+		codex={n="还在记账的", text="沉降区里有人划名字，划到你为止。"}},
 	{id="nailer", area="shaft", n="还在钉的", type="brute", mods=["rise", "count"],
-		pack=3, hp=1.55, x=10.0, z=4.0, hint="井道里有人还在钉", last="钉还在。",
+		pack=3, hp=1.55, x=10.0, z=4.0, hint="井道里有人还在钉", last="钉子还在。",
 		codex={n="还在钉的", text="桥墩井道里，有人把自己钉在墙上。"}}
 ]
 
@@ -392,7 +392,7 @@ const QUESTS := [
 	{id="q15", n="去朽舟腹杀格雷", d="最大那条船肚子里，有人还在凿。宰了格雷。", type="dungeon", t="hull", need=1, xp=7800, gold=5200, item=true, req="q14"},
 	{id="q16", n="去沉降区清怨魂", d="从裂口往下走。沉降区里的尸会挡路。砍 8 只哀嚎怨魂。", type="killtype", t="wraith", need=8, xp=6400, gold=4200, req="q15"},
 	{id="q17", n="去账房砍七影", d="七个影子一起冲。点哪个打哪个。", type="dungeon", t="ledger", need=1, xp=8600, gold=5600, item=true, req="q16"},
-	{id="q18", n="去众议厅打哑声音", d="伤口自己会说话。把众议之声打停。", type="dungeon", t="chorus", need=1, xp=9800, gold=6800, item=true, req="q17"},
+	{id="q18", n="去众议厅打哑声音", d="大厅里有人在表决。把众议之声打停。", type="dungeon", t="chorus", need=1, xp=9800, gold=6800, item=true, req="q17"},
 	{id="q19", n="钉底", d="最底下那个要挣出来。下去，按回去。", type="dungeon", t="nail", need=1, xp=12000, gold=9000, item=true, req="q18"}
 ]
 
@@ -480,12 +480,12 @@ const ENEMY_ASSET := {
 const CLASS_ASSET := {"warrior": "char_warrior", "mage": "char_mage", "archer": "char_archer"}
 
 const PHRASES := [
-	{id="enough", n="够了吗", flavor="三百年了，没人回答他。", types=["weapon"], need=3, runes=["rune_ember","rune_frost","rune_hawk"], pw="击杀后 2 秒内伤害 +40%，可叠三层。"},
-	{id="godown", n="我下去", flavor="第四年，他站在裂口边上说：我下去。", types=["armor"], need=2, runes=["rune_leech","rune_leech"], pw="生命低于 35% 时，获得等同已损失生命 30% 的护盾（12 秒一次）。"},
-	{id="notyou", n="不得替", flavor="开口的人用那条缝。别人不行。", types=["weapon","armor"], need=4, runes=["rune_frost","rune_hawk","rune_ember","rune_leech"], pw="技能无法被打断。治疗最多把你补到 80%。"},
-	{id="unsung", n="还没唱完", flavor="他们唱到一半沉了下去。", types=["helm"], need=2, runes=["rune_hawk","rune_ember"], pw="每 4 秒的第 4 秒，下一次技能不耗蓝。"},
-	{id="still", n="还亮着", flavor="灰里有一团不肯散的火。", types=["offhand"], need=2, runes=["rune_ember","rune_vita"], pw="抗性上限 75% → 85%。"},
-	{id="offkey", n="走调了", flavor="音总是高半度，但他们从没让他停。", types=["boots"], need=2, runes=["rune_gale","rune_hawk"], pw="穿透 +15%，移动速度 +8%。"}
+	{id="enough", n="够了吗", flavor="三百年了，没人应他。", types=["weapon"], need=3, runes=["rune_ember","rune_frost","rune_hawk"], pw="击杀后 2 秒内伤害 +40%，可叠三层。"},
+	{id="godown", n="我下去", flavor="第四年，他站到裂口边说：我下去。", types=["armor"], need=2, runes=["rune_leech","rune_leech"], pw="生命低于 35% 时，获得等同已损失生命 30% 的护盾（12 秒一次）。"},
+	{id="notyou", n="不得替", flavor="开口的那个人走那条缝，别人不行。", types=["weapon","armor"], need=4, runes=["rune_frost","rune_hawk","rune_ember","rune_leech"], pw="技能无法被打断。治疗最多把你补到 80%。"},
+	{id="unsung", n="还没唱完", flavor="他们唱到一半沉了。", types=["helm"], need=2, runes=["rune_hawk","rune_ember"], pw="每 4 秒的第 4 秒，下一次技能不耗蓝。"},
+	{id="still", n="还亮着", flavor="灰里还有一团火没灭。", types=["offhand"], need=2, runes=["rune_ember","rune_vita"], pw="抗性上限 75% → 85%。"},
+	{id="offkey", n="走调了", flavor="音总高半度，但没人让他停。", types=["boots"], need=2, runes=["rune_gale","rune_hawk"], pw="穿透 +15%，移动速度 +8%。"}
 ]
 
 func dun_by_id(id: String) -> Dictionary:
