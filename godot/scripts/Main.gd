@@ -962,12 +962,20 @@ func open_achs() -> void:
 	_clear_panel()
 	_show_panel()
 	Game.ensure_ach()
-	_hd("功绩  %d / %d" % [AchData.done_n(), AchData.LIST.size()])
+	_hd("功绩")
+	var bar := HBoxContainer.new()
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.add_theme_constant_override("separation", 10)
+	_panel_body.add_child(bar)
+	bar.add_child(_info_card("已解锁", "%d / %d" % [AchData.done_n(), AchData.LIST.size()], UiKit.brass_hi()))
+	bar.add_child(_info_card("完成度", "%.0f%%" % (100.0 * float(AchData.done_n()) / float(max(1, AchData.LIST.size()))), UiKit.gold()))
 	var cols := HBoxContainer.new()
-	cols.add_theme_constant_override("separation", 16)
+	cols.add_theme_constant_override("separation", 14)
+	cols.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_panel_body.add_child(cols)
 	var nav := VBoxContainer.new()
-	nav.custom_minimum_size = Vector2(280, 0)
+	nav.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	nav.add_theme_constant_override("separation", 10)
 	cols.add_child(nav)
 	var detail := VBoxContainer.new()
 	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -987,10 +995,16 @@ func open_achs() -> void:
 		for a in list:
 			if AchData.on(str(a.id)):
 				done += 1
+		var card := PanelContainer.new()
+		card.add_theme_stylebox_override("panel", UiKit.gcard())
+		nav.add_child(card)
+		var cv := VBoxContainer.new()
+		cv.add_theme_constant_override("separation", 4)
+		card.add_child(cv)
 		var cl := Label.new()
 		cl.text = "%s  %d / %d" % [cat, done, list.size()]
 		cl.add_theme_color_override("font_color", UiKit.brass())
-		nav.add_child(cl)
+		cv.add_child(cl)
 		for a in list:
 			var id: String = str(a.id)
 			var on: bool = AchData.on(id)
@@ -1001,6 +1015,8 @@ func open_achs() -> void:
 			var p := mini(AchData.prog(a), need)
 			var sub := "已解锁" if on else ("尚未揭开" if hide else "%d / %d" % [p, need])
 			row.text = "%s\n%s" % ["？？？" if hide else a.n, sub]
+			row.add_theme_stylebox_override("normal", UiKit.cell(0x2f6b3a) if on else (UiKit.cell(0x8a6a2a) if id == _ach_sel else UiKit.gcard()))
+			row.add_theme_stylebox_override("hover", UiKit.cell_hover())
 			if id == _ach_sel:
 				row.modulate = Color(1.2, 1.05, 0.7)
 			if on:
@@ -1009,10 +1025,16 @@ func open_achs() -> void:
 				_ach_sel = id
 				open_achs()
 			)
-			nav.add_child(row)
+			cv.add_child(row)
 	var a := AchData.by_id(_ach_sel)
 	if a.is_empty():
 		return
+	var dcard := PanelContainer.new()
+	dcard.add_theme_stylebox_override("panel", UiKit.gcard())
+	detail.add_child(dcard)
+	var dv := VBoxContainer.new()
+	dv.add_theme_constant_override("separation", 6)
+	dcard.add_child(dv)
 	var on: bool = AchData.on(str(a.id))
 	var hide: bool = a.get("hidden") == true and not on
 	var need := int(a.get("need", 1))
@@ -1021,35 +1043,35 @@ func open_achs() -> void:
 	ico.text = "◆" if on else "◇"
 	ico.add_theme_font_size_override("font_size", 28)
 	ico.add_theme_color_override("font_color", UiKit.brass())
-	detail.add_child(ico)
+	dv.add_child(ico)
 	var hn := Label.new()
 	hn.text = "？？？" if hide else str(a.n)
 	hn.add_theme_font_size_override("font_size", 22)
 	hn.add_theme_color_override("font_color", UiKit.brass())
-	detail.add_child(hn)
+	dv.add_child(hn)
 	var qw := Label.new()
 	qw.text = str(a.cat) + (" · 已解锁" if on else "")
 	qw.add_theme_color_override("font_color", UiKit.dim())
-	detail.add_child(qw)
+	dv.add_child(qw)
 	var qd := Label.new()
 	qd.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	qd.text = "还没揭开。去做该做的事。" if hide else str(a.d)
-	detail.add_child(qd)
+	dv.add_child(qd)
 	if not hide:
-		var bar := ProgressBar.new()
-		bar.max_value = need
-		bar.value = p
-		bar.show_percentage = false
-		bar.custom_minimum_size = Vector2(0, 10)
-		detail.add_child(bar)
+		var bar2 := ProgressBar.new()
+		bar2.max_value = need
+		bar2.value = p
+		bar2.show_percentage = false
+		bar2.custom_minimum_size = Vector2(0, 10)
+		dv.add_child(bar2)
 		var obj := Label.new()
 		obj.text = "%s  %d / %d" % ["已达成" if on else "进度", p, need]
-		detail.add_child(obj)
+		dv.add_child(obj)
 	if int(a.get("gold", 0)):
 		var gr := Label.new()
 		gr.text = "%s %d 金币" % ["已领取" if on else "解锁奖励", int(a.gold)]
 		gr.add_theme_color_override("font_color", Color(0.96, 0.77, 0.32))
-		detail.add_child(gr)
+		dv.add_child(gr)
 
 
 func _item_btn(label: String, it: Dictionary, left: Callable, right: Callable = Callable()) -> Button:
@@ -2800,6 +2822,65 @@ func _char_sets_row(parent: Control) -> void:
 			parent.add_child(cl)
 
 
+func _info_card(title: String, value: String, col: Color = UiKit.gold()) -> PanelContainer:
+	var c := PanelContainer.new()
+	c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	c.add_theme_stylebox_override("panel", UiKit.gcard())
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	c.add_child(row)
+	var t := Label.new()
+	t.text = title
+	t.add_theme_font_size_override("font_size", 11)
+	t.add_theme_color_override("font_color", UiKit.ash())
+	row.add_child(t)
+	var v := Label.new()
+	v.text = value
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	v.add_theme_font_size_override("font_size", 18)
+	v.add_theme_color_override("font_color", col)
+	row.add_child(v)
+	return c
+
+func _talent_card(t: Dictionary) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.add_theme_stylebox_override("panel", UiKit.gcard())
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 4)
+	card.add_child(v)
+	var on: bool = Game.tal_rank(str(t.id)) > 0
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 8)
+	v.add_child(head)
+	head.add_child(UiKit.icon_rect(UiKit.icon_for_glyph(str(t.g)), 28))
+	var l := Label.new()
+	l.text = str(t.n)
+	l.add_theme_font_size_override("font_size", 15)
+	l.add_theme_color_override("font_color", Color(0.54, 0.87, 0.5) if on else UiKit.brass())
+	head.add_child(l)
+	var d := Label.new()
+	d.text = str(t.d)
+	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	d.add_theme_font_size_override("font_size", 12)
+	v.add_child(d)
+	if on:
+		var ok := Label.new()
+		ok.text = "已点亮"
+		ok.add_theme_color_override("font_color", Color(0.54, 0.87, 0.5))
+		v.add_child(ok)
+	elif Game.tal_can(t):
+		var b := Button.new()
+		b.text = "点亮"
+		var tal: Dictionary = t
+		b.pressed.connect(func():
+			Game.learn_talent(tal)
+			open_talents()
+		)
+		v.add_child(b)
+	return card
+
+
 func open_char() -> void:
 	_sheet = "char"
 	_clear_panel()
@@ -2910,22 +2991,31 @@ func open_skills() -> void:
 	_sheet = "skills"
 	_clear_panel()
 	_show_panel()
-	_hd("技能  ·  点 %d" % Game.P.skPts)
+	_hd("技能")
+	var bar := HBoxContainer.new()
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.add_theme_constant_override("separation", 10)
+	_panel_body.add_child(bar)
+	bar.add_child(_info_card("可用技能点", str(Game.P.skPts), UiKit.brass_hi()))
 	var skills: Array = Data.class_skills(Game.P.cls)
 	if _sk_sel == "":
 		_sk_sel = str(skills[0].id) if skills.size() else ""
 	var split := HBoxContainer.new()
-	split.add_theme_constant_override("separation", 18)
+	split.add_theme_constant_override("separation", 14)
 	split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_panel_body.add_child(split)
 	var list := VBoxContainer.new()
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list.add_theme_constant_override("separation", 7)
+	list.add_theme_constant_override("separation", 6)
 	split.add_child(list)
+	var detail_card := PanelContainer.new()
+	detail_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_card.custom_minimum_size = Vector2(320, 0)
+	detail_card.add_theme_stylebox_override("panel", UiKit.gcard())
+	split.add_child(detail_card)
 	var detail := VBoxContainer.new()
-	detail.custom_minimum_size = Vector2(320, 0)
 	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	split.add_child(detail)
+	detail_card.add_child(detail)
 	var picked: Dictionary = {}
 	for sk in skills:
 		var sid: String = str(sk.id)
@@ -3036,50 +3126,31 @@ func open_talents() -> void:
 	_sheet = "talents"
 	_clear_panel()
 	_show_panel()
-	_hd("天赋  ·  点 %d  ·  已点 %d / %d" % [Game.tal_pts(), Game.tal_spent(), Game.tal_earned()])
+	_hd("天赋")
+	var bar := HBoxContainer.new()
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.add_theme_constant_override("separation", 10)
+	_panel_body.add_child(bar)
+	bar.add_child(_info_card("可用点", str(Game.tal_pts()), UiKit.brass_hi()))
+	bar.add_child(_info_card("已点", "%d / %d" % [Game.tal_spent(), Game.tal_earned()], UiKit.gold()))
 	if Game.P.lvl < 10:
 		_plab("10 级点亮第一格，20 级点亮第二格。")
-	var cols := HBoxContainer.new()
-	cols.add_theme_constant_override("separation", 18)
-	_panel_body.add_child(cols)
+	var grid := HBoxContainer.new()
+	grid.add_theme_constant_override("separation", 14)
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_panel_body.add_child(grid)
 	var left := VBoxContainer.new()
 	var right := VBoxContainer.new()
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cols.add_child(left)
-	cols.add_child(right)
+	left.add_theme_constant_override("separation", 10)
+	right.add_theme_constant_override("separation", 10)
+	grid.add_child(left)
+	grid.add_child(right)
 	var i := 0
 	for t in Game.class_talents():
 		var box: VBoxContainer = left if i % 2 == 0 else right
-		var on: bool = Game.tal_rank(str(t.id)) > 0
-		var head := HBoxContainer.new()
-		head.add_theme_constant_override("separation", 8)
-		box.add_child(head)
-		head.add_child(UiKit.icon_rect(UiKit.icon_for_glyph(str(t.g)), 28))
-		var l := Label.new()
-		l.text = str(t.n)
-		l.add_theme_font_size_override("font_size", 15)
-		l.add_theme_color_override("font_color", Color(0.54, 0.87, 0.5) if on else UiKit.brass())
-		head.add_child(l)
-		var d := Label.new()
-		d.text = str(t.d)
-		d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		d.add_theme_font_size_override("font_size", 12)
-		box.add_child(d)
-		if on:
-			var ok := Label.new()
-			ok.text = "已点亮"
-			ok.add_theme_font_size_override("font_size", 12)
-			box.add_child(ok)
-		elif Game.tal_can(t):
-			var b := Button.new()
-			b.text = "点亮"
-			var tal: Dictionary = t
-			b.pressed.connect(func():
-				Game.learn_talent(tal)
-				open_talents()
-			)
-			box.add_child(b)
+		box.add_child(_talent_card(t))
 		i += 1
 	if Game.tal_spent() > 0:
 		_btn("洗点 %d 金" % Game.tal_reset_cost(), func():
@@ -3094,13 +3165,26 @@ func open_quests() -> void:
 	_clear_panel()
 	_show_panel()
 	_hd("委托")
+	var tracking := "无"
+	if Game.P.trackId != "":
+		for q in Data.QUESTS:
+			if str(q.id) == Game.P.trackId:
+				tracking = q.n
+				break
+	var bar := HBoxContainer.new()
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.add_theme_constant_override("separation", 10)
+	_panel_body.add_child(bar)
+	bar.add_child(_info_card("追踪中", tracking, UiKit.brass_hi()))
 	var split := HBoxContainer.new()
-	split.add_theme_constant_override("separation", 16)
+	split.add_theme_constant_override("separation", 14)
+	split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_panel_body.add_child(split)
 	var list := VBoxContainer.new()
 	var detail := VBoxContainer.new()
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list.add_theme_constant_override("separation", 6)
 	split.add_child(list)
 	split.add_child(detail)
 	var picked: Dictionary = {}
@@ -3113,6 +3197,9 @@ func open_quests() -> void:
 		var mark := "完成" if st == "done" else "%d/%d" % [Game.quest_prog(q), int(q.need)]
 		var b := Button.new()
 		b.text = "%s  ·  %s" % [q.n, mark]
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.add_theme_stylebox_override("normal", UiKit.cell(0x2f6b3a) if st == "done" else (UiKit.cell(0xb08d4f) if str(q.id) == _quest_sel else UiKit.gcard()))
+		b.add_theme_stylebox_override("hover", UiKit.cell_hover())
 		if str(q.id) == _quest_sel:
 			b.modulate = Color(1.2, 1.05, 0.7)
 			picked = q
@@ -3126,18 +3213,24 @@ func open_quests() -> void:
 		empty.text = "板上暂时没有你的名字。"
 		detail.add_child(empty)
 	else:
+		var dcard := PanelContainer.new()
+		dcard.add_theme_stylebox_override("panel", UiKit.gcard())
+		detail.add_child(dcard)
+		var dv := VBoxContainer.new()
+		dv.add_theme_constant_override("separation", 6)
+		dcard.add_child(dv)
 		var n := Label.new()
 		n.text = str(picked.n)
 		n.add_theme_font_size_override("font_size", 18)
 		n.add_theme_color_override("font_color", UiKit.brass())
-		detail.add_child(n)
+		dv.add_child(n)
 		var d := Label.new()
 		d.text = str(picked.d)
 		d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		detail.add_child(d)
+		dv.add_child(d)
 		var p := Label.new()
 		p.text = "进度 %d / %d  ·  奖励 %d 金 / %d 经验" % [Game.quest_prog(picked), int(picked.need), int(picked.gold), int(picked.xp)]
-		detail.add_child(p)
+		dv.add_child(p)
 		if Game.P.quests.get(picked.id, {}).get("state") == "open":
 			var pin := Button.new()
 			pin.text = "取消追踪" if Game.P.trackId == picked.id else "追踪此任务"
@@ -3145,7 +3238,7 @@ func open_quests() -> void:
 				Game.set_track("" if Game.P.trackId == picked.id else str(picked.id))
 				open_quests()
 			)
-			detail.add_child(pin)
+			dv.add_child(pin)
 	_btn("关掉", func(): _close_sheet())
 
 
