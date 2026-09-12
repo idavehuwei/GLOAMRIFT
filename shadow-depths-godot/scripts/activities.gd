@@ -60,6 +60,7 @@ func contract_action(index: int):
 		if not g.in_town: g.note("回城后可领取委托奖励。"); return
 		if g.inventory.size()>=36: g.note("请先腾出一格背包再领奖。"); return
 		c.claimed = true; g.gold += 100*g.depth(); shards += 5
+		if g.achv != null: g.achv.contract_done()
 		g.inventory.append(g.Data.loot(g.rng,g.depth(),true,g.hero_class)); g.note("委托奖励：金币、稀有装备与 5 碎片。"); g.save_game()
 func salvage():
 	if not g.in_town: g.note("分解装备需要回到城镇。"); return
@@ -79,6 +80,7 @@ func upgrade(slot: int):
 	if shards<cost or g.gold<coins: g.note("材料或金币不足。"); return
 	shards -= cost; g.gold -= coins; item.power += 2+g.depth(); item["upgrade"] = rank+1
 	g.note("强化成功："+item.name+" +%d" % (rank+1)); g.save_game()
+	if g.achv != null: g.achv.upgraded()
 func next_chapter():
 	for c in contracts: c.count = 0; c.accepted = false; c.claimed = false
 func snapshot() -> Dictionary: return {"shards":shards,"contracts":contracts}

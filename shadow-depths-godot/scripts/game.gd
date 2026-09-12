@@ -64,13 +64,19 @@ var gallery_index = 0
 var combat
 var enemy_skills
 var pets
+var achv
 var enemy_uid = 0
+var map_no_hit = true
 var player_slow = 0.0
 var renderer_3d
 var map_seed = 0
 var save_path = SAVE
 var flow = {}
 var flow_clock = 0.0
+var achv_tab = 0
+var achv_kind = -1
+var achv_page = 0
+var coll_tab = 0
 
 func _ready():
 	rng.randomize()
@@ -78,6 +84,7 @@ func _ready():
 	combat = preload("res://scripts/combat.gd").new(self)
 	enemy_skills = preload("res://scripts/enemy_skills.gd").new(self)
 	pets = preload("res://scripts/pets.gd").new(self)
+	achv = preload("res://scripts/achievements.gd").new(self)
 	panel_texture = load("res://assets/textures/stone.png")
 	font = SystemFont.new()
 	font.font_names = PackedStringArray(["PingFang SC", "Heiti SC", "Microsoft YaHei", "Noto Sans CJK SC", "sans-serif"])
@@ -116,6 +123,7 @@ func tone(freq: float, duration: float = 0.08):
 	sound.play()
 
 func generate_map():
+	map_no_hit = not in_town
 	activities.reset_map()
 	W = 30 if in_town else 54
 	H = 20 if in_town else 36
@@ -254,6 +262,7 @@ func _process(dt):
 	if not in_town and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and mouse_in_world(): attack(false)
 	combat.update(dt)
 	if pets != null: pets.update(dt)
+	if achv != null: achv.update(dt)
 	reveal()
 	for e in enemies.duplicate():
 		enemy_skills.update(e,dt)
@@ -275,18 +284,18 @@ func _process(dt):
 					var hit = maxf(3,9+depth()*2-(int(equipped[1].power)*0.3)) * (1.8 if e.boss else 1)
 					# 宠物在附近会替主人挡刀；挡下时玩家不受伤。
 					if pets == null or not pets.soak(e,hit):
-						hp -= hit; invincible = 0.45; shake = 0.15
+						hp -= hit; invincible = 0.45; shake = 0.15; map_no_hit = false
 						if renderer_3d!=null: renderer_3d.animate_hero("death" if hp<=0 else "hit",0.85 if hp<=0 else 0.26)
 						floating(player,"-"+str(int(hit)),Color("e77f75")); tone(100)
-						if hp <= 0: hp = 0; modal = "dead"; break
+						if hp <= 0: hp = 0; map_no_hit = false; achv.died(); modal = "dead"; break
 					else: invincible = 0.28
 	for i in range(drops.size()-1,-1,-1):
 		var d = drops[i]
 		if d.pos.distance_to(player) < 25:
-			if d.kind == "mark": marks += 1; note("拾取余烬印记 %d / 3" % marks); tone(780)
+			if d.kind == "mark": marks += 1; note("拾取余烬印记 %d / 3" % marks); tone(780); achv.mark()
 			elif d.kind == "item":
 				if inventory.size() >= 36: continue
-				inventory.append(d.item); note("获得："+d.item.name); tone(540)
+				inventory.append(d.item); note("获得："+d.item.name); tone(540); achv.looted(d.item)
 			else: gold += d.amount
 			drops.remove_at(i)
 	queue_redraw()
@@ -301,6 +310,7 @@ func defeat(i: int):
 	activities.killed(e)
 	var elite = e.get("elite",false)
 	kills += 1; xp += (15+depth()*3)*(5 if e.boss else (3 if elite else 1))
+	if achv != null: achv.killed(e)
 	if e.boss and pets != null: pets.boss_reward()
 	gold += rng.randi_range(5,15)*depth()*(5 if elite or e.boss else 1)
 	if rng.randf()<0.65 or elite or e.boss:
@@ -330,7 +340,7 @@ func interact():
 			chest.open = true
 			activities.progress("chest")
 			drops.append({"pos":chest.pos+Vector2(0,22),"kind":"item","item":Data.loot(rng,depth(),true,hero_class)})
-			gold += 20 * depth(); tone(650); note("箱子里不是怪物。今天运气不错。"); return
+			gold += 20 * depth(); tone(650); note("箱子里不是怪物。今天运气不错。"); achv.chest(); return
 	if player.distance_to(npc) < 65:
 		if gold >= 25: gold -= 25; potions += 1; note("买到药水。邮差：包治不开心，不包治穷。")
 		else: note("邮差：25 金一瓶药水。故事免费——"+Data.CHAPTERS[chapter].goal)
@@ -339,13 +349,16 @@ func interact():
 		if ready_exit(): next_map()
 		else: note("传送门：请清理敌人，并收齐 3 枚印记。")
 func next_map():
+	var clean = map_no_hit and not in_town
 	stage += 1
 	if stage >= 3:
 		stage = 0; chapter += 1; in_town = true; quest_accepted = false; activities.next_chapter()
 		if chapter >= 5: chapter = 0; cycle += 1; modal = "victory"
+		if achv != null: achv.victory(); achv.cycle_done()
 		else: modal = "story"
 	hp = max_hp(); potions += 1
 	generate_map(); save_game(); note("抵达「"+location_name()+"」。")
+	if achv != null: achv.map_done(clean)
 func heal():
 	if potions > 0 and hp < max_hp(): potions -= 1; hp = minf(max_hp(),hp+max_hp()*0.6); tone(700); floating(player,"+ 生命",Color("84c39d"))
 func dash(): combat.dodge()
@@ -363,6 +376,7 @@ func choose_class(index: int):
 	if first: equipped[0].name = Data.CLASSES[hero_class].weapon
 	hp = max_hp(); mana = 100; nova_cd = 0; ultimate_cd = 0; attack_cd = 0
 	modal = "story" if first else ""
+	if achv != null: achv.class_picked(hero_class)
 	if renderer_3d != null: renderer_3d.rebuild()
 	note("你选择了「"+Data.CLASSES[hero_class].name+"」。")
 	save_game()
@@ -370,14 +384,15 @@ func choose_class(index: int):
 func save_game():
 	var f = FileAccess.open(save_path,FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({"version":3,"activities":activities.snapshot(),"pets":pets.snapshot(),"in_town":in_town,"hero_class":hero_class,"quest_accepted":quest_accepted,"chapter":chapter,"stage":stage,"cycle":cycle,"level":level,"xp":xp,"gold":gold,"potions":potions,"inventory":inventory,"equipped":equipped}))
+		f.store_string(JSON.stringify({"version":4,"activities":activities.snapshot(),"pets":pets.snapshot(),"achv":achv.snapshot(),"in_town":in_town,"hero_class":hero_class,"quest_accepted":quest_accepted,"chapter":chapter,"stage":stage,"cycle":cycle,"level":level,"xp":xp,"gold":gold,"potions":potions,"inventory":inventory,"equipped":equipped}))
 		note("进度已保存 · 继续时从本地图入口出发")
 func load_game():
 	if not FileAccess.file_exists(save_path): note("还没有存档。"); return
 	var d = JSON.parse_string(FileAccess.get_file_as_string(save_path))
-	if not d is Dictionary or int(d.get("version",0)) not in [1,2,3]: note("存档格式无法读取。"); return
+	if not d is Dictionary or int(d.get("version",0)) not in [1,2,3,4]: note("存档格式无法读取。"); return
 	activities.restore(d.get("activities",{}))
 	if pets != null: pets.restore(d.get("pets",{}))
+	if achv != null: achv.restore(d.get("achv",{}))
 	in_town = bool(d.get("in_town",true)); hero_class = clampi(int(d.get("hero_class",0)),0,2); quest_accepted = bool(d.get("quest_accepted",false)); mana = 100
 	chapter = clampi(int(d.chapter),0,4); stage = clampi(int(d.stage),0,2); cycle = maxi(0,int(d.cycle))
 	level = maxi(1,int(d.level)); xp = int(d.xp); gold = int(d.gold); potions = int(d.potions)
@@ -439,6 +454,7 @@ func _input(event):
 			KEY_I: modal = "" if modal == "inventory" else "inventory"
 			KEY_M: modal = "" if modal == "map" else "map"
 			KEY_P: modal = "" if modal == "pets" else "pets"
+			KEY_G: modal = "" if modal == "achievements" else "achievements"
 			KEY_ENTER:
 				if modal == "story" or modal == "victory": modal = ""
 			KEY_E:
@@ -467,6 +483,11 @@ func action(id: String):
 	if id.begins_with("class:"): choose_class(int(id.split(":")[1])); return
 	if id.begins_with("item:"): selected = int(id.split(":")[1]); return
 	if id.begins_with("pet:"): pets.set_active(int(id.split(":")[1])); return
+	if id.begins_with("achv_tab:"): achv_tab = int(id.split(":")[1]); achv_page = 0; return
+	if id.begins_with("achv_kind:"): achv_kind = int(id.split(":")[1]); achv_page = 0; return
+	if id.begins_with("coll_tab:"): coll_tab = int(id.split(":")[1]); return
+	if id=="achv_page-": achv_page = maxi(0,achv_page-1); return
+	if id=="achv_page+": achv_page += 1; return
 	match id:
 		"play":
 			if modal == "story": save_game()
@@ -474,6 +495,7 @@ func action(id: String):
 		"gacha":
 			if pets != null and pets.gacha(): save_game()
 		"pets": modal = "pets"
+		"achievements": modal = "achievements"
 		"pet_toggle": if pets != null: pets.toggle()
 		"pet_release": if pets != null: pets.release()
 		"contracts": modal = "contracts"
@@ -695,6 +717,7 @@ func _draw():
 		var s = str(logs[0])
 		var width = font.get_string_size(s,HORIZONTAL_ALIGNMENT_LEFT,-1,14).x
 		label_at(Vector2((1440-width)/2,734),s,14,Color("c4bba6"))
+	if achv != null: draw_achv_hud(); draw_toasts()
 	if modal != "": draw_modal()
 
 func draw_modal():
@@ -739,6 +762,9 @@ func draw_modal():
 		return
 	if modal == "pets":
 		draw_pet_panel()
+		return
+	if modal == "achievements":
+		draw_achv_panel()
 		return
 	if modal == "story" or modal == "victory":
 		label_at(Vector2(320,247),"黎明已归来" if modal == "victory" else "第 %d 章  ·  %s" % [chapter+1,Data.CHAPTERS[chapter].name],36,TEXT)
@@ -897,6 +923,7 @@ func draw_codex_panel():
 			label_at(Vector2(920,y),rows[i][1],17,TEXT)
 		button(Rect2(320,681,290,43),"装备与行囊  I","inventory")
 		button(Rect2(637,681,240,43),"小宠物  P","pets")
+		button(Rect2(897,681,230,43),"成就与收藏  G","achievements")
 	elif modal=="skills":
 		label_at(Vector2(320,278),c.name+" · 技能随角色等级及武器伤害成长",16,MUTED)
 		var descriptions = [["前方扇形攻击，命中可暴击。","持续旋转 1.3 秒，打击周围敌人。","震击前方大范围，造成重伤并眩晕。"],["发射火弹，命中后造成范围爆炸。","冻结附近敌人并施加持续减速。","延迟轰击目标地点，造成高额伤害。"],["箭矢可穿透两名敌人。","同时射出五支穿透箭。","在目标区域持续降下减速箭雨。"]][hero_class]
@@ -1013,3 +1040,128 @@ func draw_expansion_panel():
 				button(Rect2(320+i*97,657,91,29),renderer_3d.motion.LABELS[i],"motion:"+renderer_3d.motion.ACTIONS[i],renderer_3d.preview_action==renderer_3d.motion.ACTIONS[i])
 			button(Rect2(320,697,165,29),"转台：开" if renderer_3d.preview_turntable else "转台：关","turntable")
 			label_at(Vector2(505,718),"动作循环预览 · 战斗中随攻击、技能、受击事件播放",13,MUTED)
+
+func draw_achv_panel():
+	label_at(Vector2(320,242),"成就与收藏",29,GOLD)
+	label_at(Vector2(556,246),"已解锁 %d / %d" % [achv.done(),achv.total()],15,TEXT)
+	label_at(Vector2(700,246),"图鉴 %d / 35   ·   陈列 %d   ·   伙伴 %d / 10" % [achv.bestiary_count(),achv.armory_count(),achv.pet_seen_count()],13,MUTED)
+	button(Rect2(320,262,130,32),"成就","achv_tab:0",achv_tab==0)
+	button(Rect2(456,262,130,32),"收藏","achv_tab:1",achv_tab==1)
+	if achv_tab==0: draw_achv_list()
+	else: draw_collection_list()
+	button(Rect2(960,681,200,43),"返回冒险  G / Esc","play")
+
+func draw_achv_list():
+	for i in 6:
+		var kind = i-1
+		var caption = "全部" if i==0 else Data.ACH_KINDS[kind]
+		var d = achv.done() if i==0 else achv.kind_done(kind)
+		var t = achv.total() if i==0 else achv.kind_total(kind)
+		button(Rect2(320,306+i*58,176,50),"%s   %d/%d" % [caption,d,t],"achv_kind:"+str(kind),achv_kind==kind)
+	var list = []
+	for a in Data.ACHIEVEMENTS:
+		if achv_kind < 0 or int(a.kind)==achv_kind: list.append(a)
+	var pages = maxi(1,int((list.size()+7)/8))
+	achv_page = clampi(achv_page,0,pages-1)
+	for k in 8:
+		var index = achv_page*8+k
+		if index >= list.size(): break
+		var a = list[index]
+		var r = Rect2(508+(k%2)*308,306+int(k/2)*95,300,88)
+		var got = achv.has(str(a.id))
+		var hidden = bool(a.get("hidden",false)) and not got
+		var c = Color(Data.ACH_KIND_COLORS[int(a.kind)])
+		inset(r)
+		if got: draw_rect(r,c,false,2)
+		label_at(r.position+Vector2(14,26),"？？？" if hidden else str(a.name),18,c if got else Color("5c6367"))
+		label_at(r.position+Vector2(14,48),"隐藏成就 · 达成后揭晓" if hidden else str(a.desc),12,MUTED)
+		var pr = achv.progress_of(a)
+		bar(Rect2(r.position+Vector2(14,60),Vector2(208,7)),float(pr[0]),float(pr[1]),c if got else Color("4a5257"))
+		label_at(r.position+Vector2(232,68),"%d / %d" % [int(pr[0]),int(pr[1])],12,TEXT)
+		var rw = a.get("reward",{})
+		var parts = []
+		if int(rw.get("gold",0))>0: parts.append("%d 金" % int(rw.gold))
+		if int(rw.get("potions",0))>0: parts.append("药水 ×%d" % int(rw.potions))
+		if int(rw.get("shards",0))>0: parts.append("碎片 ×%d" % int(rw.shards))
+		label_at(r.position+Vector2(14,82),"奖励："+("、".join(parts) if parts.size()>0 else "纯荣誉"),11,Color("8a8577"))
+		if got: label_at(r.position+Vector2(266,28),"✦",20,GOLD)
+	if list.is_empty(): label_at(Vector2(520,360),"这一类还没有成就。",16,MUTED)
+	button(Rect2(320,668,94,34),"◀ 上一页","achv_page-")
+	button(Rect2(424,668,94,34),"下一页 ▶","achv_page+")
+	label_at(Vector2(534,690),"第 %d / %d 页" % [achv_page+1,pages],13,MUTED)
+	label_at(Vector2(660,690),"累计击杀 %d   ·   最深 %d   ·   时长 %.0f 分钟" % [int(achv.value("kills")),int(achv.value("max_depth")),achv.value("playtime")/60.0],13,TEXT)
+
+func draw_collection_list():
+	var tabs = ["怪物图鉴","装备陈列","首领纪念","伙伴名录"]
+	for i in 4: button(Rect2(320+i*152,300,146,32),tabs[i],"coll_tab:"+str(i),coll_tab==i)
+	inset(Rect2(320,342,810,318))
+	if coll_tab==0:
+		var entries = Data.bestiary_entries()
+		for k in entries.size():
+			var e = entries[k]
+			var key = str(e.key)
+			var got = achv.bestiary.has(key)
+			var c = Vector2(330+(k%5)*160,352+int(k/5)*44)
+			label_at(c+Vector2(0,16),str(e.name) if got else "？？？",14,(Color("c98d8d") if bool(e.boss) else GOLD) if got else Color("4d5457"))
+			if got: label_at(c+Vector2(0,34),"击杀 %d 次" % int(achv.bestiary[key].get("kills",0)),11,MUTED)
+			else: label_at(c+Vector2(0,34),"第 %d 章" % (int(e.chapter)+1),11,Color("3f464a"))
+		label_at(Vector2(320,678),"解锁 %d / %d 种。击败敌人自动记录，章节首领单独成条。" % [achv.bestiary_count(),entries.size()],13,MUTED)
+	elif coll_tab==1:
+		for k in Data.ARMORY_CAP:
+			var c = Vector2(330+(k%3)*270,352+int(k/3)*52)
+			if k >= achv.armory.size():
+				label_at(c+Vector2(0,16),"空陈列位",12,Color("42484b"))
+				continue
+			var it = achv.armory[k]
+			label_at(c+Vector2(0,16),str(it.name),14,Color(Data.RARITY_COLORS[clampi(int(it.rarity),0,4)]))
+			label_at(c+Vector2(0,34),"%s · 力量 %d · 深度 %d" % [Data.SLOTS[int(it.slot)],int(it.power),int(it.depth)],11,MUTED)
+		label_at(Vector2(320,678),"只收录史诗及以上的装备，同名取最高力量，最多 %d 件。" % Data.ARMORY_CAP,13,MUTED)
+	elif coll_tab==2:
+		for i in 5:
+			var c = Vector2(330+i*160,352)
+			var t = achv.trophies.get(str(i),null)
+			label_at(c+Vector2(0,20),"第 %d 章" % (i+1),12,MUTED)
+			label_at(c+Vector2(0,44),Data.CHAPTERS[i].boss,15,GOLD if t!=null else Color("4d5457"))
+			if t != null:
+				label_at(c+Vector2(0,66),"击败 %d 次" % int(t.get("count",0)),13,TEXT)
+				label_at(c+Vector2(0,86),"最深 %d" % int(t.get("depth",0)),11,MUTED)
+			else: label_at(c+Vector2(0,66),"尚未击败",12,Color("4d5457"))
+		label_at(Vector2(320,678),"累计击败首领 %d 次。每章首领都会掉落伙伴。" % achv.trophy_count(),13,MUTED)
+	else:
+		for i in Data.PETS.size():
+			var info = Data.PETS[i]
+			var seen = achv.pet_seen.has(str(i))
+			var c = Vector2(330+(i%5)*160,352+int(i/5)*100)
+			var rc = Color(Data.RARITY_COLORS[int(info.rarity)])
+			label_at(c+Vector2(0,20),str(info.name) if seen else "？？？",15,rc if seen else Color("4d5457"))
+			if seen:
+				label_at(c+Vector2(0,42),"%s · 最高 Lv.%d" % [Data.RARITY_NAMES[int(info.rarity)],int(achv.pet_seen[str(i)])],12,MUTED)
+				label_at(c+Vector2(0,62),str(info.desc).substr(0,14),11,Color("6f767a"))
+				label_at(c+Vector2(0,78),str(info.desc).substr(14,14),11,Color("6f767a"))
+			else: label_at(c+Vector2(0,42),"尚未相遇",11,Color("4d5457"))
+		label_at(Vector2(320,678),"收集 %d / %d 种伙伴。放生也会保留记录。" % [achv.pet_seen_count(),Data.PETS.size()],13,MUTED)
+
+func draw_achv_hud():
+	box(Rect2(28,443,268,96),Color(0.055,0.06,0.06,0.78))
+	ornament(Vector2(42,446),237)
+	label_at(Vector2(42,474),"成就与收藏",15,GOLD)
+	label_at(Vector2(212,474),"%d / %d" % [achv.done(),achv.total()],14,TEXT)
+	bar(Rect2(42,482,238,7),float(achv.done()),float(achv.total()),Color("c9a05f"))
+	var recent = achv.recent()
+	if recent.size()>0:
+		var found = null
+		for a in Data.ACHIEVEMENTS:
+			if str(a.id)==str(recent[0]): found = a; break
+		if found != null: label_at(Vector2(42,506),"最近："+str(found.name),12,Color(Data.ACH_KIND_COLORS[int(found.kind)]))
+	label_at(Vector2(42,526),"图鉴 %d/35 · 伙伴 %d/10 · 陈列 %d" % [achv.bestiary_count(),achv.pet_seen_count(),achv.armory_count()],11,MUTED)
+	button(Rect2(176,504,108,26),"成就  G","achievements")
+
+func draw_toasts():
+	for i in achv.toasts.size():
+		var t = achv.toasts[i]
+		var alpha = clampf(float(t.life)/1.2,0.0,1.0)
+		var r = Rect2(1088,292+i*80,330,72)
+		box(r,Color(0.05,0.055,0.06,0.88*alpha),Color(t.color).darkened(0.15))
+		label_at(r.position+Vector2(16,22),"✦ 成就解锁",12,Color(t.color))
+		label_at(r.position+Vector2(16,46),str(t.title),18,GOLD)
+		label_at(r.position+Vector2(16,64),str(t.desc).substr(0,16),11,Color("a8a294"))

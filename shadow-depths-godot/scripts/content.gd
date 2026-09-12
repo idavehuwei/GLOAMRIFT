@@ -62,3 +62,54 @@ const BOSS_SKILLS = [
 	["焚化流水线", "熔炉追责", "狂暴：全厂加班"],
 	["虚空换位", "八方蚀光", "狂暴：黎明封印"]
 ]
+
+# ---------- 成就与收藏 ----------
+const ACH_KINDS = ["战斗", "探索", "财富", "伙伴", "旅程"]
+const ACH_KIND_COLORS = ["c2705f", "7fa86a", "d0b06a", "8fa8d8", "a98fd0"]
+# stat 为统计键，goal 为达成阈值，reward 为解锁时自动发放的奖励（金币 / 药水 / 锻造碎片）。
+const ACHIEVEMENTS = [
+	{"id":"first_blood","name":"第一滴血","desc":"击败第一名敌人","kind":0,"stat":"kills","goal":1,"reward":{"gold":30}},
+	{"id":"slayer_50","name":"清道夫","desc":"累计击败 50 名敌人","kind":0,"stat":"kills","goal":50,"reward":{"gold":120}},
+	{"id":"slayer_200","name":"不死屠夫","desc":"累计击败 200 名敌人","kind":0,"stat":"kills","goal":200,"reward":{"gold":400,"potions":2}},
+	{"id":"elite_10","name":"精英猎手","desc":"击败 10 名精英敌人","kind":0,"stat":"elites","goal":10,"reward":{"shards":5}},
+	{"id":"elite_40","name":"精英克星","desc":"击败 40 名精英敌人","kind":0,"stat":"elites","goal":40,"reward":{"shards":15}},
+	{"id":"boss_1","name":"弑王者","desc":"击败一名章节首领","kind":0,"stat":"bosses","goal":1,"reward":{"gold":200}},
+	{"id":"boss_5","name":"五王终结","desc":"击败五名章节首领","kind":0,"stat":"bosses","goal":5,"reward":{"potions":3}},
+	{"id":"heavy_hit","name":"一击必杀","desc":"单次伤害达到 400","kind":0,"stat":"max_hit","goal":400,"reward":{"gold":150}},
+	{"id":"crit_800","name":"会心一击","desc":"单次伤害达到 800","kind":0,"stat":"max_hit","goal":800,"reward":{"gold":500,"shards":5}},
+	{"id":"flawless","name":"毫发无伤","desc":"不受伤清空一张地图","kind":0,"stat":"clean_maps","goal":1,"reward":{"potions":2}},
+	{"id":"flawless_5","name":"幽灵行者","desc":"五次不受伤清空地图","kind":0,"stat":"clean_maps","goal":5,"reward":{"shards":10}},
+	{"id":"chest_10","name":"开箱者","desc":"打开 10 个宝箱","kind":1,"stat":"chests","goal":10,"reward":{"gold":80}},
+	{"id":"chest_40","name":"撬锁行家","desc":"打开 40 个宝箱","kind":1,"stat":"chests","goal":40,"reward":{"gold":300}},
+	{"id":"marks_15","name":"印记收集者","desc":"收集 15 枚余烬印记","kind":1,"stat":"marks","goal":15,"reward":{"gold":100}},
+	{"id":"deep_20","name":"深渊行者","desc":"抵达深度 20","kind":1,"stat":"max_depth","goal":20,"reward":{"gold":200}},
+	{"id":"deep_50","name":"深潜者","desc":"抵达深度 50","kind":1,"stat":"max_depth","goal":50,"reward":{"gold":800,"shards":10}},
+	{"id":"chapter_3","name":"远行者","desc":"推进到第三章","kind":1,"stat":"max_chapter","goal":3,"reward":{"gold":150}},
+	{"id":"chapter_5","name":"无昼之路","desc":"推进到第五章","kind":1,"stat":"max_chapter","goal":5,"reward":{"gold":400,"potions":2}},
+	{"id":"rich_1000","name":"小有积蓄","desc":"累计获得 1000 金币","kind":2,"stat":"gold_total","goal":1000,"reward":{"potions":1}},
+	{"id":"rich_8000","name":"富甲一方","desc":"累计获得 8000 金币","kind":2,"stat":"gold_total","goal":8000,"reward":{"potions":3,"shards":10}},
+	{"id":"legend_1","name":"传说初现","desc":"获得第一件传说装备","kind":2,"stat":"legendaries","goal":1,"reward":{"gold":200}},
+	{"id":"legend_8","name":"传说收藏家","desc":"获得 8 件传说装备","kind":2,"stat":"legendaries","goal":8,"reward":{"shards":20}},
+	{"id":"upgrade_5","name":"铸魂学徒","desc":"强化装备 5 次","kind":2,"stat":"upgrades","goal":5,"reward":{"shards":5}},
+	{"id":"contract_6","name":"可靠打工人","desc":"完成 6 份城镇委托","kind":2,"stat":"contracts","goal":6,"reward":{"gold":300}},
+	{"id":"pet_first","name":"第一个伙伴","desc":"获得第一只伙伴","kind":3,"stat":"pets","goal":1,"reward":{"gold":50}},
+	{"id":"pet_5","name":"小小动物园","desc":"收集 5 种伙伴","kind":3,"stat":"pet_species","goal":5,"reward":{"gold":300}},
+	{"id":"pet_all","name":"万物之友","desc":"集齐全部 10 种伙伴","kind":3,"stat":"pet_species","goal":10,"reward":{"potions":5,"shards":20}},
+	{"id":"pet_lv10","name":"老练伙伴","desc":"伙伴达到 10 级","kind":3,"stat":"pet_level","goal":10,"reward":{"shards":10}},
+	{"id":"veteran_1h","name":"老练旅人","desc":"游戏时长满 1 小时","kind":4,"stat":"playtime","goal":3600,"reward":{"gold":500}},
+	{"id":"level_15","name":"渐入佳境","desc":"角色达到 15 级","kind":4,"stat":"max_level","goal":15,"reward":{"gold":300}},
+	{"id":"death_1","name":"第一次也是最后一次","desc":"倒下过一次。账单仍然没有。","kind":4,"stat":"deaths","goal":1,"reward":{"potions":1}},
+	{"id":"cycle_1","name":"深渊再来","desc":"进入第二轮深渊","kind":4,"stat":"cycle","goal":1,"reward":{"potions":2}},
+	{"id":"hidden_return","name":"退货成功","desc":"把黎明退回了人间。","kind":4,"stat":"victories","goal":1,"hidden":true,"reward":{"gold":1000,"shards":20}},
+	{"id":"hidden_classes","name":"三面手","desc":"三种职业都用过一遍。","kind":4,"stat":"classes","goal":3,"hidden":true,"reward":{"gold":200}}
+]
+const ARMORY_CAP = 30
+
+static func bestiary_entries() -> Array:
+	var out = []
+	for c in CHAPTERS.size():
+		for kind in MONSTER_NAMES[c].size():
+			var name = str(MONSTER_NAMES[c][kind])
+			if name == "": name = str(CHAPTERS[c].boss)
+			out.append({"key":"%d:%d" % [c, kind], "name":name, "chapter":c, "boss":kind==3})
+	return out

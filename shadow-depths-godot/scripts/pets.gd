@@ -69,6 +69,7 @@ func grant(species: int, rarity: int):
 		result_name = str(info.name)
 		result_new = true
 	result_rarity = rarity
+	if g.achv != null: g.achv.pet_granted(species, int(pet.level))
 	if active < 0 or active >= roster.size(): active = roster.find(pet)
 	return pet
 # 栏位满了又抽到新物种时，最弱的一只自行离开，避免首领掉落被浪费。
@@ -137,6 +138,7 @@ func gain_xp(p: Dictionary, amount: int):
 		p.hp = max_hp(p)
 		need = int(p.level) * 22
 		g.note(str(p.name) + " 升到 Lv." + str(p.level))
+		if g.achv != null: g.achv.pet_granted(int(p.species), int(p.level))
 		g.tone(700, 0.12)
 func follow_only(dt: float):
 	var goal = g.player + Vector2(-26, 26)

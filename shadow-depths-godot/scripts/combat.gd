@@ -83,6 +83,7 @@ func hit_enemy(index: int,power: float,status: String = ""):
 	var e = g.enemies[index]
 	var crit = g.rng.randi_range(0,99)<mini(75,8+int(g.equipped[0].crit)+int(g.equipped[2].crit))
 	var hit = power*(1.65 if crit else 1)
+	if g.achv != null: g.achv.hit(hit)
 	e.hp -= hit; e.hit = 0.17
 	e["knock_dir"] = g.player.direction_to(e.pos) if e.pos.distance_to(g.player)>1 else g.facing
 	if g.renderer_3d!=null:
@@ -108,13 +109,13 @@ func clear_line(a: Vector2,b: Vector2) -> bool:
 	return true
 func hurt_player(power: float):
 	if g.invincible>0 or g.in_town: return
-	g.hp = maxf(0,g.hp-power); g.invincible = 0.4; g.shake = 0.20; g.hitstop = 0.06
+	g.hp = maxf(0,g.hp-power); g.invincible = 0.4; g.shake = 0.20; g.hitstop = 0.06; g.map_no_hit = false
 	g.floating(g.player,"-"+str(int(power)),Color("e77f75"))
 	if g.pets != null: g.pets.splash(power*0.30)
 	if g.renderer_3d!=null:
 		g.renderer_3d.animate_hero("death" if g.hp<=0 else "hit",0.85 if g.hp<=0 else 0.26)
 		g.renderer_3d.impact(g.player,Color("e77f75"),0.9)
-	if g.hp<=0: g.modal = "dead"
+	if g.hp<=0: g.map_no_hit = false; g.achv.died(); g.modal = "dead"
 func update(dt: float):
 	for i in range(g.projectiles.size()-1,-1,-1):
 		var p = g.projectiles[i]
