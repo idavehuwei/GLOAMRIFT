@@ -9,6 +9,8 @@ const GOLD = Color("d4ae72")
 const TEXT = Color("dcd8c9")
 const MUTED = Color("7f898b")
 const SAVE = "user://embers_save.json"
+const SLOT_COUNT = 3
+const SLOT_NAMES = ["旅途 一", "旅途 二", "旅途 三"]
 var panel_texture: Texture2D
 var font: SystemFont
 var rng = RandomNumberGenerator.new()
@@ -42,7 +44,7 @@ var slash = 0.0
 var cast = 0.0      # 施法蓄力计时，驱动法杖宝珠亮度
 var hitstop = 0.0   # 命中卡帧，短暂放慢时间强化打击感
 var shake = 0.0
-var modal = "class"
+var modal = "title"
 var selected = 0
 var logs: Array = ["你带着一把旧剑，走进没有黎明的边境。"]
 var buttons: Array = []
@@ -77,9 +79,19 @@ var achv_tab = 0
 var achv_kind = -1
 var achv_page = 0
 var coll_tab = 0
+var slot = 0
+var slot_dir = "user://"
+var slot_cache: Array = []
+var title_time = 0.0
+var save_mode = "load"
+var del_confirm = -1
+var tz_bias = -99999
 
 func _ready():
 	rng.randomize()
+	use_slot(0)
+	migrate_legacy_save()
+	refresh_slots()
 	activities = preload("res://scripts/activities.gd").new(self)
 	combat = preload("res://scripts/combat.gd").new(self)
 	enemy_skills = preload("res://scripts/enemy_skills.gd").new(self)
@@ -237,6 +249,7 @@ func reveal():
 		for x in range(maxi(0,t.x-5),mini(W,t.x+6)): seen[Vector2i(x,y)] = true
 
 func _process(dt):
+	if modal in ["title","saves"]: title_time += dt; queue_redraw(); return
 	if modal != "": queue_redraw(); return
 	if hitstop>0: hitstop -= dt; dt *= 0.16
 	time += dt
@@ -384,12 +397,14 @@ func choose_class(index: int):
 func save_game():
 	var f = FileAccess.open(save_path,FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({"version":4,"activities":activities.snapshot(),"pets":pets.snapshot(),"achv":achv.snapshot(),"in_town":in_town,"hero_class":hero_class,"quest_accepted":quest_accepted,"chapter":chapter,"stage":stage,"cycle":cycle,"level":level,"xp":xp,"gold":gold,"potions":potions,"inventory":inventory,"equipped":equipped}))
-		note("进度已保存 · 继续时从本地图入口出发")
+		f.store_string(JSON.stringify({"version":5,"meta":save_meta(),"activities":activities.snapshot(),"pets":pets.snapshot(),"achv":achv.snapshot(),"in_town":in_town,"hero_class":hero_class,"quest_accepted":quest_accepted,"chapter":chapter,"stage":stage,"cycle":cycle,"level":level,"xp":xp,"gold":gold,"potions":potions,"inventory":inventory,"equipped":equipped}))
+		f.close()
+		note("进度已保存 · "+slot_name()+" · 继续时从本地图入口出发")
+		refresh_slots()
 func load_game():
 	if not FileAccess.file_exists(save_path): note("还没有存档。"); return
 	var d = JSON.parse_string(FileAccess.get_file_as_string(save_path))
-	if not d is Dictionary or int(d.get("version",0)) not in [1,2,3,4]: note("存档格式无法读取。"); return
+	if not d is Dictionary or int(d.get("version",0)) not in [1,2,3,4,5]: note("存档格式无法读取。"); return
 	activities.restore(d.get("activities",{}))
 	if pets != null: pets.restore(d.get("pets",{}))
 	if achv != null: achv.restore(d.get("achv",{}))
@@ -397,7 +412,8 @@ func load_game():
 	chapter = clampi(int(d.chapter),0,4); stage = clampi(int(d.stage),0,2); cycle = maxi(0,int(d.cycle))
 	level = maxi(1,int(d.level)); xp = int(d.xp); gold = int(d.gold); potions = int(d.potions)
 	inventory = d.inventory; equipped = d.equipped; hp = max_hp(); modal = ""
-	generate_map(); note("旅人，欢迎回来。")
+	sync_slot_from_path()
+	generate_map(); note("旅人，欢迎回来。"); refresh_slots()
 func equip_item():
 	if inventory.is_empty(): return
 	selected = clampi(selected,0,inventory.size()-1)
@@ -423,9 +439,11 @@ func mouse_in_world() -> bool:
 	return true
 
 func _input(event):
-	if modal in ["class","trainer"]:
+	if modal in ["class","trainer","title","saves"]:
 		if event is InputEventKey and event.pressed:
-			if event.physical_keycode in [KEY_1,KEY_2,KEY_3]: choose_class(event.physical_keycode-KEY_1)
+			if modal in ["class","trainer"] and event.physical_keycode in [KEY_1,KEY_2,KEY_3]: choose_class(event.physical_keycode-KEY_1)
+			elif modal == "title" and event.physical_keycode == KEY_ENTER: action("title_enter")
+			elif modal == "saves" and event.physical_keycode == KEY_ESCAPE: modal = "pause"
 		if event is InputEventMouseButton and event.pressed and event.button_index==MOUSE_BUTTON_LEFT:
 			for b in buttons:
 				if b.rect.has_point(get_global_mouse_position()): action(b.id); return
@@ -455,6 +473,8 @@ func _input(event):
 			KEY_M: modal = "" if modal == "map" else "map"
 			KEY_P: modal = "" if modal == "pets" else "pets"
 			KEY_G: modal = "" if modal == "achievements" else "achievements"
+			KEY_F5: save_game()
+			KEY_F9: save_mode = "load"; refresh_slots(); modal = "saves"
 			KEY_ENTER:
 				if modal == "story" or modal == "victory": modal = ""
 			KEY_E:
@@ -486,6 +506,15 @@ func action(id: String):
 	if id.begins_with("achv_tab:"): achv_tab = int(id.split(":")[1]); achv_page = 0; return
 	if id.begins_with("achv_kind:"): achv_kind = int(id.split(":")[1]); achv_page = 0; return
 	if id.begins_with("coll_tab:"): coll_tab = int(id.split(":")[1]); return
+	if id.begins_with("slot_new:"): new_game(int(id.split(":")[1])); return
+	if id.begins_with("slot_load:"): continue_slot(int(id.split(":")[1])); return
+	if id.begins_with("slot_save:"): use_slot(int(id.split(":")[1])); save_game(); modal = ""; return
+	if id.begins_with("slot_del:"):
+		var target = int(id.split(":")[1])
+		if del_confirm == target: delete_slot(target)
+		else: del_confirm = target
+		return
+	if id.begins_with("saves_mode:"): save_mode = id.split(":")[1]; return
 	if id=="achv_page-": achv_page = maxi(0,achv_page-1); return
 	if id=="achv_page+": achv_page += 1; return
 	match id:
@@ -509,6 +538,14 @@ func action(id: String):
 		"pause": modal = "pause"
 		"save": save_game()
 		"load": load_game()
+		"title": refresh_slots(); modal = "title"
+		"saves": save_mode = "load"; refresh_slots(); modal = "saves"
+		"quit": get_tree().quit()
+		"del_cancel": del_confirm = -1
+		"title_enter":
+			var resume = latest_slot()
+			if resume < 0: new_game(first_empty_slot())
+			else: continue_slot(resume)
 		"equip": equip_item()
 		"sell": sell_item()
 		"heal": heal()
@@ -595,6 +632,7 @@ func orb(p: Vector2,r: float,ratio: float,c: Color):
 func _draw():
 	if font == null: return
 	buttons.clear()
+	if modal == "title": draw_title_screen(); return
 	box(Rect2(0,0,1440,900),Color("12191d"))
 	if renderer_3d != null:
 		draw_texture_rect(renderer_3d.viewport.get_texture(),Rect2(0,0,1440,900),false)
@@ -726,7 +764,7 @@ func draw_modal():
 	rpg_frame(Rect2(280,140,880,620))
 	label_at(Vector2(320,181),"B E L O W   T H E   E M B E R S",11,GOLD)
 	ornament(Vector2(320,194),790)
-	if modal not in ["class","trainer","dead"]:
+	if modal not in ["class","trainer","dead","saves"]:
 		for i in 6: button(Rect2(590+i*87,154,81,31),["角色","行囊","技能","任务","委托","图鉴"][i],["character","inventory","skills","quests","contracts","gallery"][i],modal==["character","inventory","skills","quests","contracts","gallery"][i])
 	if modal in ["class","trainer"]:
 		label_at(Vector2(320,232),"选择你的道路",32,TEXT)
@@ -740,7 +778,7 @@ func draw_modal():
 			for k in 4: label_at(p+Vector2(19,125+k*34),["左键  ","右键  ","R       ","空格  "][k]+c.skills[k],16,TEXT)
 			label_at(p+Vector2(19,277),"生命 %d · 精力自动恢复" % c.hp,13,MUTED)
 			button(Rect2(p+Vector2(0,339),Vector2(248,50)),"选择"+c.name+"  ["+str(i+1)+"]","class:"+str(i),hero_class==i)
-		if FileAccess.file_exists(save_path): button(Rect2(921,701,192,35),"继续已有存档","load")
+		button(Rect2(921,701,192,35),"读取存档","saves")
 		return
 	if modal=="npc":
 		var n = townsfolk[active_npc]
@@ -760,6 +798,9 @@ func draw_modal():
 		button(Rect2(320,610,420,54),captions[active_npc],["accept","buy","forge","trainer","rest","pets"][active_npc],true)
 		button(Rect2(880,682,233,44),"离开","play")
 		return
+	if modal == "saves":
+		draw_saves_screen()
+		return
 	if modal == "pets":
 		draw_pet_panel()
 		return
@@ -777,7 +818,7 @@ func draw_modal():
 		label_at(Vector2(320,555),"先在城镇向邮差领取委托、补给整装，再从东侧城门出发。",15,MUTED)
 		label_at(Vector2(320,586),"野外收集 3 枚印记并清敌。R 终极技能，T 随时返回本章城镇。",15,MUTED)
 		button(Rect2(320,649,270,58),"继续深入  →" if modal == "victory" else "进入城镇  →  Enter","play",true)
-		if FileAccess.file_exists(save_path): button(Rect2(614,649,190,58),"读取旅程","load")
+		button(Rect2(614,649,190,58),"读取存档","saves")
 	elif modal == "inventory":
 		label_at(Vector2(320,242),"装备与行囊",29,GOLD)
 		label_at(Vector2(876,239),"%d / 36 格    %d 金" % [inventory.size(),gold],15,TEXT)
@@ -839,10 +880,11 @@ func draw_modal():
 		label_at(Vector2(320,259),"在篝火旁歇一会儿",34,TEXT)
 		label_at(Vector2(320,303),"游戏已暂停。存档保留装备和章节，读档会重置当前地图。",17,MUTED)
 		button(Rect2(320,362,340,54),"继续冒险","play",true)
-		button(Rect2(320,434,340,54),"保存旅程","save")
-		button(Rect2(320,506,340,54),"读取旅程","load")
-		button(Rect2(320,578,340,54),"音效：关闭" if muted else "音效：开启","mute")
-		label_at(Vector2(716,399),"烬下 / 铸魂工坊 0.5",22,GOLD)
+		button(Rect2(320,428,340,52),"保存旅程  F5","save")
+		button(Rect2(320,488,340,52),"存档管理  F9","saves")
+		button(Rect2(320,548,340,52),"返回标题","title")
+		button(Rect2(320,608,340,52),"音效：关闭" if muted else "音效：开启","mute")
+		label_at(Vector2(716,399),"烬下 / 铸魂工坊 0.10",22,GOLD)
 		label_at(Vector2(716,446),"5 座安全城镇 · 15 张冒险地图",16,TEXT)
 		label_at(Vector2(716,480),"三种职业 · 随机装备 · 无限周目",16,TEXT)
 		label_at(Vector2(716,514),"正交 3D · 实时阴影 · 像素渲染",15,MUTED)
@@ -1089,7 +1131,7 @@ func draw_achv_list():
 	button(Rect2(320,668,94,34),"◀ 上一页","achv_page-")
 	button(Rect2(424,668,94,34),"下一页 ▶","achv_page+")
 	label_at(Vector2(534,690),"第 %d / %d 页" % [achv_page+1,pages],13,MUTED)
-	label_at(Vector2(660,690),"累计击杀 %d   ·   最深 %d   ·   时长 %.0f 分钟" % [int(achv.value("kills")),int(achv.value("max_depth")),achv.value("playtime")/60.0],13,TEXT)
+	label_at(Vector2(660,690),"累计讨伐 %d   ·   最深 %d   ·   时长 %.0f 分钟" % [int(achv.value("kills")),int(achv.value("max_depth")),achv.value("playtime")/60.0],13,TEXT)
 
 func draw_collection_list():
 	var tabs = ["怪物图鉴","装备陈列","首领纪念","伙伴名录"]
@@ -1103,7 +1145,7 @@ func draw_collection_list():
 			var got = achv.bestiary.has(key)
 			var c = Vector2(330+(k%5)*160,352+int(k/5)*44)
 			label_at(c+Vector2(0,16),str(e.name) if got else "？？？",14,(Color("c98d8d") if bool(e.boss) else GOLD) if got else Color("4d5457"))
-			if got: label_at(c+Vector2(0,34),"击杀 %d 次" % int(achv.bestiary[key].get("kills",0)),11,MUTED)
+			if got: label_at(c+Vector2(0,34),"讨伐 %d 次" % int(achv.bestiary[key].get("kills",0)),11,MUTED)
 			else: label_at(c+Vector2(0,34),"第 %d 章" % (int(e.chapter)+1),11,Color("3f464a"))
 		label_at(Vector2(320,678),"解锁 %d / %d 种。击败敌人自动记录，章节首领单独成条。" % [achv.bestiary_count(),entries.size()],13,MUTED)
 	elif coll_tab==1:
@@ -1165,3 +1207,200 @@ func draw_toasts():
 		label_at(r.position+Vector2(16,22),"✦ 成就解锁",12,Color(t.color))
 		label_at(r.position+Vector2(16,46),str(t.title),18,GOLD)
 		label_at(r.position+Vector2(16,64),str(t.desc).substr(0,16),11,Color("a8a294"))
+
+# ---------- 存档槽：路径、元信息、新建 / 读取 / 删除 ----------
+func slot_path(i: int) -> String: return slot_dir + "embers_slot_%d.json" % (i + 1)
+func slot_name(i: int = -1) -> String: return SLOT_NAMES[clampi(slot if i < 0 else i, 0, SLOT_COUNT - 1)]
+func use_slot(i: int):
+	slot = clampi(i, 0, SLOT_COUNT - 1)
+	save_path = slot_path(slot)
+func sync_slot_from_path():
+	slot = 0
+	for i in SLOT_COUNT:
+		if save_path == slot_path(i): slot = i
+func remove_save(p: String):
+	if not FileAccess.file_exists(p): return
+	var dir = DirAccess.open(p.get_base_dir())
+	if dir != null: dir.remove(p.get_file())
+func save_meta() -> Dictionary:
+	return {"level": level, "hero_class": hero_class, "chapter": chapter, "stage": stage, "cycle": cycle,
+		"depth": depth(), "gold": gold, "kills": int(achv.value("kills")) if achv != null else kills, "playtime": time, "location": location_name(),
+		"town": in_town, "saved": int(Time.get_unix_time_from_system()), "achv": achv.done() if achv != null else 0}
+func meta_from(d: Dictionary) -> Dictionary:
+	var m = d.get("meta", {})
+	if not m is Dictionary: m = {}
+	var ch = clampi(int(m.get("chapter", d.get("chapter", 0))), 0, Data.CHAPTERS.size() - 1)
+	var st = clampi(int(m.get("stage", d.get("stage", 0))), 0, Data.CHAPTERS[ch].maps.size() - 1)
+	var cy = maxi(0, int(m.get("cycle", d.get("cycle", 0))))
+	var town = bool(m.get("town", d.get("in_town", true)))
+	var loc = str(m.get("location", ""))
+	if loc == "": loc = Data.TOWNS[ch] if town else Data.CHAPTERS[ch].maps[st]
+	return {"level": maxi(1, int(m.get("level", d.get("level", 1)))),
+		"hero_class": clampi(int(m.get("hero_class", d.get("hero_class", 0))), 0, Data.CLASSES.size() - 1),
+		"chapter": ch, "stage": st, "cycle": cy, "town": town, "location": loc,
+		"depth": int(m.get("depth", cy * 15 + ch * 3 + st + 1)), "gold": int(m.get("gold", d.get("gold", 0))),
+		"kills": int(m.get("kills", 0)), "playtime": float(m.get("playtime", 0)),
+		"saved": int(m.get("saved", 0)), "achv": int(m.get("achv", 0))}
+func refresh_slots():
+	slot_cache.clear()
+	for i in SLOT_COUNT:
+		var path = slot_path(i)
+		var info = {"index": i, "path": path, "empty": true, "meta": {}}
+		if FileAccess.file_exists(path):
+			var d = JSON.parse_string(FileAccess.get_file_as_string(path))
+			if d is Dictionary and not (d as Dictionary).is_empty():
+				info["empty"] = false
+				info["meta"] = meta_from(d)
+		slot_cache.append(info)
+	del_confirm = -1
+func slot_info(i: int) -> Dictionary:
+	if i >= 0 and i < slot_cache.size(): return slot_cache[i]
+	return {"index": i, "path": slot_path(i), "empty": true, "meta": {}}
+func slot_meta(i: int) -> Dictionary: return slot_info(i).get("meta", {})
+func latest_slot() -> int:
+	var best = -1
+	var newest = -1
+	for i in SLOT_COUNT:
+		if bool(slot_info(i).get("empty", true)): continue
+		var stamp = int(slot_meta(i).get("saved", 0))
+		if stamp >= newest: newest = stamp; best = i
+	return best
+func first_empty_slot() -> int:
+	for i in SLOT_COUNT:
+		if bool(slot_info(i).get("empty", true)): return i
+	return 0
+func delete_slot(i: int):
+	remove_save(slot_path(i))
+	refresh_slots()
+	note("已删除"+slot_name(i)+"。")
+func reset_run():
+	chapter = 0; stage = 0; cycle = 0; level = 1; xp = 0; gold = 0; potions = 5
+	marks = 0; kills = 0; time = 0.0; in_town = true; quest_accepted = false
+	hp = 100.0; mana = 100.0; attack_cd = 0.0; dash_cd = 0.0; nova_cd = 0.0; ultimate_cd = 0.0
+	invincible = 0.0; slash = 0.0; cast = 0.0; shake = 0.0; hitstop = 0.0; player_slow = 0.0
+	hero_class = 0; inventory = []
+	equipped = [{"name":"旧铁剑","power":4,"crit":3,"rarity":0},{"name":"旅人外套","power":2,"crit":0,"rarity":0},{"name":"空","power":0,"crit":0,"rarity":0}]
+	particles.clear(); floats.clear(); projectiles.clear(); effects.clear(); drops.clear()
+	logs = ["你带着一把旧剑，走进没有黎明的边境。"]
+	activities = preload("res://scripts/activities.gd").new(self)
+	pets = preload("res://scripts/pets.gd").new(self)
+	achv = preload("res://scripts/achievements.gd").new(self)
+	generate_map()
+	hp = max_hp(); mana = 100.0
+	if renderer_3d != null: renderer_3d.rebuild()
+func new_game(i: int):
+	use_slot(i)
+	reset_run()
+	remove_save(save_path)
+	refresh_slots()
+	modal = "class"
+func continue_slot(i: int):
+	use_slot(i)
+	load_game()
+func migrate_legacy_save():
+	if not FileAccess.file_exists(SAVE): return
+	for i in SLOT_COUNT:
+		if FileAccess.file_exists(slot_path(i)): return
+	var txt = FileAccess.get_file_as_string(SAVE)
+	if txt == "": return
+	var f = FileAccess.open(slot_path(0), FileAccess.WRITE)
+	if f: f.store_string(txt)
+
+# ---------- 开始界面 ----------
+func clock_text(sec: float) -> String:
+	if sec < 60.0: return "%.0f 秒" % sec
+	if sec < 3600.0: return "%.0f 分钟" % (sec / 60.0)
+	return "%d 小时 %d 分" % [int(sec / 3600.0), int(fmod(sec, 3600.0) / 60.0)]
+func stamp(unix: int) -> String:
+	if unix <= 0: return "未知"
+	if tz_bias == -99999:
+		var tz = Time.get_time_zone_from_system()
+		tz_bias = int(tz.get("bias", 0)) * 60 if tz is Dictionary else 0
+	var d = Time.get_datetime_dict_from_unix_time(unix + tz_bias)
+	return "%02d-%02d-%02d  %02d:%02d" % [int(d.get("year", 0)) % 100, int(d.get("month", 0)), int(d.get("day", 0)), int(d.get("hour", 0)), int(d.get("minute", 0))]
+func centered(s: String, y: float, size: int, c: Color):
+	var w = font.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+	label_at(Vector2((1440.0 - w) / 2.0, y), s, size, c)
+func draw_title_screen():
+	box(Rect2(0, 0, 1440, 900), Color("0b1013"))
+	for i in 90: box(Rect2(0, i * 10, 1440, 10), Color(0.06, 0.08, 0.10, (1.0 - i / 90.0) * 0.55))
+	for i in 46:
+		var sd = float(i) * 1.618
+		var x = fmod(sd * 173.0 + title_time * (6.0 + fmod(sd, 7.0)), 1450.0) - 5.0
+		var y = 910.0 - fmod(sd * 97.0 + title_time * (22.0 + fmod(sd * 7.0, 26.0)), 920.0)
+		box(Rect2(x, y, 2.0, 2.0), Color(0.92, 0.58, 0.26, 0.14 + 0.30 * abs(sin(sd + title_time * 1.7))))
+	for r in 5: draw_circle(Vector2(720, 236), 250.0 - r * 44.0, Color(0.35, 0.22, 0.10, 0.05))
+	centered("烬 下", 200, 80, GOLD)
+	centered("B E L O W   T H E   E M B E R S", 244, 15, Color("9c907a"))
+	ornament(Vector2(560, 266), 320)
+	centered("五座城镇 · 十五张地图 · 一场没有黎明的远征", 306, 16, MUTED)
+	draw_slot_cards(88, 330, 400, 340, 32, "title")
+	centered("选择一处空席开始新的旅程，或继续已有的旅途 · 回车继续最近存档", 696, 13, Color("8d8577"))
+	button(Rect2(430, 716, 180, 42), "音效：" + ("关闭" if muted else "开启"), "mute")
+	button(Rect2(630, 716, 180, 42), "画面精度：" + (["精细像素","经典像素","原生细节"][renderer_3d.quality] if renderer_3d != null else "无头测试"), "quality")
+	button(Rect2(830, 716, 180, 42), "退出游戏", "quit")
+	centered("WASD 移动 · 左键攻击 · 右键 / K 技能 · 空格冲刺 · R 终极 · Esc 篝火", 786, 12, Color("7f898b"))
+	centered("烬下 · 铸魂工坊  0.10   ·   三个存档槽，各自独立的旅程", 812, 12, Color("5f6669"))
+func draw_saves_screen():
+	label_at(Vector2(320, 242), "存档管理", 29, GOLD)
+	label_at(Vector2(520, 246), "当前槽位：" + slot_name(), 15, TEXT)
+	button(Rect2(700, 230, 108, 32), "读取", "saves_mode:load", save_mode == "load")
+	button(Rect2(816, 230, 108, 32), "保存", "saves_mode:save", save_mode == "save")
+	label_at(Vector2(942, 246), "自动保存：进入新地图 / 选择职业", 12, MUTED)
+	draw_slot_cards(320, 300, 250, 390, 25, save_mode)
+	button(Rect2(320, 704, 200, 44), "返回冒险  Esc", "play", true)
+	button(Rect2(538, 704, 200, 44), "返回标题", "title")
+func draw_slot_cards(x0: float, y0: float, w: float, h: float, gap: float, mode: String):
+	for i in SLOT_COUNT: draw_slot_card(i, Rect2(x0 + i * (w + gap), y0, w, h), mode)
+func draw_slot_card(i: int, r: Rect2, mode: String):
+	var info = slot_info(i)
+	var empty = bool(info.get("empty", true))
+	var m = info.get("meta", {})
+	box(r, Color(0.045, 0.05, 0.055, 0.94), Color("6b5c42"))
+	draw_line(r.position + Vector2(3, 3), r.position + Vector2(r.size.x - 3, 3), Color("8a7550"), 1)
+	label_at(r.position + Vector2(20, 34), SLOT_NAMES[i], 21, GOLD)
+	label_at(r.position + Vector2(r.size.x - 92, 34), "空 席" if empty else "进行中", 13, MUTED if empty else Color("8bab78"))
+	ornament(r.position + Vector2(20, 46), r.size.x - 40)
+	if empty:
+		label_at(r.position + Vector2(20, 118), "还没有旅人", 24, Color("5b6265"))
+		label_at(r.position + Vector2(20, 150), "从这里出发。", 24, Color("5b6265"))
+		label_at(r.position + Vector2(20, 196), "选择职业、接下委托，", 13, Color("6f767a"))
+		label_at(r.position + Vector2(20, 218), "把黎明带回人间。", 13, Color("6f767a"))
+		button(Rect2(r.position + Vector2(20, r.size.y - 66), Vector2(r.size.x - 40, 46)), "开始新的旅程", "slot_new:" + str(i), true)
+		return
+	var c = Data.CLASSES[clampi(int(m.get("hero_class", 0)), 0, Data.CLASSES.size() - 1)]
+	var ch = clampi(int(m.get("chapter", 0)), 0, Data.CHAPTERS.size() - 1)
+	label_at(r.position + Vector2(20, 90), c.name, 24, Color(c.color))
+	label_at(r.position + Vector2(20, 116), "Lv.%d  ·  %s" % [int(m.get("level", 1)), c.title], 12, MUTED)
+	label_at(r.position + Vector2(20, 148), "第 %d 章  %s" % [ch + 1, Data.CHAPTERS[ch].name], 16, TEXT)
+	label_at(r.position + Vector2(20, 174), str(m.get("location", "")), 15, GOLD)
+	var rows = ["深度   %d" % int(m.get("depth", 1)), "金币   %d" % int(m.get("gold", 0)),
+		"讨伐   %d" % int(m.get("kills", 0)), "成就   %d / %d" % [int(m.get("achv", 0)), achv.total() if achv != null else Data.ACHIEVEMENTS.size()],
+		"时长   %s" % clock_text(float(m.get("playtime", 0))), "保存   %s" % stamp(int(m.get("saved", 0)))]
+	var inner = r.size.x - 40.0
+	if r.size.x >= 320.0:
+		for k in 3:
+			label_at(r.position + Vector2(20, 208 + k * 24), rows[k], 13, Color("a8a294"))
+			label_at(r.position + Vector2(20 + inner / 2.0, 208 + k * 24), rows[k + 3], 13, Color("a8a294"))
+	else:
+		for k in rows.size(): label_at(r.position + Vector2(20, 200 + k * 22), rows[k], 13, Color("a8a294"))
+	if del_confirm == i:
+		label_at(r.position + Vector2(20, r.size.y - 104), "删除后无法恢复，确定？", 12, Color("d78f7f"))
+		button(Rect2(r.position + Vector2(20, r.size.y - 86), Vector2(inner / 2.0 - 6, 42)), "确认删除", "slot_del:" + str(i), true)
+		button(Rect2(r.position + Vector2(20 + inner / 2.0 + 6, r.size.y - 86), Vector2(inner / 2.0 - 6, 42)), "取消", "del_cancel")
+		return
+	if r.size.x >= 320.0:
+		if mode == "save":
+			button(Rect2(r.position + Vector2(20, r.size.y - 64), Vector2(inner, 44)), "保存到此处", "slot_save:" + str(i), true)
+		else:
+			var third = (inner - 20.0) / 3.0
+			button(Rect2(r.position + Vector2(20, r.size.y - 64), Vector2(third, 44)), "继续", "slot_load:" + str(i), true)
+			button(Rect2(r.position + Vector2(20 + third + 10, r.size.y - 64), Vector2(third, 44)), "覆盖重开", "slot_new:" + str(i))
+			button(Rect2(r.position + Vector2(20 + (third + 10) * 2, r.size.y - 64), Vector2(third, 44)), "删除", "slot_del:" + str(i))
+	else:
+		var by = r.size.y - 94.0
+		if mode == "save":
+			button(Rect2(r.position + Vector2(20, by), Vector2(inner, 40)), "保存到此处", "slot_save:" + str(i), true)
+		else:
+			button(Rect2(r.position + Vector2(20, by), Vector2(inner, 40)), "读取旅程", "slot_load:" + str(i), true)
+		button(Rect2(r.position + Vector2(20, by + 48), Vector2(inner, 40)), "删除存档", "slot_del:" + str(i))

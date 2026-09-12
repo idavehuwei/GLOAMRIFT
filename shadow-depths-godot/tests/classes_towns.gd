@@ -9,7 +9,7 @@ func enemy(p: Vector2,uid: int = 1,hp: float = 500) -> Dictionary:
 func _initialize(): call_deferred("run")
 func run():
 	var g = load("res://main.tscn").instantiate(); root.add_child(g); g.set_process(false); g.muted = true; g.save_path = "/tmp/embers-classes-save.json"
-	check(g.in_town and g.modal=="class","New game begins with class selection in town")
+	check(g.in_town and g.modal=="title","New game opens on the title screen in town")
 	for c in 5:
 		g.chapter = c; g.in_town = true; g.quest_accepted = false; g.generate_map(); g.modal = ""
 		check(g.enemies.is_empty() and g.drops.is_empty(),"Every chapter town is safe")

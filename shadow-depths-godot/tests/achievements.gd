@@ -150,7 +150,8 @@ func run():
 	# --- save round trip ---
 	g.save_game()
 	var raw = JSON.parse_string(FileAccess.get_file_as_string(g.save_path))
-	check(int(raw.get("version",0))==4,"Save is version 4")
+	check(int(raw.get("version",0))==5,"Save is version 5")
+	check(raw.has("meta"),"Save carries slot metadata")
 	check(raw.has("achv"),"Save carries the achievement block")
 	var done_before = a.done()
 	var stats_before = int(a.value("kills"))
