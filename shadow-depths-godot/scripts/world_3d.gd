@@ -391,6 +391,65 @@ func arch(parent: Node3D,p: Vector3,width: float,height: float,mat: Material):
 	for k in range(11):
 		var a = PI*k/10.0
 		block(parent,p+Vector3(cos(a)*width*0.5,height*0.63+sin(a)*height*0.34,0),Vector3(width*0.19,0.34,0.52),mat,Vector3(0,0,a-PI/2))
+# ---------- HY3D 建筑 ----------
+# 城镇的四个建筑基座各放一栋混元3D 生成的建筑；模型文件缺失时自动回退到程序化 landmark。
+# 每个条目：[资源名, 世界坐标, 朝向(弧度), 允许的最大底边宽度]
+const BUILDING_HEIGHT = {"smithy":3.6,"alchemy":3.0,"inn":4.4,"den":2.4,"tower":5.0}
+const TOWN_BUILDINGS = [
+	["alchemy", Vector3(8,0,3.0), 0.0, 3.3],
+	["smithy", Vector3(20,0,3.0), 0.0, 3.3],
+	["inn", Vector3(7.5,0,16.0), PI, 4.2],
+	["den", Vector3(20.5,0,16.0), PI, 4.2],
+	["tower", Vector3(1.6,0,1.6), PI*0.25, 2.6],
+	["tower", Vector3(27.4,0,17.4), PI*1.25, 2.6]
+]
+var building_scenes = {}
+
+# 递归合并所有 MeshInstance3D 的世界 AABB，用来把任意尺度的模型归一到目标尺寸。
+func _mesh_box(node: Node, xf: Transform3D, box: AABB, found: Array) -> AABB:
+	var t: Transform3D = xf
+	if node is Node3D:
+		var n3 := node as Node3D
+		t = xf * n3.transform
+		if n3 is MeshInstance3D:
+			var mi := n3 as MeshInstance3D
+			if mi.mesh != null:
+				var local: AABB = mi.mesh.get_aabb()
+				for i in 8:
+					var c: Vector3 = local.position
+					if (i & 1) != 0: c.x += local.size.x
+					if (i & 2) != 0: c.y += local.size.y
+					if (i & 4) != 0: c.z += local.size.z
+					var w: Vector3 = t * c
+					if found[0]: box = box.expand(w)
+					else: box = AABB(w, Vector3.ZERO); found[0] = true
+	for ch in node.get_children(): box = _mesh_box(ch, t, box, found)
+	return box
+
+# 返回建筑根节点；GLB 不存在时返回 null，由调用方回退到程序化建筑。
+func place_building(key: String, p: Vector3, rot_y: float, width: float) -> Node3D:
+	var path = "res://assets/models/architecture/"+key+".glb"
+	if not ResourceLoader.exists(path): return null
+	var packed = building_scenes.get(key)
+	if packed == null:
+		packed = load(path)
+		if packed == null: return null
+		building_scenes[key] = packed
+	var model := (packed as PackedScene).instantiate() as Node3D
+	if model == null: return null
+	var box: AABB = _mesh_box(model, Transform3D.IDENTITY, AABB(), [false])
+	if box.size.y < 0.001: return null
+	var s = minf(float(BUILDING_HEIGHT.get(key,3.4)) / box.size.y, width / maxf(maxf(box.size.x,box.size.z),0.001))
+	model.name = "Model"
+	model.scale = Vector3.ONE * s
+	model.position = Vector3(-(box.position.x+box.size.x*0.5)*s, -box.position.y*s, -(box.position.z+box.size.z*0.5)*s)
+	var outer = Node3D.new(); outer.name = "Building_"+key
+	outer.position = p; outer.rotation.y = rot_y
+	outer.set_meta("authored_building",true)
+	outer.add_child(model)
+	scenery.add_child(outer)
+	return outer
+
 func landmark(p: Vector3,stone: Material,dark: Material,iron: Material):
 	detailer.building(p)
 	if game.chapter in [0,2]:
@@ -540,6 +599,8 @@ func chest(p: Vector3) -> Node3D:
 
 func authored_character(kind: int) -> Node3D:
 	var file = "warrior" if kind == -1 else ("mage" if kind == -10 else "archer")
+	var npc_files = {-2:"npc_courier",-3:"npc_apothecary",-4:"npc_smith",-5:"npc_mentor",-6:"npc_innkeeper",-7:"npc_petkeeper"}
+	if npc_files.has(kind): file = npc_files[kind]
 	var packed = load("res://assets/models/realistic/authored/"+file+".glb")
 	if packed == null: return null
 	var root: Node3D = packed.instantiate(); root.name = "Authored_"+file
@@ -549,6 +610,10 @@ func authored_character(kind: int) -> Node3D:
 		# Variant 0 is the default appearance; variant 1 is a swappable equipment set.
 		for n in skeleton.get_children():
 			if n.name.ends_with("_1"): n.visible = false
+		if npc_files.has(kind):
+			var npc_anim = root.get_node_or_null("AnimationPlayer")
+			if npc_anim != null: npc_anim.play("idle")
+			return root
 		var attachment = BoneAttachment3D.new(); attachment.name = "EquipmentSocket"; attachment.bone_name = "hand_r" if kind in [-1,-10] else "hand_l"; skeleton.add_child(attachment)
 		var weapon_file = "sword" if kind == -1 else ("staff" if kind == -10 else "bow")
 		var weapon = load("res://assets/models/realistic/authored/"+weapon_file+".glb")
@@ -597,7 +662,7 @@ func refresh_authored_hero_equipment() -> void:
 		_attach_authored_asset(skeleton, "chest", "BackEquipmentSocket", "quiver", 0.72)
 
 func character(kind: int) -> Node3D:
-	if kind in [-1,-10,-11]:
+	if kind in [-1,-10,-11,-2,-3,-4,-5,-6,-7]:
 		var authored = authored_character(kind)
 		if authored != null: return authored
 	if kind in [4,5]: return creature(kind)
@@ -819,8 +884,9 @@ func building_details(p: Vector3,stone: Material,iron: Material):
 		ball(scenery,q,Vector3(0.045,0.20,0.18),ivy)
 func town_details(stone: Material,dark: Material,iron: Material):
 	# Distinct town landmarks and actual services stand around a clear central square.
-	landmark(Vector3(7.5,0,16),stone,dark,iron)
-	landmark(Vector3(20.5,0,16),stone,dark,iron)
+	for slot in TOWN_BUILDINGS:
+		if place_building(str(slot[0]),slot[1],float(slot[2]),float(slot[3])) == null:
+			landmark(slot[1],stone,dark,iron)
 	var well = Vector3(15,0,9)
 	cylinder(scenery,well+Vector3(0,0.16,0),0.9,0.32,dark)
 	var water = material("wellwater",Color("3b7279"),0.18,0.35)
