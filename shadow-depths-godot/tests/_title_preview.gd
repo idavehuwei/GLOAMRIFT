@@ -13,11 +13,11 @@ func run():
 	DirAccess.make_dir_recursive_absolute("/tmp/embers_title_slots")
 	for i in g.SLOT_COUNT: g.remove_save(g.slot_path(i))
 	# 槽位一：深入第三章的法师
-	g.new_game(0); g.choose_class(1)
+	g.new_game(0); g.action("diff:0"); g.choose_class(1)
 	g.level = 14; g.gold = 3420; g.achv.bump("kills", 87); g.chapter = 2; g.stage = 1; g.in_town = false
 	g.generate_map(); g.time = 4520.0; g.save_game()
 	# 槽位二：刚出城的战士
-	g.new_game(1); g.choose_class(0)
+	g.new_game(1); g.action("diff:0"); g.choose_class(0)
 	g.level = 4; g.gold = 260; g.achv.bump("kills", 11); g.chapter = 0; g.stage = 0; g.in_town = true
 	g.generate_map(); g.time = 640.0; g.save_game()
 	g.refresh_slots()

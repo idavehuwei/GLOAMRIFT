@@ -46,7 +46,7 @@ func killed(e: Dictionary):
 		challenge_ids.erase(e.uid)
 		if challenge_ids.is_empty() and challenge_active:
 			challenge_active = false; shards += 10
-			var item = g.Data.loot(g.rng,g.depth(),true,g.hero_class); item.rarity = maxi(3,int(item.rarity)); item.power += 5
+			var item = g.Data.loot(g.rng,g.ilvl(),true,g.hero_class); item.rarity = maxi(3,int(item.rarity)); item.power += 5
 			g.drops.append({"pos":e.pos,"kind":"item","item":item})
 			g.note("祭坛试炼完成！额外史诗装备 + 10 锻造碎片。")
 func contract_action(index: int):
@@ -59,9 +59,9 @@ func contract_action(index: int):
 	elif c.count>=c.goal:
 		if not g.in_town: g.note("回城后可领取委托奖励。"); return
 		if g.inventory.size()>=36: g.note("请先腾出一格背包再领奖。"); return
-		c.claimed = true; g.gold += 100*g.depth(); shards += 5
+		c.claimed = true; g.gold += 40*g.ilvl(); shards += 5
 		if g.achv != null: g.achv.contract_done()
-		g.inventory.append(g.Data.loot(g.rng,g.depth(),true,g.hero_class)); g.note("委托奖励：金币、稀有装备与 5 碎片。"); g.save_game()
+		g.inventory.append(g.Data.loot(g.rng,g.ilvl(),true,g.hero_class)); g.note("委托奖励：金币、稀有装备与 5 碎片。"); g.save_game()
 func salvage():
 	if not g.in_town: g.note("分解装备需要回到城镇。"); return
 	if g.inventory.is_empty(): return
@@ -76,9 +76,9 @@ func upgrade(slot: int):
 	var rank = int(item.get("upgrade",0))
 	if rank>=5: g.note("此装备已经强化至 +5。"); return
 	var cost = 3+rank*2
-	var coins = 25*g.depth()*(rank+1)
+	var coins = 10*g.ilvl()*(rank+1)
 	if shards<cost or g.gold<coins: g.note("材料或金币不足。"); return
-	shards -= cost; g.gold -= coins; item.power += 2+g.depth(); item["upgrade"] = rank+1
+	shards -= cost; g.gold -= coins; item.power += 2+int(g.ilvl()*0.4); item["upgrade"] = rank+1
 	g.note("强化成功："+item.name+" +%d" % (rank+1)); g.save_game()
 	if g.achv != null: g.achv.upgraded()
 func next_chapter():

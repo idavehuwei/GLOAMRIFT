@@ -19,7 +19,7 @@ static func loot(rng: RandomNumberGenerator, depth: int, guaranteed: bool = fals
 	var rarity = 4 if roll > 0.97 else (3 if roll > 0.84 else (2 if roll > 0.58 else (1 if roll > 0.25 else 0)))
 	if guaranteed: rarity = maxi(2, rarity)
 	var slot = rng.randi_range(0, 2)
-	var power = 3 + depth * 2 + rarity * 4 + rng.randi_range(0, depth + 3)
+	var power = item_power(rng, depth, rarity)
 	var choices = BASES[slot]
 	if slot==0 and job>=0: choices = [["长剑","斩骨斧","平底锅","焰纹重刃"],["星火法杖","寒霜权杖","不加糖魔杖","虚空枝"],["猎影长弓","穿林短弓","机关弩","弹弓之王"]][job]
 	return {"name":PREFIX[rng.randi_range(0,PREFIX.size()-1)] + choices[rng.randi_range(0,choices.size()-1)] + SUFFIX[rng.randi_range(0,SUFFIX.size()-1)], "slot":slot, "rarity":rarity, "power":power, "crit":rng.randi_range(1,5+rarity*3), "level":depth, "id":rng.randi()}
@@ -101,7 +101,12 @@ const ACHIEVEMENTS = [
 	{"id":"death_1","name":"第一次也是最后一次","desc":"倒下过一次。账单仍然没有。","kind":4,"stat":"deaths","goal":1,"reward":{"potions":1}},
 	{"id":"cycle_1","name":"深渊再来","desc":"进入第二轮深渊","kind":4,"stat":"cycle","goal":1,"reward":{"potions":2}},
 	{"id":"hidden_return","name":"退货成功","desc":"把黎明退回了人间。","kind":4,"stat":"victories","goal":1,"hidden":true,"reward":{"gold":1000,"shards":20}},
-	{"id":"hidden_classes","name":"三面手","desc":"三种职业都用过一遍。","kind":4,"stat":"classes","goal":3,"hidden":true,"reward":{"gold":200}}
+	{"id":"hidden_classes","name":"三面手","desc":"三种职业都用过一遍。","kind":4,"stat":"classes","goal":3,"hidden":true,"reward":{"gold":200}},
+	{"id":"level_50","name":"半百之躯","desc":"角色达到 50 级","kind":4,"stat":"max_level","goal":50,"reward":{"gold":800,"shards":10}},
+	{"id":"level_100","name":"登临百级","desc":"角色达到 100 级","kind":4,"stat":"max_level","goal":100,"reward":{"gold":5000,"shards":40}},
+	{"id":"nightmare_clear","name":"噩梦终结","desc":"通关噩梦难度","kind":4,"stat":"nm_clear","goal":1,"reward":{"gold":1500,"shards":20}},
+	{"id":"hell_clear","name":"地狱已空","desc":"通关地狱难度","kind":4,"stat":"hell_clear","goal":1,"reward":{"gold":4000,"shards":40}},
+	{"id":"hidden_abyss","name":"深渊常客","desc":"在深渊里走完三轮轮回。","kind":4,"stat":"cycle","goal":3,"hidden":true,"reward":{"gold":2000,"shards":30}}
 ]
 const ARMORY_CAP = 30
 
@@ -113,3 +118,66 @@ static func bestiary_entries() -> Array:
 			if name == "": name = str(CHAPTERS[c].boss)
 			out.append({"key":"%d:%d" % [c, kind], "name":name, "chapter":c, "boss":kind==3})
 	return out
+
+# ---------- 暗黑破坏神 2 风格：等级 / 难度 / 经验 ----------
+# 设计口径：最高 100 级；三难度（普通 / 噩梦 / 地狱）只改变区域等级与怪物强度，
+# 不额外给经验乘子——与暗黑2 一致，高难度的回报来自更高的怪物等级与更好的掉落。
+const LEVEL_CAP = 100
+const DIFFICULTIES = [
+	{"name":"普通", "en":"NORMAL", "offset":0, "hp":1.00, "dmg":1.00, "gold":1.0, "drop":1.00, "death_xp":0.00, "resist":0,
+		"desc":"亡者刚刚学会加班。适合第一次踏进边境的旅人。"},
+	{"name":"噩梦", "en":"NIGHTMARE", "offset":30, "hp":1.12, "dmg":1.18, "gold":1.6, "drop":1.25, "death_xp":0.05, "resist":-20,
+		"desc":"死者开始轮班。死亡损失当前等级 5% 的经验。"},
+	{"name":"地狱", "en":"HELL", "offset":60, "hp":1.30, "dmg":1.42, "gold":2.4, "drop":1.55, "death_xp":0.10, "resist":-50,
+		"desc":"它们从不下班。死亡损失当前等级 10% 的经验。"}
+]
+# 15 张冒险地图在普通难度下的区域等级（5 章 × 3 图）；噩梦 +30，地狱 +60，深渊每轮再 +3。
+const AREA_LEVELS = [1,3,5, 7,9,11, 13,15,17, 19,21,23, 25,27,30]
+const ABYSS_STEP = 3
+
+static func diff(index: int) -> Dictionary: return DIFFICULTIES[clampi(index, 0, DIFFICULTIES.size() - 1)]
+static func diff_name(index: int) -> String: return str(diff(index).name)
+static func area_level(chapter: int, stage: int, cycle: int, difficulty: int) -> int:
+	var idx = clampi(chapter * 3 + stage, 0, AREA_LEVELS.size() - 1)
+	var base = int(AREA_LEVELS[idx]) + ABYSS_STEP * maxi(0, cycle)
+	return clampi(base + int(diff(difficulty).offset), 1, LEVEL_CAP)
+
+# 升到下一级所需经验。曲线按暗黑2 的节奏标定：
+# 普通通关约 33 级，噩梦约 62 级，地狱约 86-90 级，100 级需要在深渊里反复轮回。
+static func xp_need(level: int) -> int:
+	if level >= LEVEL_CAP: return 0
+	return int(round(120.0 * pow(float(maxi(1, level)), 2.5)))
+
+# 怪物基础经验只由怪物等级决定。
+static func monster_xp_base(mlvl: int) -> int:
+	return int(round(16.6 * (pow(float(maxi(1, mlvl)), 2.25) + 3.0)))
+
+# 等级差修正：怪物等级高于玩家时有奖励（最多 +50%），低于玩家时经验急剧衰减。
+# 这是暗黑2 用来阻止"回头刷低级怪"的核心机制——等级不够就往前走，不要原地刷。
+static func xp_ratio(player_level: int, monster_level: int) -> float:
+	var p = maxi(1, player_level)
+	var m = maxi(1, monster_level)
+	if m >= p: return 1.0 + minf(float(m - p), 10.0) * 0.05
+	return clampf(pow(float(m) / float(p), 3.0 if p < 25 else 6.0), 0.02, 1.0)
+
+static func kill_xp(player_level: int, monster_level: int, elite: bool = false, boss: bool = false) -> int:
+	var mul = 14.0 if boss else (2.5 if elite else 1.0)
+	return maxi(1, int(round(float(monster_xp_base(monster_level)) * mul * xp_ratio(player_level, monster_level))))
+
+# 怪物属性：随区域等级线性成长，再乘难度系数。
+static func monster_hp(mlvl: int, elite: bool, boss: bool, difficulty: int) -> float:
+	var mul = 12.0 if boss else (3.2 if elite else 1.0)
+	return (26.0 + 23.0 * float(maxi(1, mlvl))) * mul * float(diff(difficulty).hp)
+static func monster_damage(mlvl: int, difficulty: int) -> float:
+	return (7.0 + 1.8 * float(maxi(1, mlvl))) * float(diff(difficulty).dmg)
+
+# 装备强度随区域等级成长，保证玩家伤害跟得上怪物血量。
+static func item_power(rng: RandomNumberGenerator, mlvl: int, rarity: int) -> int:
+	return 5 + int(float(maxi(1, mlvl)) * 1.6) + rarity * 6 + rng.randi_range(0, int(float(maxi(1, mlvl)) * 0.5) + 3)
+
+# 大数字的中文简写，用于经验条与角色面板。
+static func short_num(v: float) -> String:
+	var n = int(v)
+	if n < 10000: return str(n)
+	if n < 100000000: return "%.1f 万" % (float(n) / 10000.0)
+	return "%.2f 亿" % (float(n) / 100000000.0)

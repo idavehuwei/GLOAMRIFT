@@ -6,6 +6,7 @@ const TILE = 30
 var W = 30
 var H = 20
 const GOLD = Color("d4ae72")
+const DIFF_COLOR = Color("c78f6a")
 const TEXT = Color("dcd8c9")
 const MUTED = Color("7f898b")
 const SAVE = "user://embers_save.json"
@@ -19,6 +20,10 @@ var stage = 0
 var cycle = 0
 var level = 1
 var xp = 0
+var difficulty = 0
+var cleared = [false, false, false]
+var pending_difficulty = 0
+var pending_slot = 0
 var gold = 0
 var hp = 100.0
 var potions = 5
@@ -112,8 +117,51 @@ func _ready():
 	queue_redraw()
 
 func depth() -> int: return cycle * 15 + chapter * 3 + stage + 1
-func max_hp() -> float: return float(Data.CLASSES[hero_class].hp) + (level - 1) * 12 + int(equipped[1].power) * 3
-func damage() -> int: return int((12 + level * 2 + int(equipped[0].power))*(1.25 if activities!=null and activities.buff_time>0 else 1.0))
+# 区域等级：暗黑2 式的核心标尺，怪物等级、经验、装备强度全部由它派生。
+func ilvl() -> int: return Data.area_level(chapter, stage, cycle, difficulty)
+func xp_next() -> int: return Data.xp_need(level)
+func maxed() -> bool: return level >= Data.LEVEL_CAP
+func xp_text() -> String:
+	if maxed(): return "已满级"
+	return "%s / %s" % [Data.short_num(xp), Data.short_num(Data.xp_need(level))]
+func gain_xp(amount: int):
+	if amount <= 0: return
+	xp += amount
+	var ups = 0
+	while level < Data.LEVEL_CAP and xp >= Data.xp_need(level):
+		xp -= Data.xp_need(level)
+		level += 1
+		ups += 1
+	if ups > 0:
+		hp = max_hp(); mana = 100.0
+		note("等级提升！Lv.%d  生命与精力完全恢复。" % level)
+		tone(880, 0.2)
+		if achv != null: achv.set_max("max_level", level)
+func lose_xp_on_death():
+	var rate = float(Data.diff(difficulty).death_xp)
+	if rate <= 0 or maxed(): return
+	var loss = int(round(float(Data.xp_need(level)) * rate))
+	xp = maxi(0, xp - loss)
+	note("死亡惩罚：损失 %s 点经验。" % Data.short_num(loss))
+func difficulty_unlocked(i: int) -> bool: return i <= 0 or bool(cleared[clampi(i - 1, 0, cleared.size() - 1)])
+func mark_cleared():
+	var d = clampi(difficulty, 0, Data.DIFFICULTIES.size() - 1)
+	if cleared[d]: return
+	cleared[d] = true
+	if achv != null:
+		if d >= 1: achv.bump("nm_clear")
+		if d >= 2: achv.bump("hell_clear")
+func ascend():
+	var nxt = clampi(difficulty + 1, 0, Data.DIFFICULTIES.size() - 1)
+	if nxt == difficulty or not difficulty_unlocked(nxt): return
+	difficulty = nxt
+	chapter = 0; stage = 0; cycle = 0; in_town = true; quest_accepted = false
+	hp = max_hp(); mana = 100.0
+	generate_map(); save_game()
+	note("踏入「%s」难度。等级、装备与伙伴全部保留。" % Data.diff_name(difficulty))
+	modal = "story"
+func max_hp() -> float: return float(Data.CLASSES[hero_class].hp) + (level - 1) * 10 + int(equipped[1].power) * 3
+func damage() -> int: return int((11 + level * 2.4 + int(equipped[0].power))*(1.25 if activities!=null and activities.buff_time>0 else 1.0))
 func outdoor() -> bool: return in_town or Data.CHAPTERS[chapter].outside[stage]
 func location_name() -> String: return Data.TOWNS[chapter] if in_town else Data.CHAPTERS[chapter].maps[stage]
 func ready_exit() -> bool: return quest_accepted if in_town else marks >= 3 and enemies.is_empty()
@@ -229,10 +277,11 @@ func generate_map():
 
 func spawn_enemy(p: Vector2,kind: int,elite: bool = false,boss: bool = false):
 	enemy_uid += 1
-	var health = (260.0+depth()*27) if boss else (30.0+depth()*7)*(3.0 if elite else 1.0)
+	var ml = ilvl() + (3 if boss else (1 if elite else 0))
+	var health = Data.monster_hp(ml, elite, boss, difficulty)
 	var affix = Data.ELITE_AFFIXES[rng.randi_range(0,Data.ELITE_AFFIXES.size()-1)] if elite else ""
 	var title = Data.CHAPTERS[chapter].boss if boss else Data.MONSTER_NAMES[chapter][kind]
-	enemies.append({"uid":enemy_uid,"name":title,"pos":p,"hp":health,"max":health,"type":kind,"cd":1.0,"skill_cd":rng.randf_range(1,3),"boss":boss,"elite":elite,"affix":affix,"hit":0.0})
+	enemies.append({"uid":enemy_uid,"name":title,"pos":p,"hp":health,"max":health,"type":kind,"cd":1.0,"skill_cd":rng.randf_range(1,3),"boss":boss,"elite":elite,"affix":affix,"hit":0.0,"mlvl":ml})
 
 func walkable(p: Vector2) -> bool:
 	var t = Vector2i(p / TILE)
@@ -289,18 +338,18 @@ func _process(dt):
 			if e.type in [2,6] and not e.boss and e.cd<=0 and dist<290:
 				e.cd = 1.8
 				if renderer_3d!=null: renderer_3d.animate_enemy(e,"attack",0.55)
-				combat.shoot(e.pos,e.pos.direction_to(player),"arrow" if e.type==6 else "hex",6+depth(),true)
+				combat.shoot(e.pos,e.pos.direction_to(player),"arrow" if e.type==6 else "hex",Data.monster_damage(int(e.get("mlvl", ilvl())),difficulty)*0.62,true)
 			if dist < (65 if e.boss else 32) and e.cd <= 0:
 				e.cd = 1.3 if e.boss else 1.0
 				if renderer_3d!=null: renderer_3d.animate_enemy(e,"attack",0.50)
 				if invincible <= 0:
-					var hit = maxf(3,9+depth()*2-(int(equipped[1].power)*0.3)) * (1.8 if e.boss else 1)
+					var hit = maxf(3.0, Data.monster_damage(int(e.get("mlvl", ilvl())), difficulty) - int(equipped[1].power) * 0.25) * (1.9 if e.boss else 1.0)
 					# 宠物在附近会替主人挡刀；挡下时玩家不受伤。
 					if pets == null or not pets.soak(e,hit):
 						hp -= hit; invincible = 0.45; shake = 0.15; map_no_hit = false
 						if renderer_3d!=null: renderer_3d.animate_hero("death" if hp<=0 else "hit",0.85 if hp<=0 else 0.26)
 						floating(player,"-"+str(int(hit)),Color("e77f75")); tone(100)
-						if hp <= 0: hp = 0; map_no_hit = false; achv.died(); modal = "dead"; break
+						if hp <= 0: hp = 0; map_no_hit = false; achv.died(); lose_xp_on_death(); modal = "dead"; break
 					else: invincible = 0.28
 	for i in range(drops.size()-1,-1,-1):
 		var d = drops[i]
@@ -322,21 +371,19 @@ func defeat(i: int):
 	var e = enemies[i]
 	activities.killed(e)
 	var elite = e.get("elite",false)
-	kills += 1; xp += (15+depth()*3)*(5 if e.boss else (3 if elite else 1))
+	kills += 1; gain_xp(Data.kill_xp(level, int(e.get("mlvl", ilvl())), elite, e.boss))
 	if achv != null: achv.killed(e)
 	if e.boss and pets != null: pets.boss_reward()
-	gold += rng.randi_range(5,15)*depth()*(5 if elite or e.boss else 1)
+	gold += int(rng.randi_range(3,8)*float(Data.diff(difficulty).gold)*float(ilvl())*(5 if elite or e.boss else 1))
 	if rng.randf()<0.65 or elite or e.boss:
 		for k in (3 if e.boss else (2 if elite else 1)):
-			var item = Data.loot(rng,depth(),elite or e.boss,hero_class)
+			var item = Data.loot(rng,ilvl(),elite or e.boss,hero_class)
 			if e.boss: item.rarity = 4 if k==0 else maxi(3,int(item.rarity)); item.power += 8
 			elif elite: item.power += 3
 			drops.append({"pos":e.pos+Vector2(k*7,0),"kind":"item","item":item})
 	if e.boss: note(Data.CHAPTERS[chapter].joke+"  首领掉落：传说装备！"); potions += 2
 	elif elite: note("击败「"+e.affix+" · "+e.name+"」，获得稀有战利品。")
 	enemies.remove_at(i)
-	while xp>=level*55:
-		xp -= level*55; level += 1; hp = max_hp(); note("等级提升！生命恢复，属性增强。"); tone(880,0.2)
 	if enemies.is_empty(): note("区域已清理。收齐印记后，前往东侧传送门。")
 func interact():
 	if not in_town and activities.interact(): return
@@ -352,11 +399,12 @@ func interact():
 		if not chest.open and chest.pos.distance_to(player) < 65:
 			chest.open = true
 			activities.progress("chest")
-			drops.append({"pos":chest.pos+Vector2(0,22),"kind":"item","item":Data.loot(rng,depth(),true,hero_class)})
-			gold += 20 * depth(); tone(650); note("箱子里不是怪物。今天运气不错。"); achv.chest(); return
+			drops.append({"pos":chest.pos+Vector2(0,22),"kind":"item","item":Data.loot(rng,ilvl(),true,hero_class)})
+			gold += int(8 * float(Data.diff(difficulty).gold) * float(ilvl())); tone(650); note("箱子里不是怪物。今天运气不错。"); achv.chest(); return
 	if player.distance_to(npc) < 65:
-		if gold >= 25: gold -= 25; potions += 1; note("买到药水。邮差：包治不开心，不包治穷。")
-		else: note("邮差：25 金一瓶药水。故事免费——"+Data.CHAPTERS[chapter].goal)
+		var price = potion_price()
+		if gold >= price: gold -= price; potions += 1; note("买到药水。邮差：包治不开心，不包治穷。")
+		else: note("邮差：%d 金一瓶药水。故事免费——" % price + Data.CHAPTERS[chapter].goal)
 		return
 	if player.distance_to(portal) < 65:
 		if ready_exit(): next_map()
@@ -366,12 +414,14 @@ func next_map():
 	stage += 1
 	if stage >= 3:
 		stage = 0; chapter += 1; in_town = true; quest_accepted = false; activities.next_chapter()
-		if chapter >= 5: chapter = 0; cycle += 1; modal = "victory"
+		if chapter >= 5:
+			chapter = 0; cycle += 1; mark_cleared(); modal = "victory"
 		if achv != null: achv.victory(); achv.cycle_done()
 		else: modal = "story"
 	hp = max_hp(); potions += 1
 	generate_map(); save_game(); note("抵达「"+location_name()+"」。")
 	if achv != null: achv.map_done(clean)
+func potion_price() -> int: return 15 + ilvl() * 3
 func heal():
 	if potions > 0 and hp < max_hp(): potions -= 1; hp = minf(max_hp(),hp+max_hp()*0.6); tone(700); floating(player,"+ 生命",Color("84c39d"))
 func dash(): combat.dodge()
@@ -397,20 +447,24 @@ func choose_class(index: int):
 func save_game():
 	var f = FileAccess.open(save_path,FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({"version":5,"meta":save_meta(),"activities":activities.snapshot(),"pets":pets.snapshot(),"achv":achv.snapshot(),"in_town":in_town,"hero_class":hero_class,"quest_accepted":quest_accepted,"chapter":chapter,"stage":stage,"cycle":cycle,"level":level,"xp":xp,"gold":gold,"potions":potions,"inventory":inventory,"equipped":equipped}))
+		f.store_string(JSON.stringify({"version":6,"difficulty":difficulty,"cleared":cleared,"meta":save_meta(),"activities":activities.snapshot(),"pets":pets.snapshot(),"achv":achv.snapshot(),"in_town":in_town,"hero_class":hero_class,"quest_accepted":quest_accepted,"chapter":chapter,"stage":stage,"cycle":cycle,"level":level,"xp":xp,"gold":gold,"potions":potions,"inventory":inventory,"equipped":equipped}))
 		f.close()
 		note("进度已保存 · "+slot_name()+" · 继续时从本地图入口出发")
 		refresh_slots()
 func load_game():
 	if not FileAccess.file_exists(save_path): note("还没有存档。"); return
 	var d = JSON.parse_string(FileAccess.get_file_as_string(save_path))
-	if not d is Dictionary or int(d.get("version",0)) not in [1,2,3,4,5]: note("存档格式无法读取。"); return
+	if not d is Dictionary or int(d.get("version",0)) not in [1,2,3,4,5,6]: note("存档格式无法读取。"); return
 	activities.restore(d.get("activities",{}))
 	if pets != null: pets.restore(d.get("pets",{}))
 	if achv != null: achv.restore(d.get("achv",{}))
 	in_town = bool(d.get("in_town",true)); hero_class = clampi(int(d.get("hero_class",0)),0,2); quest_accepted = bool(d.get("quest_accepted",false)); mana = 100
 	chapter = clampi(int(d.chapter),0,4); stage = clampi(int(d.stage),0,2); cycle = maxi(0,int(d.cycle))
-	level = maxi(1,int(d.level)); xp = int(d.xp); gold = int(d.gold); potions = int(d.potions)
+	level = clampi(int(d.level),1,Data.LEVEL_CAP); xp = maxi(0,int(d.xp)); gold = int(d.gold); potions = int(d.potions)
+	difficulty = clampi(int(d.get("difficulty",0)),0,Data.DIFFICULTIES.size()-1)
+	var cl = d.get("cleared",[])
+	if cl is Array:
+		for i in mini(cl.size(),cleared.size()): cleared[i] = bool(cl[i])
 	inventory = d.inventory; equipped = d.equipped; hp = max_hp(); modal = ""
 	sync_slot_from_path()
 	generate_map(); note("旅人，欢迎回来。"); refresh_slots()
@@ -425,6 +479,8 @@ func equip_item():
 		old["slot"] = item.slot
 		inventory.append(old)
 	hp = minf(hp,max_hp()); tone(480)
+	if renderer_3d != null and renderer_3d.has_method("refresh_authored_hero_equipment"):
+		renderer_3d.refresh_authored_hero_equipment()
 func sell_item():
 	if inventory.is_empty(): return
 	var item = inventory[clampi(selected,0,inventory.size()-1)]
@@ -439,10 +495,12 @@ func mouse_in_world() -> bool:
 	return true
 
 func _input(event):
-	if modal in ["class","trainer","title","saves"]:
+	if modal in ["class","trainer","title","saves","difficulty"]:
 		if event is InputEventKey and event.pressed:
 			if modal in ["class","trainer"] and event.physical_keycode in [KEY_1,KEY_2,KEY_3]: choose_class(event.physical_keycode-KEY_1)
 			elif modal == "title" and event.physical_keycode == KEY_ENTER: action("title_enter")
+			elif modal == "difficulty" and event.physical_keycode in [KEY_1,KEY_2,KEY_3]: action("diff:"+str(event.physical_keycode-KEY_1))
+			elif modal == "difficulty" and event.physical_keycode == KEY_ESCAPE: modal = "title"
 			elif modal == "saves" and event.physical_keycode == KEY_ESCAPE: modal = "pause"
 		if event is InputEventMouseButton and event.pressed and event.button_index==MOUSE_BUTTON_LEFT:
 			for b in buttons:
@@ -507,6 +565,7 @@ func action(id: String):
 	if id.begins_with("achv_kind:"): achv_kind = int(id.split(":")[1]); achv_page = 0; return
 	if id.begins_with("coll_tab:"): coll_tab = int(id.split(":")[1]); return
 	if id.begins_with("slot_new:"): new_game(int(id.split(":")[1])); return
+	if id.begins_with("diff:"): start_run(pending_slot, int(id.split(":")[1])); return
 	if id.begins_with("slot_load:"): continue_slot(int(id.split(":")[1])); return
 	if id.begins_with("slot_save:"): use_slot(int(id.split(":")[1])); save_game(); modal = ""; return
 	if id.begins_with("slot_del:"):
@@ -541,6 +600,7 @@ func action(id: String):
 		"title": refresh_slots(); modal = "title"
 		"saves": save_mode = "load"; refresh_slots(); modal = "saves"
 		"quit": get_tree().quit()
+		"ascend": ascend()
 		"del_cancel": del_confirm = -1
 		"title_enter":
 			var resume = latest_slot()
@@ -561,8 +621,8 @@ func action(id: String):
 			else: note("金币不足，需要 25 金。")
 		"forge":
 			if inventory.size()>=36: note("背包已满，请先出售装备。")
-			elif gold>=60*depth():
-				gold -= 60*depth(); inventory.append(Data.loot(rng,depth(),true,hero_class)); note("铁匠：保修到你出门。")
+			elif gold>=25*ilvl():
+				gold -= 25*ilvl(); inventory.append(Data.loot(rng,ilvl(),true,hero_class)); note("铁匠：保修到你出门。")
 			else: note("金币不足。")
 		"trainer": modal = "trainer"
 		"town": return_town()
@@ -718,7 +778,8 @@ func _draw():
 		label_at(Vector2(42,392),"每章首领也会掉落。",13,TEXT)
 	button(Rect2(42,404,120,26),"伙伴  P","pets")
 	box(Rect2(1210,104,198,161),Color(0.045,0.05,0.055,0.70))
-	label_at(Vector2(1224,128),"%s · %02d" % [Data.CHAPTERS[chapter].region,depth()],12,GOLD)
+	label_at(Vector2(1224,128),"%s · 深度 %02d" % [Data.CHAPTERS[chapter].region,depth()],12,GOLD)
+	label_at(Vector2(1224,146),"%s · 区域 Lv.%d" % [Data.diff_name(difficulty),ilvl()],12,DIFF_COLOR)
 	for y in H:
 		for x in W:
 			if seen.has(Vector2i(x,y)) and tiles[y][x] == 1:
@@ -736,7 +797,7 @@ func _draw():
 	label_at(Vector2(240,844),"生命",12,Color("d7b6a0"))
 	label_at(Vector2(1151,819),"精 力",17,TEXT)
 	label_at(Vector2(1147,844),"%d / 100" % mana,12,Color("adbed0"))
-	label_at(Vector2(345,775),"%s   /   LV. %02d" % [Data.CLASSES[hero_class].name,level],13,GOLD)
+	label_at(Vector2(345,775),"%s   /   LV. %02d  ·  %s" % [Data.CLASSES[hero_class].name,level,Data.diff_name(difficulty)],13,GOLD)
 	label_at(Vector2(884,775),"%d 金币   ·   攻击 %d" % [gold,damage()],13,GOLD)
 	var skills = Data.CLASSES[hero_class].skills
 	var slots = [["左键 / J",skills[0]],["K · %.1fs" % nova_cd if nova_cd>0 else "右键 / K",skills[1]],["SPACE",skills[3]],["Q","药水 ×%d" % potions],["R · %.1fs" % ultimate_cd if ultimate_cd>0 else "R",skills[2]],["E / T","交互 / 回城"]]
@@ -748,7 +809,9 @@ func _draw():
 		if i==3: buttons.append({"rect":Rect2(p,Vector2(84,65)),"id":"heal"})
 		
 	button(Rect2(943,809,146,51),"装备与行囊","inventory")
-	bar(Rect2(349,878,741,3),xp,level*55,GOLD)
+	if maxed(): bar(Rect2(349,878,741,3),1.0,1.0,GOLD)
+	else: bar(Rect2(349,878,741,3),float(xp),float(Data.xp_need(level)),GOLD)
+	label_at(Vector2(352,870),"Lv.%d  ·  经验 %s" % [level,xp_text()],11,GOLD)
 	label_at(Vector2(28,872),"WASD 移动 · Tab 地图 · T 回城",12,Color("a19b8b"))
 	label_at(Vector2(1235,872),"%d / 3  ·  %s" % [stage+1,"深渊 +%d" % cycle if cycle>0 else "剧情远征"],12,Color("a19b8b"))
 	if logs.size()>0:
@@ -764,8 +827,11 @@ func draw_modal():
 	rpg_frame(Rect2(280,140,880,620))
 	label_at(Vector2(320,181),"B E L O W   T H E   E M B E R S",11,GOLD)
 	ornament(Vector2(320,194),790)
-	if modal not in ["class","trainer","dead","saves"]:
+	if modal not in ["class","trainer","dead","saves","difficulty"]:
 		for i in 6: button(Rect2(590+i*87,154,81,31),["角色","行囊","技能","任务","委托","图鉴"][i],["character","inventory","skills","quests","contracts","gallery"][i],modal==["character","inventory","skills","quests","contracts","gallery"][i])
+	if modal == "difficulty":
+		draw_difficulty_screen()
+		return
 	if modal in ["class","trainer"]:
 		label_at(Vector2(320,232),"选择你的道路",32,TEXT)
 		label_at(Vector2(320,269),"三种职业，三种战斗方式。可在每章城镇的导师处重新选择。",16,MUTED)
@@ -794,7 +860,7 @@ func draw_modal():
 		var rows = dialogue[active_npc].split("\n")
 		for i in rows.size(): label_at(Vector2(320,356+i*36),rows[i],18,TEXT)
 		label_at(Vector2(320,559),"金币 %d   ·   药水 %d   ·   职业 %s" % [gold,potions,Data.CLASSES[hero_class].name],16,GOLD)
-		var captions = ["确认委托 / 准备出城","购买药水 · 25 金","锻造稀有装备 · %d 金" % (60*depth()),"选择职业","休息 · 恢复生命与精力","打开宠物笼 · %d 金 / 次" % pets.cost()]
+		var captions = ["确认委托 / 准备出城","购买药水 · 25 金","锻造稀有装备 · %d 金" % (25*ilvl()),"选择职业","休息 · 恢复生命与精力","打开宠物笼 · %d 金 / 次" % pets.cost()]
 		button(Rect2(320,610,420,54),captions[active_npc],["accept","buy","forge","trainer","rest","pets"][active_npc],true)
 		button(Rect2(880,682,233,44),"离开","play")
 		return
@@ -809,7 +875,7 @@ func draw_modal():
 		return
 	if modal == "story" or modal == "victory":
 		label_at(Vector2(320,247),"黎明已归来" if modal == "victory" else "第 %d 章  ·  %s" % [chapter+1,Data.CHAPTERS[chapter].name],36,TEXT)
-		label_at(Vector2(320,287),"无限深渊已解锁 · 敌人与装备等级持续成长" if modal == "victory" else Data.CHAPTERS[chapter].region+"    /    三张地图，一段荒唐的救赎",16,GOLD)
+		label_at(Vector2(320,287),("「%s」难度已通关 · 深渊轮回 +%d · 区域等级持续成长" % [Data.diff_name(difficulty),cycle]) if modal == "victory" else Data.CHAPTERS[chapter].region+"    /    三张地图，一段荒唐的救赎",16,GOLD)
 		line(316,320,790)
 		var story = "你敲响晨钟，把黎明退回了人间。\n永夜之王留下差评：这个勇者完全不讲售后流程。\n故事落幕，但深渊不会。下一轮地图和装备会更强。" if modal == "victory" else Data.CHAPTERS[chapter].story
 		var rows = story.split("\n")
@@ -818,7 +884,11 @@ func draw_modal():
 		label_at(Vector2(320,555),"先在城镇向邮差领取委托、补给整装，再从东侧城门出发。",15,MUTED)
 		label_at(Vector2(320,586),"野外收集 3 枚印记并清敌。R 终极技能，T 随时返回本章城镇。",15,MUTED)
 		button(Rect2(320,649,270,58),"继续深入  →" if modal == "victory" else "进入城镇  →  Enter","play",true)
-		button(Rect2(614,649,190,58),"读取存档","saves")
+		if modal == "victory" and difficulty + 1 < Data.DIFFICULTIES.size() and difficulty_unlocked(difficulty + 1):
+			button(Rect2(614,649,240,58),"进入「%s」难度" % Data.diff_name(difficulty+1),"ascend")
+			button(Rect2(874,649,190,58),"读取存档","saves")
+		else:
+			button(Rect2(614,649,190,58),"读取存档","saves")
 	elif modal == "inventory":
 		label_at(Vector2(320,242),"装备与行囊",29,GOLD)
 		label_at(Vector2(876,239),"%d / 36 格    %d 金" % [inventory.size(),gold],15,TEXT)
@@ -884,7 +954,7 @@ func draw_modal():
 		button(Rect2(320,488,340,52),"存档管理  F9","saves")
 		button(Rect2(320,548,340,52),"返回标题","title")
 		button(Rect2(320,608,340,52),"音效：关闭" if muted else "音效：开启","mute")
-		label_at(Vector2(716,399),"烬下 / 铸魂工坊 0.10",22,GOLD)
+		label_at(Vector2(716,399),"烬下 / 铸魂工坊 0.11",22,GOLD)
 		label_at(Vector2(716,446),"5 座安全城镇 · 15 张冒险地图",16,TEXT)
 		label_at(Vector2(716,480),"三种职业 · 随机装备 · 无限周目",16,TEXT)
 		label_at(Vector2(716,514),"正交 3D · 实时阴影 · 像素渲染",15,MUTED)
@@ -957,7 +1027,7 @@ func draw_codex_panel():
 		label_at(Vector2(344,319),c.name+" · 无名旅人",23,GOLD)
 		label_at(Vector2(344,354),c.title,14,MUTED)
 		if renderer_3d!=null: draw_texture_rect(renderer_3d.preview([-1,-10,-11][hero_class]),Rect2(330,347,269,285),false)
-		var rows = [["等级",str(level)],["生命","%d / %d" % [hp,max_hp()]],["精力","%d / 100" % mana],["基础伤害",str(damage())],["暴击概率","%d%%" % mini(75,8+int(equipped[0].crit)+int(equipped[2].crit))],["移动速度",str(c.speed)],["下级经验","%d / %d" % [xp,level*55]],["金币",str(gold)]]
+		var rows = [["等级","%d / %d" % [level,Data.LEVEL_CAP]],["生命","%d / %d" % [hp,max_hp()]],["精力","%d / 100" % mana],["基础伤害",str(damage())],["暴击概率","%d%%" % mini(75,8+int(equipped[0].crit)+int(equipped[2].crit))],["移动速度",str(c.speed)],["下级经验",xp_text()],["难度",Data.diff_name(difficulty)+" · 区域 Lv.%d" % ilvl()]]
 		for i in rows.size():
 			var y = 312+i*40
 			if i%2==0: box(Rect2(646,y-23,472,37),Color("1e211f"))
@@ -1066,8 +1136,8 @@ func draw_expansion_panel():
 			inset(Rect2(p,Vector2(348,99)))
 			item_icon(p+Vector2(30,35),i,GOLD,it.name)
 			label_at(p+Vector2(60,29),Data.SLOTS[i]+"  +%d" % rank,18,TEXT)
-			label_at(p+Vector2(60,53),"力量 %d → %d" % [it.power,it.power+2+depth()],13,MUTED)
-			button(Rect2(p+Vector2(16,66),Vector2(315,26)),"强化 · %d 碎片 / %d 金" % [3+rank*2,25*depth()*(rank+1)],"upgrade:"+str(i))
+			label_at(p+Vector2(60,53),"力量 %d → %d" % [it.power,it.power+2+int(ilvl()*0.4)],13,MUTED)
+			button(Rect2(p+Vector2(16,66),Vector2(315,26)),"强化 · %d 碎片 / %d 金" % [3+rank*2,10*ilvl()*(rank+1)],"upgrade:"+str(i))
 		label_at(Vector2(320,663),"城镇领取/提交委托和强化；行囊可分解备用装备。每章刷新委托。",14,MUTED)
 	else:
 		var entries = [[-1,"战士"],[-10,"法师"],[-11,"弓箭手"],[-2,"鸦邮差"],[-3,"药剂师"],[-4,"铁匠"],[-5,"职业导师"],[-6,"旅店老板"],[0,"亡卒"],[1,"骷髅"],[2,"术士"],[4,"猎犬"],[5,"蜘蛛"],[6,"弩手"],[3,"本章最终首领"]]
@@ -1223,7 +1293,7 @@ func remove_save(p: String):
 	var dir = DirAccess.open(p.get_base_dir())
 	if dir != null: dir.remove(p.get_file())
 func save_meta() -> Dictionary:
-	return {"level": level, "hero_class": hero_class, "chapter": chapter, "stage": stage, "cycle": cycle,
+	return {"level": level, "hero_class": hero_class, "chapter": chapter, "stage": stage, "cycle": cycle, "difficulty": difficulty,
 		"depth": depth(), "gold": gold, "kills": int(achv.value("kills")) if achv != null else kills, "playtime": time, "location": location_name(),
 		"town": in_town, "saved": int(Time.get_unix_time_from_system()), "achv": achv.done() if achv != null else 0}
 func meta_from(d: Dictionary) -> Dictionary:
@@ -1238,6 +1308,7 @@ func meta_from(d: Dictionary) -> Dictionary:
 	return {"level": maxi(1, int(m.get("level", d.get("level", 1)))),
 		"hero_class": clampi(int(m.get("hero_class", d.get("hero_class", 0))), 0, Data.CLASSES.size() - 1),
 		"chapter": ch, "stage": st, "cycle": cy, "town": town, "location": loc,
+		"difficulty": clampi(int(m.get("difficulty", 0)), 0, Data.DIFFICULTIES.size() - 1),
 		"depth": int(m.get("depth", cy * 15 + ch * 3 + st + 1)), "gold": int(m.get("gold", d.get("gold", 0))),
 		"kills": int(m.get("kills", 0)), "playtime": float(m.get("playtime", 0)),
 		"saved": int(m.get("saved", 0)), "achv": int(m.get("achv", 0))}
@@ -1274,7 +1345,7 @@ func delete_slot(i: int):
 	refresh_slots()
 	note("已删除"+slot_name(i)+"。")
 func reset_run():
-	chapter = 0; stage = 0; cycle = 0; level = 1; xp = 0; gold = 0; potions = 5
+	chapter = 0; stage = 0; cycle = 0; level = 1; xp = 0; gold = 0; potions = 5; difficulty = pending_difficulty
 	marks = 0; kills = 0; time = 0.0; in_town = true; quest_accepted = false
 	hp = 100.0; mana = 100.0; attack_cd = 0.0; dash_cd = 0.0; nova_cd = 0.0; ultimate_cd = 0.0
 	invincible = 0.0; slash = 0.0; cast = 0.0; shake = 0.0; hitstop = 0.0; player_slow = 0.0
@@ -1289,6 +1360,10 @@ func reset_run():
 	hp = max_hp(); mana = 100.0
 	if renderer_3d != null: renderer_3d.rebuild()
 func new_game(i: int):
+	pending_slot = i
+	modal = "difficulty"
+func start_run(i: int, diff_index: int):
+	pending_difficulty = clampi(diff_index, 0, Data.DIFFICULTIES.size() - 1)
 	use_slot(i)
 	reset_run()
 	remove_save(save_path)
@@ -1333,14 +1408,14 @@ func draw_title_screen():
 	centered("烬 下", 200, 80, GOLD)
 	centered("B E L O W   T H E   E M B E R S", 244, 15, Color("9c907a"))
 	ornament(Vector2(560, 266), 320)
-	centered("五座城镇 · 十五张地图 · 一场没有黎明的远征", 306, 16, MUTED)
+	centered("三难度 · 100 级 · 五座城镇 · 十五张地图 · 一场没有黎明的远征", 306, 16, MUTED)
 	draw_slot_cards(88, 330, 400, 340, 32, "title")
 	centered("选择一处空席开始新的旅程，或继续已有的旅途 · 回车继续最近存档", 696, 13, Color("8d8577"))
 	button(Rect2(430, 716, 180, 42), "音效：" + ("关闭" if muted else "开启"), "mute")
 	button(Rect2(630, 716, 180, 42), "画面精度：" + (["精细像素","经典像素","原生细节"][renderer_3d.quality] if renderer_3d != null else "无头测试"), "quality")
 	button(Rect2(830, 716, 180, 42), "退出游戏", "quit")
 	centered("WASD 移动 · 左键攻击 · 右键 / K 技能 · 空格冲刺 · R 终极 · Esc 篝火", 786, 12, Color("7f898b"))
-	centered("烬下 · 铸魂工坊  0.10   ·   三个存档槽，各自独立的旅程", 812, 12, Color("5f6669"))
+	centered("烬下 · 铸魂工坊  0.11   ·   三难度 · 100 级 · 三个存档槽", 812, 12, Color("5f6669"))
 func draw_saves_screen():
 	label_at(Vector2(320, 242), "存档管理", 29, GOLD)
 	label_at(Vector2(520, 246), "当前槽位：" + slot_name(), 15, TEXT)
@@ -1350,6 +1425,44 @@ func draw_saves_screen():
 	draw_slot_cards(320, 300, 250, 390, 25, save_mode)
 	button(Rect2(320, 704, 200, 44), "返回冒险  Esc", "play", true)
 	button(Rect2(538, 704, 200, 44), "返回标题", "title")
+func wrap_text(s: String, per: int) -> Array:
+	var out: Array = []
+	var cur = ""
+	for ch in s:
+		cur += ch
+		if cur.length() >= per: out.append(cur); cur = ""
+	if cur != "": out.append(cur)
+	return out
+func draw_difficulty_screen():
+	label_at(Vector2(320,232),"选择难度",32,TEXT)
+	label_at(Vector2(320,269),"难度决定区域等级、怪物强度与掉落。通关当前难度后，可带着等级与装备晋升下一难度。",16,MUTED)
+	line(316,302,790)
+	var cols = [Color("8bab78"), Color("d0a05f"), Color("c2705f")]
+	for i in Data.DIFFICULTIES.size():
+		var d = Data.DIFFICULTIES[i]
+		var p = Vector2(320+i*267,318)
+		var locked = not difficulty_unlocked(i)
+		var col = Color("57534b") if locked else cols[i]
+		box(Rect2(p,Vector2(248,360)),Color("22292b"),col)
+		label_at(p+Vector2(19,42),"0%d  %s" % [i+1,d.name],26,col)
+		label_at(p+Vector2(19,66),str(d.en),11,Color("6f767a"))
+		label_at(p+Vector2(19,94),"区域等级 Lv.%d - %d" % [Data.area_level(0,0,0,i),Data.area_level(4,2,0,i)],14,GOLD)
+		var lines = wrap_text(str(d.desc),13)
+		for k in mini(lines.size(),3): label_at(p+Vector2(19,120+k*20),str(lines[k]),12,TEXT if not locked else Color("5f6669"))
+		label_at(p+Vector2(19,190),"怪物生命  ×%.2f" % float(d.hp),12,MUTED)
+		label_at(p+Vector2(19,210),"怪物伤害  ×%.2f" % float(d.dmg),12,MUTED)
+		label_at(p+Vector2(19,230),"金币 ×%.1f   掉落 ×%.2f" % [float(d.gold),float(d.drop)],12,MUTED)
+		if float(d.death_xp) > 0: label_at(p+Vector2(19,252),"死亡损失 %d%% 本级经验" % int(float(d.death_xp)*100),12,Color("d78f7f"))
+		else: label_at(p+Vector2(19,252),"死亡无经验惩罚",12,Color("8bab78"))
+		if locked:
+			label_at(p+Vector2(19,272),"通关「%s」后解锁" % Data.diff_name(i-1),13,Color("8d8577"))
+			button(Rect2(p+Vector2(0,300),Vector2(248,46)),"尚未解锁","")
+		else:
+			label_at(p+Vector2(19,272),"通关目标约 Lv.%d" % [33,62,86][i],13,MUTED)
+			button(Rect2(p+Vector2(0,300),Vector2(248,46)),"选择"+str(d.name)+"  ["+str(i+1)+"]","diff:"+str(i),i==0)
+	label_at(Vector2(320,700),"数字键 1 / 2 / 3 快速选择   ·   等级上限 %d   ·   满级需要在深渊中反复轮回" % Data.LEVEL_CAP,14,GOLD)
+	label_at(Vector2(320,726),"经验只在怪物等级接近或高于你时给足；回头刷低级怪几乎拿不到经验——这是暗黑2 的规矩。",13,MUTED)
+	button(Rect2(921,700,192,35),"返回标题","title")
 func draw_slot_cards(x0: float, y0: float, w: float, h: float, gap: float, mode: String):
 	for i in SLOT_COUNT: draw_slot_card(i, Rect2(x0 + i * (w + gap), y0, w, h), mode)
 func draw_slot_card(i: int, r: Rect2, mode: String):
@@ -1371,7 +1484,7 @@ func draw_slot_card(i: int, r: Rect2, mode: String):
 	var c = Data.CLASSES[clampi(int(m.get("hero_class", 0)), 0, Data.CLASSES.size() - 1)]
 	var ch = clampi(int(m.get("chapter", 0)), 0, Data.CHAPTERS.size() - 1)
 	label_at(r.position + Vector2(20, 90), c.name, 24, Color(c.color))
-	label_at(r.position + Vector2(20, 116), "Lv.%d  ·  %s" % [int(m.get("level", 1)), c.title], 12, MUTED)
+	label_at(r.position + Vector2(20, 116), "Lv.%d  ·  %s  ·  %s" % [int(m.get("level", 1)), c.title, Data.diff_name(int(m.get("difficulty", 0)))], 12, MUTED)
 	label_at(r.position + Vector2(20, 148), "第 %d 章  %s" % [ch + 1, Data.CHAPTERS[ch].name], 16, TEXT)
 	label_at(r.position + Vector2(20, 174), str(m.get("location", "")), 15, GOLD)
 	var rows = ["深度   %d" % int(m.get("depth", 1)), "金币   %d" % int(m.get("gold", 0)),

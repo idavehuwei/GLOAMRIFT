@@ -18,7 +18,7 @@ func run():
 	g.gold = 100000; a.shards = 1000
 	var power = g.equipped[0].power
 	for i in 6: a.upgrade(0)
-	check(g.equipped[0].upgrade==5 and g.equipped[0].power==power+15,"Upgrade caps at five")
+	check(g.equipped[0].upgrade==5 and g.equipped[0].power==power+5*(2+int(g.ilvl()*0.4)),"Upgrade caps at five")
 	g.in_town = false; g.generate_map()
 	var rank = g.equipped[0].upgrade; a.upgrade(0); check(g.equipped[0].upgrade==rank,"Cannot craft outside town")
 	for site in a.sites: check(g.flow.has(Vector2i(site.pos/30)),"Activity site reachable")

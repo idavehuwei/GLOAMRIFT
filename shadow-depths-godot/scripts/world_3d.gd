@@ -538,7 +538,68 @@ func chest(p: Vector3) -> Node3D:
 	detailer.prop(root)
 	return root
 
+func authored_character(kind: int) -> Node3D:
+	var file = "warrior" if kind == -1 else ("mage" if kind == -10 else "archer")
+	var packed = load("res://assets/models/realistic/authored/"+file+".glb")
+	if packed == null: return null
+	var root: Node3D = packed.instantiate(); root.name = "Authored_"+file
+	root.set_meta("authored",true); root.set_meta("kind",kind); root.set_meta("action","idle")
+	var skeleton = root.get_node_or_null("Rig/Skeleton3D")
+	if skeleton != null:
+		# Variant 0 is the default appearance; variant 1 is a swappable equipment set.
+		for n in skeleton.get_children():
+			if n.name.ends_with("_1"): n.visible = false
+		var attachment = BoneAttachment3D.new(); attachment.name = "EquipmentSocket"; attachment.bone_name = "hand_r" if kind in [-1,-10] else "hand_l"; skeleton.add_child(attachment)
+		var weapon_file = "sword" if kind == -1 else ("staff" if kind == -10 else "bow")
+		var weapon = load("res://assets/models/realistic/authored/"+weapon_file+".glb")
+		if weapon != null:
+			var weapon_node = weapon.instantiate(); weapon_node.name = "EquippedWeapon"; weapon_node.scale = Vector3.ONE*0.72; attachment.add_child(weapon_node)
+		if kind == -1:
+			var off = BoneAttachment3D.new(); off.name = "OffhandEquipmentSocket"; off.bone_name = "lower_arm_l"; skeleton.add_child(off)
+			var shield = load("res://assets/models/realistic/authored/shield.glb")
+			if shield != null: off.add_child(shield.instantiate())
+		if kind == -11:
+			var back = BoneAttachment3D.new(); back.name = "BackEquipmentSocket"; back.bone_name = "chest"; skeleton.add_child(back)
+			var quiver = load("res://assets/models/realistic/authored/quiver.glb")
+			if quiver != null: back.add_child(quiver.instantiate())
+	var anim = root.get_node_or_null("AnimationPlayer")
+	if anim != null: anim.play("idle")
+	return root
+
+func _attach_authored_asset(skeleton: Node, bone_name: String, socket_name: String, asset_name: String, scale_value: float = 0.72) -> void:
+	var socket = skeleton.get_node_or_null(socket_name)
+	if socket == null:
+		socket = BoneAttachment3D.new()
+		socket.name = socket_name
+		socket.bone_name = bone_name
+		skeleton.add_child(socket)
+	for child in socket.get_children(): child.free()
+	var packed = load("res://assets/models/realistic/authored/"+asset_name+".glb")
+	if packed != null:
+		var item = packed.instantiate()
+		item.name = "Equipped_"+asset_name
+		item.scale = Vector3.ONE * scale_value
+		socket.add_child(item)
+
+func refresh_authored_hero_equipment() -> void:
+	if hero == null or not hero.has_meta("authored") or game == null: return
+	var skeleton = hero.get_node_or_null("Rig/Skeleton3D")
+	if skeleton == null: return
+	var kind = int(hero.get_meta("kind", -1))
+	var weapon_name = "sword" if kind == -1 else ("staff" if kind == -10 else "bow")
+	if game.equipped.size() > 0 and game.equipped[0] is Dictionary:
+		var requested = str(game.equipped[0].get("visual_id", ""))
+		if requested in ["sword", "axe", "staff", "staff_crystal", "bow", "bow_dark"]: weapon_name = requested
+	_attach_authored_asset(skeleton, "hand_r" if kind in [-1,-10] else "hand_l", "EquipmentSocket", weapon_name)
+	if kind == -1:
+		_attach_authored_asset(skeleton, "lower_arm_l", "OffhandEquipmentSocket", "shield", 0.72)
+	if kind == -11:
+		_attach_authored_asset(skeleton, "chest", "BackEquipmentSocket", "quiver", 0.72)
+
 func character(kind: int) -> Node3D:
+	if kind in [-1,-10,-11]:
+		var authored = authored_character(kind)
+		if authored != null: return authored
 	if kind in [4,5]: return creature(kind)
 	var root = Node3D.new()
 	var armor_color = Color("929da1") if kind==-1 else (Color("5b7295") if kind==-10 else (Color("597358") if kind==-11 else (Color("6f756a") if kind==0 else Color("675565"))))
@@ -639,7 +700,7 @@ func sync(dt: float):
 	var moving = previous_player.distance_to(game.player)>0.01
 	hero.position = v(game.player)
 	hero.rotation.y = lerp_angle(hero.rotation.y,atan2(-game.facing.x,-game.facing.y),minf(1,dt*18))
-	motion.update(hero,dt,moving)
+	update_model_animation(hero,dt,moving)
 	update_hero_glow(dt)
 	if vfx != null: vfx.update(dt)
 	for model in npc_models: motion.update(model,dt)
@@ -710,8 +771,19 @@ func _process(dt):
 	if preview_subject!=null and game.modal in ["gallery","character"]:
 		preview_clock += minf(dt,0.05)
 		if preview_turntable: preview_subject.rotation.y += minf(dt,0.05)*0.35
-		motion.update(preview_subject,dt,false,preview_action,preview_clock)
+		update_model_animation(preview_subject,dt,false,preview_action,preview_clock)
 	sync(dt if game != null and game.modal in ["","dead"] else 0.0)
+
+func update_model_animation(model: Node3D,dt: float,moving: bool=false,forced: String="",time: float=-1.0):
+	if model != null and model.has_meta("authored"):
+		var player: AnimationPlayer = model.get_node_or_null("AnimationPlayer")
+		if player == null: return
+		var action = forced if forced != "" else ("walk" if moving else str(model.get_meta("action","idle")))
+		if not player.has_animation(action): action = "idle"
+		if player.current_animation != action: player.play(action,0.14)
+		model.set_meta("action",action)
+		return
+	motion.update(model,dt,moving,forced,time)
 
 func barrel(p: Vector3):
 	var wood = material("barrelwood",Color("806346"),1,0,"wood")
@@ -1363,7 +1435,11 @@ func profile(parent: Node3D,p: Vector3,rings: Array,mat: Material):
 	st.generate_normals(); st.generate_tangents(); st.index()
 	return emit_mesh(parent,st.commit(),mat,p)
 
-func animate_hero(action: String,duration: float = 0.5): motion.play(hero,action,duration)
+func animate_hero(action: String,duration: float = 0.5):
+	if hero != null and hero.has_meta("authored"):
+		hero.set_meta("action",action)
+		update_model_animation(hero,0.0,false,action)
+	else: motion.play(hero,action,duration)
 func animate_enemy(e: Dictionary,action: String,duration: float = 0.5):
 	if e.has("visual_id") and actors.has(e.visual_id): motion.play(actors[e.visual_id],action,duration)
 

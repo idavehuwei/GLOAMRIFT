@@ -161,6 +161,25 @@ Godot 4 暗黑风格斜俯视 3D 动作冒险原型。正交相机、实时灯�
 
 [标题画面](tests/_title_screen.png) · [存档管理](tests/_title_saves_load.png) · [篝火菜单](tests/_title_pause.png)
 
+## 0.11 三难度 · 100 级 · 暗黑2 式经验曲线
+
+按《暗黑破坏神 2》的规则重构了等级、经验、怪物与难度：最高 **100 级**，三档难度，升级不再廉价。
+
+- **三难度**：普通（区域 Lv.1-30）/ 噩梦（Lv.31-60）/ 地狱（Lv.61-90）。难度决定区域等级与怪物强度（噩梦怪物生命 ×1.12 / 伤害 ×1.18，地狱 ×1.30 / ×1.42），并提高金币与掉落。新建旅程时选定难度（噩梦 / 地狱需先通关前一档），难度界面按数字键 1/2/3 快速选择。
+- **通关晋升**：打完第五章即标记当前难度通关并解锁下一档；胜利面板可直接「进入下一难度」，**等级、装备、宠物、成就全部保留**，章节从第一章重新开始——正是暗黑2 的难度轮回。
+- **经验曲线**：升到下一级所需经验按 `120 × 等级^2.5` 增长（1 级 120 点，50 级 212 万，99 级 1170 万）。全清模拟标定的节奏：普通通关约 33 级、噩梦约 62 级、地狱约 86-90 级；100 级需要在深渊（每轮区域等级 +3）里反复轮回。
+- **等级差惩罚**：怪物等级高于你时经验最多 +50%；低于你时按 `(怪物等级/角色等级)^6` 急剧衰减——80 级角色杀 60 级怪只拿到不到两成经验，回头刷低级图几乎没有收益。
+- **怪物与经验挂钩**：每只怪物带自己的等级（精英 +1、首领 +3），基础经验只由怪物等级决定；怪物生命 `26 + 23×等级`（精英 ×3.2、首领 ×12），伤害 `7 + 1.8×等级`，全部随难度再放大。
+- **死亡惩罚**：噩梦死亡损失本级所需经验的 5%，地狱 10%（普通无惩罚），死亡时在日志中明示。
+- **经济与装备同步**：掉落、宝箱、委托、锻造、强化的价格与产出全部改按区域等级计算；装备强度 `item_power` 随区域等级成长，保证玩家伤害跟得上地狱怪物的血量。药水价格随区域上涨（15 + 3×区域等级）。
+- **成就扩充**：新增「半百之躯」（50 级）、「登临百级」（100 级）、「噩梦终结」、「地狱已空」与隐藏成就「深渊常客」，共 39 项。
+- **存档 v6**：记录难度与各难度通关状态，兼容读取 v1-v5 旧档（旧档默认普通难度）。
+- **界面**：HUD 右上角显示难度与区域等级，经验条上方显示「Lv.X · 经验 x / y」（大数字自动缩写为万/亿）；角色面板显示等级上限、难度与区域等级；存档卡片显示难度。
+
+界面核对截图可运行 `tests/_difficulty_preview.gd` 生成到 `tests/_difficulty_*.png`。
+
+[难度选择](tests/_difficulty_select.png) · [地狱 HUD](tests/_difficulty_hud.png) · [角色面板](tests/_difficulty_character.png) · [通关胜利](tests/_difficulty_victory.png)
+
 ## 存档与地图重置
 
 自动保存发生在领取委托、选择职业、出城、回城、切图时；暂停菜单也可手动保存。保存职业、当前章节/地图、城镇状态、委托状态、等级、金币、药水、装备和背包，兼容旧版存档。
@@ -178,6 +197,7 @@ Godot 4 暗黑风格斜俯视 3D 动作冒险原型。正交相机、实时灯�
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path . --script tests/bosses_elites.gd
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path . --script tests/live_combat.gd
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path . --script tests/activities.gd
+/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --script tests/progression.gd
 /Applications/Godot.app/Contents/MacOS/Godot --path . --script tests/detail_validation.gd
 /Applications/Godot.app/Contents/MacOS/Godot --path . --script tests/render_3d.gd
 ```

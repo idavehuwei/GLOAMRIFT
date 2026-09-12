@@ -23,7 +23,7 @@ func run():
 		check(str(entry.stat)!="","Stat key present: " + id)
 		check(int(entry.goal)>0,"Goal positive: " + id)
 		check(str(entry.name)!="" and str(entry.desc)!="","Text present: " + id)
-	check(Data.ACHIEVEMENTS.size()==34,"34 achievements defined")
+	check(Data.ACHIEVEMENTS.size()==39,"39 achievements defined")
 	check(Data.bestiary_entries().size()==35,"Bestiary covers 35 entries")
 
 	# --- unlocking by stat ---
@@ -150,7 +150,7 @@ func run():
 	# --- save round trip ---
 	g.save_game()
 	var raw = JSON.parse_string(FileAccess.get_file_as_string(g.save_path))
-	check(int(raw.get("version",0))==5,"Save is version 5")
+	check(int(raw.get("version",0))==6,"Save is version 6")
 	check(raw.has("meta"),"Save carries slot metadata")
 	check(raw.has("achv"),"Save carries the achievement block")
 	var done_before = a.done()

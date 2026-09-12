@@ -1,6 +1,6 @@
 extends RefCounted
 # 小宠物系统：抽卡获取、首领掉落、自动作战、阵亡 30 秒后自动复活。
-# 战斗数值全部按 depth() 缩放，保证后期宠物依然有意义。
+# 战斗数值按区域等级缩放，保证后期宠物依然有意义。
 const Data = preload("res://scripts/content.gd")
 const REVIVE_TIME = 30.0
 const MAX_ROSTER = 10
@@ -24,15 +24,15 @@ func spec(p: Dictionary) -> Dictionary: return Data.PETS[clampi(int(p.species), 
 func active_pet():
 	if active >= 0 and active < roster.size(): return roster[active]
 	return null
-func max_hp(p: Dictionary) -> float: return float(spec(p).hp) + int(p.rarity) * 30 + int(p.level) * 24
-func power(p: Dictionary) -> float: return (float(spec(p).power) + int(p.rarity) * 4 + int(p.level) * 3.4) * (1.0 + g.depth() * 0.10)
+func max_hp(p: Dictionary) -> float: return (float(spec(p).hp) + int(p.rarity) * 30 + int(p.level) * 24) * (1.0 + float(g.ilvl()) * 0.04)
+func power(p: Dictionary) -> float: return (float(spec(p).power) + int(p.rarity) * 4 + int(p.level) * 3.4) * (1.0 + float(g.ilvl()) * 0.035)
 func rate(p: Dictionary) -> float: return maxf(0.34, float(spec(p).rate) - int(p.rarity) * 0.05 - int(p.level) * 0.008)
 func ranged(p: Dictionary) -> bool: return bool(spec(p).ranged)
 func reach(p: Dictionary) -> float: return 210.0 if ranged(p) else 48.0
 func rarity_color(p: Dictionary) -> Color: return Color(Data.RARITY_COLORS[clampi(int(p.rarity), 0, 4)])
 
 # ---------- 获取 ----------
-func cost() -> int: return 90 + g.depth() * 18
+func cost() -> int: return 90 + g.ilvl() * 8
 func roll_rarity(rng: RandomNumberGenerator, floor_rarity: int) -> int:
 	var weights = [54.0, 26.0, 13.0, 5.0, 2.0]
 	var total = 0.0

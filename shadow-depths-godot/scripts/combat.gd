@@ -154,7 +154,7 @@ func update(dt: float):
 			if g.renderer_3d!=null: g.renderer_3d.explode(e.pos,Color("f4a864"),1.5)
 			else: g.burst(e.pos,Color("f4a864"))
 		elif e.kind=="danger" and e.life<=0:
-			if e.pos.distance_to(g.player)<e.radius: hurt_player((12+g.depth()*2)*e.get("power",1.0))
+			if e.pos.distance_to(g.player)<e.radius: hurt_player(g.Data.monster_damage(g.ilvl(), g.difficulty) * e.get("power",1.0))
 			if g.renderer_3d!=null: g.renderer_3d.explode(e.pos,Color("b75d75"),0.85)
 			else: g.burst(e.pos,Color("b75d75"))
 		if e.life<=0: g.effects.remove_at(i)

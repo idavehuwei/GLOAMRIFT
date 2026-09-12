@@ -29,7 +29,10 @@ func run():
 
 	# --- 新游戏 ---
 	g.new_game(0)
-	check(g.modal == "class", "New game opens class selection")
+	check(g.modal == "difficulty", "New game opens difficulty selection")
+	check(g.difficulty_unlocked(0) and not g.difficulty_unlocked(1), "Only normal is unlocked at first")
+	g.action("diff:0")
+	check(g.modal == "class", "Picking a difficulty opens class selection")
 	check(g.slot == 0 and g.save_path == g.slot_path(0), "New game targets the chosen slot")
 	check(g.level == 1 and g.gold == 0 and g.inventory.is_empty(), "New game wipes previous progress")
 	check(g.chapter == 0 and g.stage == 0 and g.cycle == 0, "New game restarts the story")
@@ -55,6 +58,7 @@ func run():
 
 	# --- 第二个槽位互不干扰 ---
 	g.new_game(1)
+	g.action("diff:0")
 	check(g.level == 1 and g.gold == 0, "Second slot starts fresh")
 	g.choose_class(0)
 	g.level = 3
@@ -139,7 +143,7 @@ func run():
 	for i in g.SLOT_COUNT: g.remove_save(g.slot_path(i))
 	g.refresh_slots()
 	g.action("title_enter")
-	check(g.modal == "class", "Enter starts a new run when every slot is empty")
+	check(g.modal == "difficulty", "Enter offers difficulty selection when every slot is empty")
 
 	for i in g.SLOT_COUNT: g.remove_save(g.slot_path(i))
 	print("PASS ", pass_count, " checks")
