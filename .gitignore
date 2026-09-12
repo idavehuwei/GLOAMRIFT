@@ -15,3 +15,6 @@ tools/hy3d_out/
 # Python 缓存
 __pycache__/
 *.pyc
+
+# Hunyuan task state and local credentials
+shadow-depths-godot/.hunyuan3d/
