@@ -37,6 +37,10 @@ var ring: MeshInstance3D
 var fx
 var vfx
 var circle: ArrayMesh
+var pet_model: Node3D
+var pet_species = -999
+var pet_ring: MeshInstance3D
+const PET_FLYING = [2,4,8,9]
 var shot_models = {}
 var skill_models = {}
 var tree_index = 0
@@ -183,8 +187,8 @@ var sphere: SphereMesh
 var tube: CylinderMesh
 var cone: CylinderMesh
 # 细分档位：角色与生物用高精度，场景批量网格由 detail 参数另算。
-const BALL_SEGMENTS = 18
-const BALL_RINGS = 9
+const BALL_SEGMENTS = 24
+const BALL_RINGS = 12
 const TUBE_SEGMENTS = 16
 const CONE_SEGMENTS = 12
 func block(parent: Node3D,p: Vector3,size: Vector3,m: Material,rot: Vector3 = Vector3.ZERO) -> MeshInstance3D:
@@ -236,6 +240,9 @@ func rebuild():
 	if scenery != null: scenery.free()
 	if dynamic != null: dynamic.free()
 	npc_models.clear(); fallen.clear(); actors.clear(); chest_models.clear(); loot_models.clear(); torches.clear(); batches.clear(); shot_models.clear(); skill_models.clear(); tree_index = 0
+	pet_model = null
+	pet_species = -999
+	pet_ring = null
 	if vfx != null: vfx.clear()
 	scenery = Node3D.new(); scenery.name = "BatchedEnvironment"; world.add_child(scenery)
 	dynamic = Node3D.new(); dynamic.name = "ActorsAndProps"; world.add_child(dynamic)
@@ -316,6 +323,9 @@ func rebuild():
 	ring = MeshInstance3D.new(); ring.mesh = torus; ring.material_override = glow("selection",Color("c8ba85"),0.6); dynamic.add_child(ring)
 	var effect_mesh = TorusMesh.new(); effect_mesh.inner_radius = 0.96; effect_mesh.outer_radius = 1.0; effect_mesh.rings = 40; effect_mesh.ring_segments = 4
 	attack_effect = MeshInstance3D.new(); attack_effect.mesh = effect_mesh; attack_effect.material_override = glow("strike",Color("f2c48a"),2.0); dynamic.add_child(attack_effect)
+	var revive_torus = TorusMesh.new(); revive_torus.inner_radius = 0.44; revive_torus.outer_radius = 0.52; revive_torus.rings = 26; revive_torus.ring_segments = 4
+	pet_ring = MeshInstance3D.new(); pet_ring.mesh = revive_torus; pet_ring.material_override = aura_mat("petrevive",Color("9fd1a8"),0.6)
+	pet_ring.visible = false; dynamic.add_child(pet_ring)
 	if game.chapter==2:
 		var snow = fx.spawn(v(game.player,6),Color(0.85,0.92,0.95,0.8),"snow",true,100)
 		snow.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX; snow.emission_box_extents = Vector3(14,1,14)
@@ -640,6 +650,7 @@ func sync(dt: float):
 	attack_effect.position = hero.position+Vector3(0,0.08,0)
 	attack_effect.scale = Vector3.ONE*(5.0*(1-game.slash/0.2) if game.nova_cd>4.7 else 1.3)
 	sync_combat_fx()
+	sync_pet(dt)
 	var live = {}
 	for e in game.enemies:
 		if not e.has("visual_id") or not actors.has(e.visual_id): add_enemy_model(e)
@@ -1150,9 +1161,197 @@ func creature(kind: int) -> Node3D:
 	detailer.bake(root)
 	return root
 
+func sync_pet(dt: float):
+	var pets = game.pets
+	if pets == null or pet_ring == null: return
+	if pet_ring.get_parent() == null: dynamic.add_child(pet_ring)
+	var p = pets.active_pet()
+	if p == null or bool(p.get("resting", false)):
+		if pet_model != null: pet_model.visible = false
+		pet_ring.visible = false
+		return
+	var species = int(p.species)
+	if pet_model == null or pet_species != species:
+		if pet_model != null: pet_model.free()
+		var info = pets.spec(p)
+		pet_model = companion(int(info.form), Color(str(info.color)))
+		dynamic.add_child(pet_model)
+		pet_species = species
+	pet_model.visible = true
+	pet_model.position = v(pets.pos)
+	motion.update(pet_model, dt, pets.moving)
+	if int(pets.spec(p).form) in PET_FLYING: pet_model.position.y += 0.30 + sin(tick*3.2)*0.07
+	pet_model.rotation.y = lerp_angle(pet_model.rotation.y, atan2(-pets.facing.x, -pets.facing.y), minf(1.0, dt*12.0))
+	pet_model.scale = Vector3.ONE*0.62
+	# 阵亡：倒地 + 头顶复活进度环，30 秒读条结束后自动站起。
+	var dead = not bool(p.alive)
+	pet_ring.visible = dead
+	if dead:
+		var k = 1.0 - clampf(float(p.revive)/30.0, 0.0, 1.0)
+		pet_ring.position = v(pets.pos, 1.15)
+		pet_ring.scale = Vector3.ONE*(0.55 + k*0.55 + sin(tick*5.0)*0.04)
+		pet_ring.rotation.y = tick*1.6
+func animate_pet(action: String,duration: float = 0.5):
+	if pet_model != null and is_instance_valid(pet_model): motion.play(pet_model, action, duration)
+func companion(form: int,tint: Color) -> Node3D:
+	var root = Node3D.new()
+	var key = str(form)+tint.to_html(false)
+	var body = material("petbody"+key,tint,0.85,0.05,"fur")
+	var dark = material("petdark"+key,tint.darkened(0.42),0.9,0.0,"fur")
+	var light = material("petlight"+key,tint.lightened(0.26),0.75,0.0,"fur")
+	var trim = material("pettrim"+key,Color("cbb98d"),0.5,0.6,"copper")
+	var eyes = glow("peteye"+key,Color("e6bdf5") if form==8 else Color("f6e3ba"),0.9)
+	var head: Node3D = null
+	var tail: Node3D = null
+	if form in [0,1,3,7,9]:
+		for side in [-1,1]:
+			for k in 2:
+				var leg = motion.pivot(root,"Leg_%d_%d" % [side,k],Vector3(side*0.16,0.30,-0.19+k*0.36))
+				beam(leg,Vector3.ZERO,Vector3(0,-0.19,0),0.062,body)
+				ball(leg,Vector3(0,-0.22,-0.03),Vector3(0.13,0.10,0.17),dark)
+	match form:
+		0:
+			ball(root,Vector3(0,0.34,0.02),Vector3(0.38,0.33,0.56),body)
+			head = motion.pivot(root,"Head",Vector3(0,0.38,-0.32))
+			ball(head,Vector3.ZERO,Vector3(0.31,0.29,0.33),body)
+			ball(head,Vector3(0,-0.04,-0.21),Vector3(0.17,0.13,0.20),light)
+			ball(head,Vector3(0,-0.10,-0.29),Vector3(0.06,0.05,0.05),dark)
+			for side in [-1,1]:
+				ball(head,Vector3(side*0.16,0.17,-0.01),Vector3(0.21,0.21,0.05),dark)
+				ball(head,Vector3(side*0.16,0.17,0.02),Vector3(0.13,0.13,0.04),light)
+				ball(head,Vector3(side*0.10,0.02,-0.18),Vector3(0.055,0.055,0.04),eyes)
+			tail = motion.pivot(root,"Tail",Vector3(0,0.36,0.30))
+			beam(tail,Vector3.ZERO,Vector3(0,0.03,0.40),0.030,dark)
+		1:
+			ball(root,Vector3(0,0.40,0.03),Vector3(0.46,0.40,0.68),body)
+			head = motion.pivot(root,"Head",Vector3(0,0.52,-0.40))
+			ball(head,Vector3.ZERO,Vector3(0.36,0.34,0.38),body)
+			ball(head,Vector3(0,-0.05,-0.24),Vector3(0.20,0.15,0.24),light)
+			ball(head,Vector3(0,-0.11,-0.34),Vector3(0.08,0.06,0.06),dark)
+			for side in [-1,1]:
+				cylinder(head,Vector3(side*0.15,0.24,0.02),0.08,0.20,dark,Vector3(0,0,side*0.22),true)
+				ball(head,Vector3(side*0.11,0.04,-0.19),Vector3(0.06,0.06,0.04),eyes)
+			motion.pivot(root,"Jaw",Vector3(0,0.44,-0.55))
+			var jaw = root.get_node("Jaw")
+			ball(jaw,Vector3(0,0,-0.11),Vector3(0.17,0.07,0.26),dark)
+			tail = motion.pivot(root,"Tail",Vector3(0,0.50,0.36))
+			beam(tail,Vector3.ZERO,Vector3(0,0.20,0.18),0.06,body)
+			beam(tail,Vector3(0,0.20,0.18),Vector3(0,0.30,0.06),0.045,light)
+		2:
+			ball(root,Vector3(0,0.52,0),Vector3(0.28,0.30,0.52),body)
+			ball(root,Vector3(0,0.46,0.22),Vector3(0.24,0.24,0.24),light)
+			head = motion.pivot(root,"Head",Vector3(0,0.62,-0.28))
+			ball(head,Vector3.ZERO,Vector3(0.24,0.24,0.24),body)
+			for side in [-1,1]:
+				ball(head,Vector3(side*0.09,0.02,-0.13),Vector3(0.09,0.09,0.05),eyes)
+				beam(head,Vector3(side*0.06,0.18,-0.02),Vector3(side*0.17,0.42,-0.18),0.014,dark)
+				var wing = motion.pivot(root,"WingL" if side<0 else "WingR",Vector3(side*0.10,0.58,0.02))
+				block(wing,Vector3(side*0.34,0.02,0.04),Vector3(0.68,0.03,0.44),light)
+				block(wing,Vector3(side*0.26,-0.02,0.24),Vector3(0.48,0.03,0.30),body)
+			root.set_meta("wings",true)
+		3:
+			ball(root,Vector3(0,0.30,0),Vector3(0.66,0.34,0.78),dark)
+			ball(root,Vector3(0,0.44,-0.02),Vector3(0.78,0.42,0.86),body)
+			for k in 6:
+				var a = k*TAU/6.0
+				block(root,Vector3(cos(a)*0.21,0.61,sin(a)*0.27),Vector3(0.17,0.05,0.21),light)
+			block(root,Vector3(0,0.63,0),Vector3(0.30,0.06,0.34),light)
+			head = motion.pivot(root,"Head",Vector3(0,0.38,-0.46))
+			ball(head,Vector3.ZERO,Vector3(0.26,0.24,0.30),body)
+			ball(head,Vector3(0,-0.03,-0.20),Vector3(0.15,0.12,0.16),light)
+			for side in [-1,1]: ball(head,Vector3(side*0.08,0.03,-0.12),Vector3(0.05,0.05,0.035),eyes)
+			tail = motion.pivot(root,"Tail",Vector3(0,0.30,0.44))
+			ball(tail,Vector3(0,-0.02,0.08),Vector3(0.10,0.08,0.20),body)
+		4:
+			ball(root,Vector3(0,0.52,-0.02),Vector3(0.34,0.38,0.60),body)
+			ball(root,Vector3(0,0.60,0.22),Vector3(0.30,0.30,0.30),light)
+			head = motion.pivot(root,"Head",Vector3(0,0.76,-0.26))
+			ball(head,Vector3.ZERO,Vector3(0.26,0.26,0.28),body)
+			cylinder(head,Vector3(0,-0.02,-0.25),0.05,0.24,trim,Vector3(PI/2,0,0),true)
+			for side in [-1,1]:
+				ball(head,Vector3(side*0.10,0.04,-0.11),Vector3(0.07,0.07,0.04),eyes)
+				var wing = motion.pivot(root,"WingL" if side<0 else "WingR",Vector3(side*0.14,0.58,0.02))
+				block(wing,Vector3(side*0.30,-0.02,0.02),Vector3(0.60,0.05,0.40),dark)
+				block(wing,Vector3(side*0.34,-0.06,0.22),Vector3(0.44,0.04,0.26),body)
+				var leg = motion.pivot(root,"Leg_%d_0" % side,Vector3(side*0.10,0.38,0.02))
+				beam(leg,Vector3.ZERO,Vector3(0,-0.18,0),0.035,trim)
+				ball(leg,Vector3(0,-0.20,-0.04),Vector3(0.11,0.05,0.16),trim)
+			root.set_meta("wings",true)
+		5:
+			ball(root,Vector3(0,0.22,0.02),Vector3(0.88,0.30,0.88),dark)
+			ball(root,Vector3(0,0.34,0),Vector3(0.74,0.58,0.74),body)
+			ball(root,Vector3(0,0.50,0),Vector3(0.44,0.34,0.44),light)
+			ball(root,Vector3(0,0.34,-0.06),Vector3(0.30,0.24,0.30),glow("petcore"+key,tint.lightened(0.5),1.1))
+			head = motion.pivot(root,"Head",Vector3(0,0.44,-0.30))
+			for side in [-1,1]: ball(head,Vector3(side*0.11,0.02,-0.06),Vector3(0.09,0.11,0.05),eyes)
+			for k in 4:
+				var a = k*TAU/4.0+0.4
+				ball(root,Vector3(cos(a)*0.30,0.09,sin(a)*0.30),Vector3(0.17,0.15,0.17),body)
+			tail = motion.pivot(root,"Tail",Vector3(0,0.56,0.22))
+			ball(tail,Vector3(0,0.10,0),Vector3(0.14,0.24,0.14),light)
+		6:
+			block(root,Vector3(0,0.30,0),Vector3(0.56,0.44,0.40),body)
+			block(root,Vector3(0,0.66,0),Vector3(0.46,0.30,0.34),body)
+			block(root,Vector3(0,0.44,-0.21),Vector3(0.30,0.06,0.04),trim)
+			block(root,Vector3(0,0.30,-0.21),Vector3(0.36,0.06,0.04),trim)
+			head = motion.pivot(root,"Head",Vector3(0,0.94,0))
+			block(head,Vector3.ZERO,Vector3(0.36,0.32,0.34),body)
+			block(head,Vector3(0,0.02,-0.18),Vector3(0.26,0.06,0.03),trim)
+			for side in [-1,1]:
+				ball(head,Vector3(side*0.09,0.04,-0.16),Vector3(0.07,0.05,0.03),glow("petrune"+key,Color("9fd8e8"),1.2))
+				block(root,Vector3(side*0.34,0.62,0),Vector3(0.16,0.34,0.30),body)
+				block(root,Vector3(side*0.34,0.62,-0.16),Vector3(0.10,0.06,0.03),trim)
+				var leg = motion.pivot(root,"Leg_%d_0" % side,Vector3(side*0.16,0.16,0))
+				block(leg,Vector3(0,-0.08,0),Vector3(0.17,0.24,0.20),dark)
+		7:
+			ball(root,Vector3(0,0.38,0.02),Vector3(0.40,0.36,0.66),body)
+			head = motion.pivot(root,"Head",Vector3(0,0.50,-0.40))
+			ball(head,Vector3.ZERO,Vector3(0.32,0.30,0.34),body)
+			ball(head,Vector3(0,-0.06,-0.24),Vector3(0.16,0.13,0.22),light)
+			ball(head,Vector3(0,-0.10,-0.33),Vector3(0.06,0.05,0.05),dark)
+			for side in [-1,1]:
+				cylinder(head,Vector3(side*0.14,0.24,0.02),0.07,0.26,body,Vector3(0,0,side*0.16),true)
+				ball(head,Vector3(side*0.14,0.24,0.04),Vector3(0.04,0.16,0.03),light)
+				ball(head,Vector3(side*0.10,0.04,-0.19),Vector3(0.065,0.06,0.04),eyes)
+			tail = motion.pivot(root,"Tail",Vector3(0,0.46,0.34))
+			beam(tail,Vector3.ZERO,Vector3(0,0.10,0.30),0.13,body)
+			beam(tail,Vector3(0,0.10,0.30),Vector3(0,0.16,0.52),0.09,light)
+			ball(tail,Vector3(0,0.18,0.56),Vector3(0.16,0.16,0.16),light)
+			ball(root,Vector3(0,0.74,0.02),Vector3(0.16,0.20,0.16),glow("petflame"+key,Color("8fc8f0"),1.5))
+		8:
+			ball(root,Vector3(0,0.62,0),Vector3(0.52,0.52,0.52),body)
+			ball(root,Vector3(0,0.62,-0.24),Vector3(0.34,0.34,0.12),light)
+			ball(root,Vector3(0,0.62,-0.31),Vector3(0.18,0.18,0.08),glow("petiris"+key,Color("c99ae8"),1.3))
+			ball(root,Vector3(0,0.62,-0.35),Vector3(0.09,0.13,0.05),dark)
+			head = motion.pivot(root,"Head",Vector3(0,0.62,0))
+			for k in 5:
+				var a = k*TAU/5.0
+				beam(head,Vector3(cos(a)*0.16,-0.17,sin(a)*0.16),Vector3(cos(a)*0.24,-0.46,sin(a)*0.24),0.035,dark)
+			var halo = TorusMesh.new(); halo.inner_radius = 0.35; halo.outer_radius = 0.39; halo.rings = 22; halo.ring_segments = 4
+			emit_mesh(root,halo,glow("pethalo"+key,Color("b79ae0"),0.9),Vector3(0,0.62,0))
+		9:
+			ball(root,Vector3(0,0.42,0.04),Vector3(0.44,0.40,0.68),body)
+			cylinder(root,Vector3(0,0.60,-0.30),0.13,0.36,body,Vector3(0.5,0,0))
+			head = motion.pivot(root,"Head",Vector3(0,0.74,-0.48))
+			ball(head,Vector3.ZERO,Vector3(0.30,0.28,0.36),body)
+			ball(head,Vector3(0,-0.04,-0.26),Vector3(0.18,0.14,0.22),light)
+			for side in [-1,1]:
+				cylinder(head,Vector3(side*0.12,0.20,0.06),0.045,0.24,trim,Vector3(-0.3,0,side*0.5),true)
+				ball(head,Vector3(side*0.10,0.04,-0.18),Vector3(0.065,0.06,0.04),eyes)
+				var wing = motion.pivot(root,"WingL" if side<0 else "WingR",Vector3(side*0.18,0.58,0.04))
+				block(wing,Vector3(side*0.36,0.06,0.02),Vector3(0.72,0.04,0.46),light)
+				block(wing,Vector3(side*0.34,0.02,0.24),Vector3(0.52,0.04,0.30),body)
+			for k in 4: block(root,Vector3(0,0.66-k*0.02,0.10+k*0.14),Vector3(0.10,0.14,0.06),trim)
+			tail = motion.pivot(root,"Tail",Vector3(0,0.40,0.38))
+			beam(tail,Vector3.ZERO,Vector3(0,0.02,0.34),0.09,body)
+			beam(tail,Vector3(0,0.02,0.34),Vector3(0,0.06,0.60),0.05,light)
+			root.set_meta("wings",true)
+	motion.rig(root,4)
+	detailer.bake(root)
+	return root
 func profile(parent: Node3D,p: Vector3,rings: Array,mat: Material):
 	var st = SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var count = 16
+	var count = 24
 	rings = rings.duplicate()
 	rings.push_front([rings[0][0],0.0,0.0]); rings.append([rings[-1][0],0.0,0.0])
 	for y in rings.size()-1:

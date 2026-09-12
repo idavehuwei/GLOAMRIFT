@@ -1,0 +1,10 @@
+{
+  "provider": "Tencent Hunyuan 3D",
+  "phase": "base_bodies_only",
+  "parameters": {"Model": "3.1", "GenerateType": "Normal", "EnablePBR": true, "FaceCount": 100000},
+  "jobs": [
+    {"id": "warrior_male_base_v1", "gender": "male", "image": "assets/concepts/realistic/warrior-male-base-v1.png"},
+    {"id": "mage_female_base_v1", "gender": "female", "image": "assets/concepts/realistic/mage-female-base-v1.png"},
+    {"id": "archer_female_base_v1", "gender": "female", "image": "assets/concepts/realistic/archer-female-base-v1.png"}
+  ]
+}

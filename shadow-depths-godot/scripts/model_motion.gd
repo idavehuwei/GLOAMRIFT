@@ -62,6 +62,7 @@ func collect(n: Node3D,path: String,out: Dictionary):
 			collect(c,p+"/",out)
 func play(root: Node3D,action: String,duration: float = 0.5):
 	if root==null or not is_instance_valid(root): return
+	if str(root.get_meta("action", "")) == "death": return
 	root.set_meta("action",action); root.set_meta("elapsed",0.0); root.set_meta("duration",duration)
 func update(root: Node3D,dt: float,moving: bool = false,forced: String = "",time: float = -1.0):
 	var kind = int(root.get_meta("kind",0))
@@ -80,7 +81,8 @@ func update(root: Node3D,dt: float,moving: bool = false,forced: String = "",time
 	var rise = maxf(0.0,swing)
 	var wind = maxf(0.0,-swing)
 	swing_value = swing
-	var stride = sin(t*10.0)*0.55 if action=="walk" else sin(t*1.8)*0.025
+	var locomotion = action=="walk" or (moving and action in ["attack","skill"])
+	var stride = sin(t*10.0)*0.55 if locomotion else sin(t*1.8)*0.025
 	var pose = {}
 	var lift = absf(stride)*0.055
 	pose["Head"] = Vector3(sin(t*1.8)*0.025,sin(t*0.65)*0.10,0)
@@ -185,10 +187,34 @@ func update(root: Node3D,dt: float,moving: bool = false,forced: String = "",time
 				pose[name] = Vector3(wave*0.48,0,0) if kind==4 else Vector3(0,wave*0.18,side*maxf(0,wave)*0.19)
 				pose[name+"/Knee"] = Vector3(maxf(0,-wave)*0.65,0,0) if kind==4 else Vector3(0,0,-side*maxf(0,wave)*0.27)
 	var joints: Dictionary = root.get_meta("joints",{})
-	var blend = 1.0-exp(-dt*18) if time<0 else 1.0
+	# Capture the visible pose on state changes, including interrupted attacks.
+	if str(root.get_meta("blend_action","")) != action:
+		var source = {}
+		for path in joints: source[path] = joints[path].node.quaternion
+		root.set_meta("blend_source",source)
+		root.set_meta("blend_age",0.0)
+		root.set_meta("blend_height",root.position.y)
+		root.set_meta("blend_action",action)
+	var age = float(root.get_meta("blend_age",0.0))+maxf(dt,0.0)
+	root.set_meta("blend_age",age)
+	var transition = 0.08 if action in ["hit","dodge"] else 0.16
+	var weight = smoothstep(0.0,transition,age) if time<0 else 1.0
+	var source: Dictionary = root.get_meta("blend_source",{})
+	var blend = 1.0-exp(-maxf(dt,0.0)*22) if time<0 else 1.0
 	for path in joints:
 		var j = joints[path]; var target = j.rotation+pose.get(path,Vector3.ZERO)
-		j.node.rotation = j.node.rotation.lerp(target,blend)
+		var target_q = Quaternion.from_euler(target)
+		if kind not in [4,5] and path in ["Head","SwordArm","ShieldArm"]:
+			target_q = Quaternion.from_euler(pose.get("Chest",Vector3.ZERO)) * target_q
+		var mixed = source.get(path,j.node.quaternion).slerp(target_q,weight)
+		j.node.quaternion = mixed
+	if kind not in [4,5] and root.has_node("Chest"):
+		var chest = root.get_node("Chest")
+		var rest_chest: Vector3 = joints["Chest"].position
+		var delta_basis = chest.basis * Basis.from_euler(joints["Chest"].rotation).inverse()
+		for path in ["Head","SwordArm","ShieldArm"]:
+			var joint = joints[path]
+			joint.node.position = rest_chest + delta_basis * (joint.position-rest_chest)
 	# Weapons remain on their stable public path but follow the elbow pivot.
 	if root.has_node("SwordArm/Sword"):
 		var sword = root.get_node("SwordArm/Sword")
@@ -207,6 +233,12 @@ func update(root: Node3D,dt: float,moving: bool = false,forced: String = "",time
 			string_part.basis = Basis.looking_at(direction,Vector3.FORWARD)*Basis.from_scale(Vector3(0.009,0.009,tip.distance_to(center)))
 		var arrow = bow.get_node("NockedArrow"); arrow.position = center
 		arrow.scale = Vector3.ONE*(1.0 if drawing else 0.0001)
+	# 有翅膀的小宠物：翅膀在关节插值之后直接驱动，避免被回中插值拉平。
+	if root.has_meta("wings"):
+		var flap = sin(t*16.0+float(root.get_instance_id()%97)*0.11)
+		for wing_name in ["WingL","WingR"]:
+			var wg = root.get_node_or_null(wing_name)
+			if wg != null: wg.rotation.z = (-1.0 if wing_name=="WingL" else 1.0)*(0.16+flap*0.62)
 	root.rotation.x = lerpf(root.rotation.x,tilt.x,blend); root.rotation.z = lerpf(root.rotation.z,tilt.z,blend)
-	root.position.y = lift
+	root.position.y = lerpf(float(root.get_meta("blend_height",0.0)),lift,weight)
 	root.set_meta("pose_action",action)

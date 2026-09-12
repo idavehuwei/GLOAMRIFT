@@ -63,6 +63,7 @@ var activities
 var gallery_index = 0
 var combat
 var enemy_skills
+var pets
 var enemy_uid = 0
 var player_slow = 0.0
 var renderer_3d
@@ -76,6 +77,7 @@ func _ready():
 	activities = preload("res://scripts/activities.gd").new(self)
 	combat = preload("res://scripts/combat.gd").new(self)
 	enemy_skills = preload("res://scripts/enemy_skills.gd").new(self)
+	pets = preload("res://scripts/pets.gd").new(self)
 	panel_texture = load("res://assets/textures/stone.png")
 	font = SystemFont.new()
 	font.font_names = PackedStringArray(["PingFang SC", "Heiti SC", "Microsoft YaHei", "Noto Sans CJK SC", "sans-serif"])
@@ -126,6 +128,7 @@ func generate_map():
 	portal = Vector2(825,285)
 	npc = Vector2(165,225)
 	player = Vector2(135,285)
+	if pets != null: pets.reset_position()
 	for y in H:
 		var row = []
 		for x in W: row.append(0)
@@ -176,9 +179,10 @@ func generate_map():
 		for cell in [Vector2i(14,8),Vector2i(15,8),Vector2i(14,9),Vector2i(15,9),Vector2i(10,6),Vector2i(20,10)]: tiles[cell.y][cell.x] = 0
 		player = Vector2(435,315)
 		portal = Vector2(795,285)
-		var positions = [Vector2(465,225),Vector2(375,255),Vector2(570,315),Vector2(330,345),Vector2(465,405)]
-		for i in 5: townsfolk.append({"pos":positions[i],"name":Data.NPC_NAMES[i],"role":Data.NPC_ROLES[i],"type":-2-i})
+		var positions = [Vector2(465,225),Vector2(375,255),Vector2(570,315),Vector2(330,345),Vector2(465,405),Vector2(555,405)]
+		for i in 6: townsfolk.append({"pos":positions[i],"name":Data.NPC_NAMES[i],"role":Data.NPC_ROLES[i],"type":-2-i})
 		npc = positions[0]
+		if pets != null: pets.reset_position()
 		reveal(); update_flow()
 		if renderer_3d != null: renderer_3d.rebuild()
 		return
@@ -249,6 +253,7 @@ func _process(dt):
 	player = move_actor(player,direction*float(Data.CLASSES[hero_class].speed)*dt*(0.55 if player_slow>0 else 1.0))
 	if not in_town and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and mouse_in_world(): attack(false)
 	combat.update(dt)
+	if pets != null: pets.update(dt)
 	reveal()
 	for e in enemies.duplicate():
 		enemy_skills.update(e,dt)
@@ -268,10 +273,13 @@ func _process(dt):
 				if renderer_3d!=null: renderer_3d.animate_enemy(e,"attack",0.50)
 				if invincible <= 0:
 					var hit = maxf(3,9+depth()*2-(int(equipped[1].power)*0.3)) * (1.8 if e.boss else 1)
-					hp -= hit; invincible = 0.45; shake = 0.15
-					if renderer_3d!=null: renderer_3d.animate_hero("death" if hp<=0 else "hit",0.85 if hp<=0 else 0.26)
-					floating(player,"-"+str(int(hit)),Color("e77f75")); tone(100)
-					if hp <= 0: hp = 0; modal = "dead"; break
+					# 宠物在附近会替主人挡刀；挡下时玩家不受伤。
+					if pets == null or not pets.soak(e,hit):
+						hp -= hit; invincible = 0.45; shake = 0.15
+						if renderer_3d!=null: renderer_3d.animate_hero("death" if hp<=0 else "hit",0.85 if hp<=0 else 0.26)
+						floating(player,"-"+str(int(hit)),Color("e77f75")); tone(100)
+						if hp <= 0: hp = 0; modal = "dead"; break
+					else: invincible = 0.28
 	for i in range(drops.size()-1,-1,-1):
 		var d = drops[i]
 		if d.pos.distance_to(player) < 25:
@@ -293,6 +301,7 @@ func defeat(i: int):
 	activities.killed(e)
 	var elite = e.get("elite",false)
 	kills += 1; xp += (15+depth()*3)*(5 if e.boss else (3 if elite else 1))
+	if e.boss and pets != null: pets.boss_reward()
 	gold += rng.randi_range(5,15)*depth()*(5 if elite or e.boss else 1)
 	if rng.randf()<0.65 or elite or e.boss:
 		for k in (3 if e.boss else (2 if elite else 1)):
@@ -361,13 +370,14 @@ func choose_class(index: int):
 func save_game():
 	var f = FileAccess.open(save_path,FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({"version":2,"activities":activities.snapshot(),"in_town":in_town,"hero_class":hero_class,"quest_accepted":quest_accepted,"chapter":chapter,"stage":stage,"cycle":cycle,"level":level,"xp":xp,"gold":gold,"potions":potions,"inventory":inventory,"equipped":equipped}))
+		f.store_string(JSON.stringify({"version":3,"activities":activities.snapshot(),"pets":pets.snapshot(),"in_town":in_town,"hero_class":hero_class,"quest_accepted":quest_accepted,"chapter":chapter,"stage":stage,"cycle":cycle,"level":level,"xp":xp,"gold":gold,"potions":potions,"inventory":inventory,"equipped":equipped}))
 		note("进度已保存 · 继续时从本地图入口出发")
 func load_game():
 	if not FileAccess.file_exists(save_path): note("还没有存档。"); return
 	var d = JSON.parse_string(FileAccess.get_file_as_string(save_path))
-	if not d is Dictionary or int(d.get("version",0)) not in [1,2]: note("存档格式无法读取。"); return
+	if not d is Dictionary or int(d.get("version",0)) not in [1,2,3]: note("存档格式无法读取。"); return
 	activities.restore(d.get("activities",{}))
+	if pets != null: pets.restore(d.get("pets",{}))
 	in_town = bool(d.get("in_town",true)); hero_class = clampi(int(d.get("hero_class",0)),0,2); quest_accepted = bool(d.get("quest_accepted",false)); mana = 100
 	chapter = clampi(int(d.chapter),0,4); stage = clampi(int(d.stage),0,2); cycle = maxi(0,int(d.cycle))
 	level = maxi(1,int(d.level)); xp = int(d.xp); gold = int(d.gold); potions = int(d.potions)
@@ -428,6 +438,7 @@ func _input(event):
 			KEY_V: modal = "" if modal=="quests" else "quests"
 			KEY_I: modal = "" if modal == "inventory" else "inventory"
 			KEY_M: modal = "" if modal == "map" else "map"
+			KEY_P: modal = "" if modal == "pets" else "pets"
 			KEY_ENTER:
 				if modal == "story" or modal == "victory": modal = ""
 			KEY_E:
@@ -455,10 +466,16 @@ func action(id: String):
 		renderer_3d.preview_turntable = not renderer_3d.preview_turntable; return
 	if id.begins_with("class:"): choose_class(int(id.split(":")[1])); return
 	if id.begins_with("item:"): selected = int(id.split(":")[1]); return
+	if id.begins_with("pet:"): pets.set_active(int(id.split(":")[1])); return
 	match id:
 		"play":
 			if modal == "story": save_game()
 			modal = ""
+		"gacha":
+			if pets != null and pets.gacha(): save_game()
+		"pets": modal = "pets"
+		"pet_toggle": if pets != null: pets.toggle()
+		"pet_release": if pets != null: pets.release()
 		"contracts": modal = "contracts"
 		"gallery": modal = "gallery"
 		"salvage": activities.salvage()
@@ -566,6 +583,12 @@ func _draw():
 			bar(Rect2(p-Vector2(28,0),Vector2(56,4)),e.hp,e.max,Color("ac5c50"))
 			if e.boss: label_at(p-Vector2(62,10),Data.CHAPTERS[chapter].boss,15,GOLD)
 			elif e.get("elite",false): label_at(p-Vector2(55,10),e.affix+" · "+e.name,13,Color("a8a6df"))
+	if pets != null:
+		var pet = pets.active_pet()
+		if pet != null and not bool(pet.get("resting",false)):
+			var pp = world_point(pets.pos,1.7)
+			bar(Rect2(pp-Vector2(22,0),Vector2(44,3)),float(pet.hp),pets.max_hp(pet),Color("7ba36f"))
+			if not bool(pet.alive): label_at(pp-Vector2(36,6),"复活 %.0f 秒" % float(pet.revive),13,Color("d78f7f"))
 	for c in chests:
 		if not c.open and player.distance_to(c.pos)<85:
 			var p = world_point(c.pos,1.0)
@@ -619,6 +642,21 @@ func _draw():
 	label_at(Vector2(45,214),("◇  本章委托              "+("已领取" if quest_accepted else "待领取")) if in_town else "◇  寻回印记                 %d / 3" % marks,14,TEXT)
 	label_at(Vector2(45,242),"◇  城镇服务         补给 / 锻造" if in_town else "◇  消灭区域敌人             %d" % enemies.size(),14,TEXT)
 	label_at(Vector2(45,275),("出城前可向导师切换职业" if in_town else "清理完毕，前往东侧传送门") if ready_exit() else ("与鸦邮差交谈，领取章节任务" if in_town else "探索遗迹，揭开黑夜的秘密"),12,Color("a19b8b"))
+	box(Rect2(28,303,268,132),Color(0.055,0.06,0.06,0.78))
+	ornament(Vector2(42,306),237)
+	if pets != null and pets.active_pet() != null:
+		var hud_pet = pets.active_pet()
+		label_at(Vector2(42,336),"伙伴 · "+str(hud_pet.name),15,pets.rarity_color(hud_pet))
+		label_at(Vector2(42,358),"Lv.%d · %s · %s" % [int(hud_pet.level),Data.RARITY_NAMES[int(hud_pet.rarity)],("远程" if pets.ranged(hud_pet) else "近战")],12,MUTED)
+		bar(Rect2(42,368,238,8),float(hud_pet.hp),pets.max_hp(hud_pet),Color("6f9c6a"))
+		label_at(Vector2(42,394),"攻击 %d · 每 %.1f 秒" % [int(pets.power(hud_pet)),pets.rate(hud_pet)],13,TEXT)
+		if not bool(hud_pet.alive): label_at(Vector2(42,416),"复活倒计时 %.0f 秒" % float(hud_pet.revive),13,Color("d78f7f"))
+		else: label_at(Vector2(42,416),"休息中 · 缓慢恢复" if bool(hud_pet.get("resting",false)) else "出战中",12,MUTED)
+	else:
+		label_at(Vector2(42,342),"尚未获得伙伴",15,MUTED)
+		label_at(Vector2(42,372),"城镇宠物商可以抽卡，",13,TEXT)
+		label_at(Vector2(42,392),"每章首领也会掉落。",13,TEXT)
+	button(Rect2(42,404,120,26),"伙伴  P","pets")
 	box(Rect2(1210,104,198,161),Color(0.045,0.05,0.055,0.70))
 	label_at(Vector2(1224,128),"%s · %02d" % [Data.CHAPTERS[chapter].region,depth()],12,GOLD)
 	for y in H:
@@ -689,13 +727,18 @@ func draw_modal():
 入口微苦，回味是你还活着的幸福。","稀有装备现打现卖，三围随机。
 本店不接受“隔壁骷髅穿起来更帅”作为退货理由。","剑、魔法和弓都可以救世界。
 在城镇可以免费切换职业，保留等级和装备。","坐吧，热汤是免费的。
-床铺没有跳蚤，它们都去隔壁旅店团建了。"]
+床铺没有跳蚤，它们都去隔壁旅店团建了。","笼子里的家伙都在装睡。
+抽一次 %d 金，抽到什么全看命——她们管这叫「缘分经济」。
+首领身上会掉更好的，但前提是你活着回来。" % pets.cost()]
 		var rows = dialogue[active_npc].split("\n")
 		for i in rows.size(): label_at(Vector2(320,356+i*36),rows[i],18,TEXT)
 		label_at(Vector2(320,559),"金币 %d   ·   药水 %d   ·   职业 %s" % [gold,potions,Data.CLASSES[hero_class].name],16,GOLD)
-		var captions = ["确认委托 / 准备出城","购买药水 · 25 金","锻造稀有装备 · %d 金" % (60*depth()),"选择职业","休息 · 恢复生命与精力"]
-		button(Rect2(320,610,420,54),captions[active_npc],["accept","buy","forge","trainer","rest"][active_npc],true)
+		var captions = ["确认委托 / 准备出城","购买药水 · 25 金","锻造稀有装备 · %d 金" % (60*depth()),"选择职业","休息 · 恢复生命与精力","打开宠物笼 · %d 金 / 次" % pets.cost()]
+		button(Rect2(320,610,420,54),captions[active_npc],["accept","buy","forge","trainer","rest","pets"][active_npc],true)
 		button(Rect2(880,682,233,44),"离开","play")
+		return
+	if modal == "pets":
+		draw_pet_panel()
 		return
 	if modal == "story" or modal == "victory":
 		label_at(Vector2(320,247),"黎明已归来" if modal == "victory" else "第 %d 章  ·  %s" % [chapter+1,Data.CHAPTERS[chapter].name],36,TEXT)
@@ -853,6 +896,7 @@ func draw_codex_panel():
 			label_at(Vector2(666,y),rows[i][0],16,MUTED)
 			label_at(Vector2(920,y),rows[i][1],17,TEXT)
 		button(Rect2(320,681,290,43),"装备与行囊  I","inventory")
+		button(Rect2(637,681,240,43),"小宠物  P","pets")
 	elif modal=="skills":
 		label_at(Vector2(320,278),c.name+" · 技能随角色等级及武器伤害成长",16,MUTED)
 		var descriptions = [["前方扇形攻击，命中可暴击。","持续旋转 1.3 秒，打击周围敌人。","震击前方大范围，造成重伤并眩晕。"],["发射火弹，命中后造成范围爆炸。","冻结附近敌人并施加持续减速。","延迟轰击目标地点，造成高额伤害。"],["箭矢可穿透两名敌人。","同时射出五支穿透箭。","在目标区域持续降下减速箭雨。"]][hero_class]
@@ -881,6 +925,58 @@ func draw_codex_panel():
 		label_at(Vector2(659,494),"印记 %d / 3    敌人剩余 %d" % [marks,enemies.size()],16,TEXT)
 		label_at(Vector2(659,541),"章节首领："+Data.CHAPTERS[chapter].boss,17,Color("bf9070"))
 		label_at(Vector2(659,579),"最终首领必掉传说装备。精英必掉稀有装备。",14,GOLD)
+
+func draw_pet_panel():
+	var p = pets.active_pet()
+	label_at(Vector2(320,242),"小宠物",29,GOLD)
+	label_at(Vector2(876,239),"%d 金   ·   伙伴 %d / 10" % [gold,pets.roster.size()],15,TEXT)
+	inset(Rect2(320,278,300,300))
+	if p == null:
+		label_at(Vector2(344,330),"还没有伙伴",22,GOLD)
+		label_at(Vector2(344,368),"在城镇找宠物商抽卡，",14,TEXT)
+		label_at(Vector2(344,392),"或者击败每章首领。",14,TEXT)
+		label_at(Vector2(344,436),"伙伴会自动索敌、替你挡刀，",13,MUTED)
+		label_at(Vector2(344,458),"阵亡后 30 秒自动复活。",13,MUTED)
+	else:
+		var c = pets.rarity_color(p)
+		var info = pets.spec(p)
+		draw_circle(Vector2(470,318),26,Color("15191b"))
+		draw_arc(Vector2(470,318),26,0,TAU,44,c,2)
+		draw_circle(Vector2(470,318),18,c.darkened(0.28))
+		var ns = font.get_string_size(str(p.name),HORIZONTAL_ALIGNMENT_LEFT,-1,24)
+		label_at(Vector2(470-ns.x/2,378),str(p.name),24,c)
+		label_at(Vector2(470-58,400),"Lv.%d · %s" % [int(p.level),Data.RARITY_NAMES[int(p.rarity)]],13,MUTED)
+		bar(Rect2(350,414,240,9),float(p.hp),pets.max_hp(p),Color("6f9c6a"))
+		label_at(Vector2(350,440),"生命 %d / %d" % [int(p.hp),int(pets.max_hp(p))],13,TEXT)
+		label_at(Vector2(350,466),"攻击 %d   ·   每 %.2f 秒出手" % [int(pets.power(p)),pets.rate(p)],13,TEXT)
+		label_at(Vector2(350,490),"形态：%s   经验 %d / %d" % [("远程" if pets.ranged(p) else "近战"),int(p.xp),int(p.level)*22],13,TEXT)
+		var desc = str(info.desc)
+		label_at(Vector2(350,520),desc.substr(0,mini(16,desc.length())),12,MUTED)
+		if desc.length()>16: label_at(Vector2(350,538),desc.substr(16),12,MUTED)
+		var status = "复活倒计时 %.0f 秒" % float(p.revive) if not bool(p.alive) else ("休息中 · 缓慢恢复" if bool(p.get("resting",false)) else "出战中")
+		var sc = Color("d78f7f") if not bool(p.alive) else (MUTED if bool(p.get("resting",false)) else Color("8bab78"))
+		label_at(Vector2(350,566),status,14,sc)
+	for i in 10:
+		var r = Rect2(637+(i%2)*245,278+int(i/2)*62,236,56)
+		inset(r)
+		if i == pets.active: draw_rect(r,Color("ae915e"),false,2)
+		if i < pets.roster.size():
+			var q = pets.roster[i]
+			label_at(r.position+Vector2(14,26),str(q.name),16,pets.rarity_color(q))
+			var st = "出战" if i==pets.active and not bool(q.get("resting",false)) else ("休息" if bool(q.get("resting",false)) else ("复活 %.0fs" % float(q.revive) if not bool(q.alive) else "待命"))
+			label_at(r.position+Vector2(14,46),"Lv.%d · %s · %s" % [int(q.level),Data.RARITY_NAMES[int(q.rarity)],st],12,MUTED)
+			buttons.append({"rect":r,"id":"pet:"+str(i)})
+		else: label_at(r.position+Vector2(14,32),"空笼位",13,Color("4d5457"))
+	inset(Rect2(637,592,481,52))
+	if pets.result_name != "":
+		label_at(Vector2(653,614),"最近获得："+pets.result_name+("（新伙伴）" if pets.result_new else "（进阶 +2 级）"),14,Color(Data.RARITY_COLORS[clampi(pets.result_rarity,0,4)]))
+		label_at(Vector2(653,634),"重复物种自动转为进阶；每章首领掉落稀有起步的伙伴。",12,MUTED)
+	else:
+		label_at(Vector2(653,614),"抽卡 %d 金 / 次 · 重复物种转为进阶" % pets.cost(),14,GOLD)
+		label_at(Vector2(653,634),"伙伴自动索敌、替你挡刀，阵亡 30 秒后自动复活。",12,MUTED)
+	button(Rect2(320,681,300,43),"抽卡 · %d 金" % pets.cost(),"gacha",true)
+	button(Rect2(637,681,232,43),"出战 / 休息","pet_toggle")
+	button(Rect2(883,681,235,43),"返回冒险  P / Esc","play")
 
 func draw_expansion_panel():
 	if modal=="contracts":

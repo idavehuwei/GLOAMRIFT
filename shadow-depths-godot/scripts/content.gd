@@ -30,8 +30,22 @@ const CLASSES = [
 	{"name":"法师", "title":"驾驭余烬的织法者", "hp":90, "speed":140, "color":"85b4df", "weapon":"星火法杖", "skills":["火焰弹","寒冰新星","陨星坠落","闪烁"], "description":"以法杖发射爆炸火弹。\n寒冰新星冻结敌人；陨星轰击目标区域。"},
 	{"name":"弓箭手", "title":"隐于林间的猎影者", "hp":110, "speed":165, "color":"91bd82", "weapon":"猎影长弓", "skills":["穿林箭","散射箭","箭雨","疾退"], "description":"敏捷的远程猎手，箭矢可穿透敌人。\n五重散射覆盖前方，箭雨持续压制目标区域。"}
 ]
-const NPC_ROLES = ["委托人", "药剂师", "铁匠", "职业导师", "旅店老板"]
-const NPC_NAMES = ["鸦邮差 · 科尔", "药剂师 · 米拉", "铁匠 · 布隆", "导师 · 伊莲", "旅店老板 · 奥多"]
+const NPC_ROLES = ["委托人", "药剂师", "铁匠", "职业导师", "旅店老板", "伙伴契约"]
+const NPC_NAMES = ["鸦邮差 · 科尔", "药剂师 · 米拉", "铁匠 · 布隆", "导师 · 伊莲", "旅店老板 · 奥多", "宠物商 · 绒绒"]
+
+# 小宠物物种表。rarity 决定抽卡池层级；form 决定 world_3d.companion 的造型。
+const PETS = [
+	{"name":"余烬鼠","form":0,"rarity":0,"ranged":false,"bolt":"","power":6,"hp":54,"rate":0.95,"color":"a98a63","desc":"偷药水的灰毛小鼠，咬合力惊人，忠诚度为负。"},
+	{"name":"骨犬幼崽","form":1,"rarity":0,"ranged":false,"bolt":"","power":8,"hp":74,"rate":1.10,"color":"9a9484","desc":"骨头还没长齐，已经学会替主人挡刀。"},
+	{"name":"荧光蛾","form":2,"rarity":1,"ranged":true,"bolt":"venom","power":9,"hp":56,"rate":1.15,"color":"8fc49b","desc":"翅膀抖落的磷粉，会让敌人持续难受。"},
+	{"name":"苔壳龟","form":3,"rarity":1,"ranged":false,"bolt":"","power":7,"hp":135,"rate":1.35,"color":"6f8a63","desc":"走得慢，但它是唯一敢跟首领对视的伙伴。"},
+	{"name":"霜羽鸦","form":4,"rarity":2,"ranged":true,"bolt":"icebolt","power":13,"hp":68,"rate":1.05,"color":"7d9fc4","desc":"雪线带来的鸟。啄击带寒气，命中即减速。"},
+	{"name":"熔岩史莱姆","form":5,"rarity":2,"ranged":false,"bolt":"","power":16,"hp":115,"rate":1.25,"color":"d08a52","desc":"黏在敌人身上不肯下来。据说尝起来像烤焦的糖。"},
+	{"name":"符文石灵","form":6,"rarity":3,"ranged":false,"bolt":"","power":21,"hp":185,"rate":1.30,"color":"8b8f96","desc":"古代守卫的残片。沉默、可靠，从不请假。"},
+	{"name":"幽焰狐","form":7,"rarity":3,"ranged":true,"bolt":"fireball","power":24,"hp":98,"rate":0.95,"color":"d98a5c","desc":"尾巴扫过的地方留下蓝色余烬，并且假装听不懂指令。"},
+	{"name":"虚空之眼","form":8,"rarity":4,"ranged":true,"bolt":"icebolt","power":30,"hp":125,"rate":0.85,"color":"a98fd0","desc":"它看着你的时候，你也在被别的东西看着。"},
+	{"name":"黎明幼龙","form":9,"rarity":4,"ranged":true,"bolt":"fireball","power":34,"hp":170,"rate":0.90,"color":"e0b169","desc":"被封存的黎明孵出来的幼龙，喷出的火是朝霞的颜色。"}
+]
 
 const ELITE_AFFIXES = ["烈焰", "冰霜", "雷鸣", "吸血", "迅捷"]
 const MONSTER_NAMES = [

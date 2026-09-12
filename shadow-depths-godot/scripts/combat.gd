@@ -110,6 +110,7 @@ func hurt_player(power: float):
 	if g.invincible>0 or g.in_town: return
 	g.hp = maxf(0,g.hp-power); g.invincible = 0.4; g.shake = 0.20; g.hitstop = 0.06
 	g.floating(g.player,"-"+str(int(power)),Color("e77f75"))
+	if g.pets != null: g.pets.splash(power*0.30)
 	if g.renderer_3d!=null:
 		g.renderer_3d.animate_hero("death" if g.hp<=0 else "hit",0.85 if g.hp<=0 else 0.26)
 		g.renderer_3d.impact(g.player,Color("e77f75"),0.9)

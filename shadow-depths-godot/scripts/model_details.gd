@@ -90,7 +90,39 @@ func character(root: Node3D,kind: int):
 		for finger in 4:
 			w.ball(arm,Vector3((finger-1.5)*0.029,-0.52,-0.085),Vector3(0.027,0.09,0.045),glove)
 		w.ball(arm,Vector3(-side*0.065,-0.47,-0.07),Vector3(0.04,0.08,0.055),glove)
+	refine_character(root,kind,steel,trim,straps)
 	if kind==3: boss(root)
+func refine_character(root: Node3D,kind: int,steel: Material,trim: Material,leather: Material):
+	# Raised seams and shaped greaves remain attached to the existing joint rig.
+	for side in [-1,1]:
+		var leg = root.get_node("LeftLeg" if side<0 else "RightLeg")
+		if kind in [-1,0,3,6]:
+			w.profile(leg,Vector3(0,-0.66,-0.025),[[0.0,0.085,0.09],[0.08,0.115,0.13],[0.19,0.12,0.12],[0.26,0.09,0.09]],steel)
+			w.beam(leg,Vector3(0,-0.63,-0.16),Vector3(0,-0.43,-0.16),0.018,trim)
+		else:
+			for k in 4:
+				w.beam(leg,Vector3(-0.07,-0.62+k*0.035,-0.115),Vector3(0.07,-0.60+k*0.035,-0.115),0.012,trim)
+		for k in 6:
+			w.ball(root,Vector3(side*0.21,0.96+k*0.047,-0.145),Vector3(0.015,0.024,0.016),trim)
+	if kind < -1:
+		var skin = w.material("skin"+str(kind),Color("b89b7e"),1,0,"skin")
+		var shadow = mat("face_shadow","473a32","skin")
+		var eye = mat("eye_white","c3bba4","bone")
+		w.ball(root,Vector3(0,1.565,-0.183),Vector3(0.062,0.11,0.073),skin)
+		w.ball(root,Vector3(0,1.477,-0.15),Vector3(0.16,0.084,0.073),skin)
+		w.beam(root,Vector3(-0.047,1.501,-0.195),Vector3(0.047,1.501,-0.195),0.012,shadow)
+		for side in [-1,1]:
+			w.ball(root,Vector3(side*0.198,1.59,0),Vector3(0.06,0.11,0.072),skin)
+			w.ball(root,Vector3(side*0.081,1.623,-0.173),Vector3(0.077,0.036,0.035),eye)
+			w.ball(root,Vector3(side*0.081,1.623,-0.193),Vector3(0.022,0.027,0.012),shadow)
+			w.beam(root,Vector3(side*0.044,1.657,-0.179),Vector3(side*0.12,1.651,-0.164),0.022,shadow)
+			w.ball(root,Vector3(side*0.107,1.558,-0.139),Vector3(0.102,0.073,0.071),skin)
+	if kind in [-10,-11,-2,-3,-4,-5,-6,2]:
+		for side in [-1,1]:
+			w.beam(root,Vector3(side*0.06,1.32,-0.135),Vector3(side*0.15,1.20,-0.19),0.029,trim)
+			w.block(root,Vector3(side*0.17,0.96,-0.201),Vector3(0.11,0.13,0.025),leather)
+			w.block(root,Vector3(side*0.17,1.022,-0.22),Vector3(0.12,0.025,0.025),trim)
+
 func boss(root: Node3D):
 	var c = w.game.chapter
 	var dark = mat("obsidian","3c3b49","marble",0.2)
@@ -131,11 +163,23 @@ func creature(root: Node3D,kind: int):
 		var fur = mat("beastfur"+str(w.game.chapter),"788184" if w.game.chapter==2 else "675541","fur")
 		for k in 7:
 			w.ball(root,Vector3(0,0.89+k*0.016,-0.32+k*0.115),Vector3(0.20,0.10,0.22),fur)
+		var head = root.get_node("Head")
+		for side in [-1,1]:
+			for k in 5:
+				w.cylinder(head,Vector3(side*(0.14+k*0.016),-0.04+k*0.038,0.075),0.044,0.20,fur,Vector3(0.4,0,-side*0.9),true)
+			w.ball(head,Vector3(side*0.14,0.15,-0.17),Vector3(0.13,0.06,0.09),fur)
 	else:
 		var carapace = mat("carapace","797d78","chitin",0.15)
 		for k in 5: w.ball(root,Vector3(0,0.74,0.05+k*0.105),Vector3(0.64-k*0.045,0.12,0.14),carapace)
 		for side in [-1,1]:
 			for k in 4: w.ball(root,Vector3(side*0.34,0.48,k*0.23-0.32),Vector3(0.10,0.10,0.10),carapace)
+		var head = root.get_node("Head")
+		for side in [-1,1]:
+			for k in 4:
+				var leg = root.get_node("Leg_%d_%d" % [side,k])
+				w.ball(leg,Vector3.ZERO,Vector3(0.15,0.13,0.16),carapace)
+				w.cylinder(leg,Vector3(side*0.14,0.10,0),0.03,0.18,carapace,Vector3(0,0,-side*0.6),true)
+			w.ball(head,Vector3(side*0.16,-0.05,-0.16),Vector3(0.17,0.18,0.13),carapace)
 func building(p: Vector3):
 	var stone = mat("cutstone","9a9688","stone")
 	var trim = mat("weatheredbronze","8c8167","copper",0.4)
